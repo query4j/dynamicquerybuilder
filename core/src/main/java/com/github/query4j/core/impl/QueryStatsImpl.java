@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,17 +39,38 @@ public final class QueryStatsImpl implements QueryStats {
      * Updates the statistics data.
      * 
      * @param executionTimeMs execution time in milliseconds
-     * @param resultCount number of results returned
-     * @param cacheHit whether cache was hit
+     * @param resultCount     number of results returned
+     * @param cacheHit        whether cache was hit
      */
     public void update(long executionTimeMs, int resultCount, boolean cacheHit) {
         this.executionTimeMs = executionTimeMs;
         this.resultCount = resultCount;
         this.cacheHit = cacheHit;
+        this.executionTimestamp = System.currentTimeMillis();
     }
 
-	@Override
-	public boolean wasCacheHit() {
-		return cacheHit;
-	}
+    @Override
+    public boolean wasCacheHit() {
+        return cacheHit;
+    }
+
+    /**
+     * Sets/overwrites the generated SQL text.
+     */
+    public QueryStatsImpl sql(String sql) {
+        this.generatedSQL = (sql == null) ? "" : sql;
+        return this;
+    }
+
+    /**
+     * Replaces the hints map with an unmodifiable defensive copy.
+     */
+    public QueryStatsImpl hints(Map<String, Object> hints) {
+        if (hints == null || hints.isEmpty()) {
+            this.hints = Collections.emptyMap();
+        } else {
+            this.hints = Collections.unmodifiableMap(new HashMap<>(hints));
+        }
+        return this;
+    }
 }

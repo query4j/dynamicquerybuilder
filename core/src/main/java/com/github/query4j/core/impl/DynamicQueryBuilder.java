@@ -40,7 +40,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     // Default constructor for factory method
     public DynamicQueryBuilder(Class<T> entityClass) {
-        this(entityClass, Collections.emptyList(), Collections.emptyMap(), 0, -1, false);
+        this(Objects.requireNonNull(entityClass, "entityClass must not be null"), Collections.emptyList(), Collections.emptyMap(), 0, -1, false);
     }
 
     private DynamicQueryBuilder<T> newInstance(List<String> whereClauses,
@@ -53,10 +53,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> where(String fieldName, Object value) {
-        if (fieldName == null || fieldName.isEmpty()) {
-            throw new IllegalArgumentException("fieldName must not be null or empty");
-        }
-        if (fieldName.trim().isEmpty() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        String trimmed = fieldName.trim();
+        if (trimmed.isEmpty() || !trimmed.matches("[A-Za-z0-9_\\.]+")) {
             throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
         }
         List<String> newClauses = new ArrayList<>(whereClauses);
@@ -71,9 +70,11 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     private String generateParamName(String baseName, Map<String, Object> params) {
-        String paramName = baseName.replaceAll("\\W", "") + "_" + params.size();
+        String base = baseName.replaceAll("\\W", "");
+        String paramName = base + "_" + params.size();
+        int i = 1;
         while (params.containsKey(paramName)) {
-            paramName = paramName + "_1";
+            paramName = base + "_" + (params.size() + i++);
         }
         return paramName;
     }
@@ -251,7 +252,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         if (pageSize < 1) {
             throw new IllegalArgumentException("pageSize must be >= 1");
         }
-        int newOffset = Math.multiplyExact(pageNumber, pageSize);
+        int newOffset = Math.multiplyExact(pageNumber - 1, pageSize);
         return withOffset(newOffset).withLimit(pageSize);
     }
 

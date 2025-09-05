@@ -48,7 +48,7 @@ class DynamicQueryBuilderTest {
     @Test
     void queryBuilderThrowsOnNullFieldName() {
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
-        assertThrows(IllegalArgumentException.class, () -> builder.where(null, "value"));
+        assertThrows(NullPointerException.class, () -> builder.where(null, "value"));
         assertThrows(IllegalArgumentException.class, () -> builder.where("", "value"));
     }
 
