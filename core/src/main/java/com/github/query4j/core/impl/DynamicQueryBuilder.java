@@ -56,7 +56,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         if (fieldName == null || fieldName.isEmpty()) {
             throw new IllegalArgumentException("fieldName must not be null or empty");
         }
-        if (fieldName.isBlank() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
+        if (fieldName.trim().isEmpty() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
             throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
         }
         List<String> newClauses = new ArrayList<>(whereClauses);
@@ -82,10 +82,10 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     public QueryBuilder<T> where(String fieldName, String operator, Object value) {
         Objects.requireNonNull(fieldName, "fieldName must not be null");
         Objects.requireNonNull(operator, "operator must not be null");
-        if (fieldName.isBlank() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
+        if (fieldName.trim().isEmpty() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
             throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
         }
-        if (operator.isBlank() || !operator.matches("=|!=|<>|<|<=|>|>=|LIKE|NOT LIKE|IN|NOT IN|BETWEEN")) {
+        if (operator.trim().isEmpty() || !operator.matches("=|!=|<>|<|<=|>|>=|LIKE|NOT LIKE|IN|NOT IN|BETWEEN")) {
             throw new IllegalArgumentException("Invalid operator: " + operator);
         }
         List<String> newClauses = new ArrayList<>(whereClauses);
@@ -402,7 +402,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> limit(int maxResults) {
-    	if (maxResults <= 0) {
+        if (maxResults <= 0) {
             throw new IllegalArgumentException("limit must be positive");
         }
         return withLimit(maxResults);
@@ -410,7 +410,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> offset(int skipCount) {
-    	if (skipCount < 0) {
+        if (skipCount < 0) {
             throw new IllegalArgumentException("offset must be non-negative");
         }
         return withOffset(skipCount);
