@@ -17,8 +17,8 @@ Welcome! Thank you for your interest in contributing to the **dynamicquerybuilde
 
 ## Code Style & Standards
 
-- Follow [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html) and [Oracle Code Conventions](https://www.oracle.com/java/technologies/javase/codeconventions-programmingpractices.html).
-- Use **UTF-8** encoding with 4 spaces indentation, no tabs.
+- Follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html). In case of ambiguity, Google Java Style takes precedence.
+- Use **UTF-8**. Indentation: 2 spaces, no tabs (per Google Java Style).
 - Class and interface names should use PascalCase; methods and variables should use camelCase.
 - Use descriptive, meaningful, and pronounceable names — avoid abbreviations or ambiguous names.
 - Keep methods focused and concise (generally 10–20 lines, max 50 lines).
@@ -35,7 +35,7 @@ Welcome! Thank you for your interest in contributing to the **dynamicquerybuilde
 - Use **feature branches** named `feat/your-feature-name`, `fix/bug-description` etc.
 - Keep commits small and atomic, encapsulating a single logical change.
 - Write clear commit messages using the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
-- Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+- Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 - Example: `feat(core): add immutable query builder implementation`
 
 ---
@@ -62,18 +62,18 @@ Welcome! Thank you for your interest in contributing to the **dynamicquerybuilde
 ## Testing Requirements
 
 - All new features and bug fixes must include comprehensive unit and integration tests.
-- Target **100% test coverage** on all changed/new code paths.
-- Use `JUnit 5` and `Mockito` for testing.
+- Target at least **90% coverage** on changed/new code paths; justify any gaps in the PR.
+- Use `JUnit 5`, `Mockito`, and (optionally) `AssertJ` for fluent assertions.
 - Follow Test-Driven Development (TDD) principles where possible.
-- Write performance benchmarks for critical sections.
+- Write performance benchmarks for critical sections using **JMH**; include results in PRs that claim performance improvements.
 - Tests should be deterministic and not depend on external state.
-
+- For integration tests against infra (e.g., DB), prefer **Testcontainers** to keep tests hermetic.
 ---
 
 ## Performance & Quality Expectations
 
-- Prioritize performance optimizations to outperform existing libraries.
-- Avoid premature optimization—profile first and optimize hotspot code carefully.
+- Optimize based on evidence: profile first, then focus on hotspot code.
+- Favor algorithmic improvements; do not sacrifice correctness or readability without data to justify the trade-off.
 - Document any trade-offs or considerations made for performance gains.
 - Maintain sound memory usage and avoid unnecessary object allocation.
 - Use immutable collections and thread-safe practices consistently.
@@ -95,8 +95,7 @@ Welcome! Thank you for your interest in contributing to the **dynamicquerybuilde
 - Be respectful and constructive in communication.
 - Encourage diverse participation.
 - Avoid toxic or abusive behavior.
-- Follow the project's [CODE_OF_CONDUCT.md](link_to_code_of_conduct) document.
-
+- Follow the project's [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) document.
 ---
 
 Thank you for contributing to making **dynamicquerybuilder** a powerful, reliable, and community-driven tool. Together, we can build a library that empowers developers worldwide.
