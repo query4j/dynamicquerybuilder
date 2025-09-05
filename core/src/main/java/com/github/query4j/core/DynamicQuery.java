@@ -10,7 +10,10 @@ import java.util.List;
  */
 public interface DynamicQuery<T> {
     List<T> execute();
+
     T executeOne();
+
     long executeCount();
+
     String getSQL();
 }

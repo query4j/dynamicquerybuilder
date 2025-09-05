@@ -10,12 +10,20 @@ import java.util.List;
  */
 public interface Page<T> {
     List<T> getContent();
-    int getNumber();          // zero-based page index
-    int getSize();            // page size
+
+    int getNumber();
+
+    int getSize();
+
     long getTotalElements();
+
     int getTotalPages();
+
     boolean hasNext();
+
     boolean hasPrevious();
+
     boolean isFirst();
+
     boolean isLast();
 }

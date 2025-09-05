@@ -10,9 +10,14 @@ import java.util.Map;
  */
 public interface QueryStats {
     long getExecutionTimeMs();
+
     int getResultCount();
+
     String getGeneratedSQL();
+
     Map<String, Object> getHints();
+
     boolean wasCacheHit();
+
     long getExecutionTimestamp();
 }
