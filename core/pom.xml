@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.github.query4j</groupId>
     <artifactId>dynamicquerybuilder</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>core</artifactId>
@@ -14,6 +14,12 @@
   <name>core</name>
   <dependencies>
 		<!-- Example: Add dependencies needed for your core logic -->
+	<dependency>
+	    <groupId>org.projectlombok</groupId>
+	    <artifactId>lombok</artifactId>
+	    <version>1.18.28</version>
+	    <scope>provided</scope>
+	  </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
