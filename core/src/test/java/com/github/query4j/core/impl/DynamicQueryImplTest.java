@@ -3,6 +3,7 @@ package com.github.query4j.core.impl;
 import com.github.query4j.core.DynamicQuery;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,7 +13,7 @@ class DynamicQueryImplTest {
 
     @Test
     void testExecuteReturnsResults() {
-        List<String> sampleResults = List.of("elem1", "elem2");
+        List<String> sampleResults = Arrays.asList("elem1", "elem2");
         DynamicQuery<String> dq = new DynamicQueryImpl<>(sampleResults, "SELECT * FROM SampleTable");
         List<String> results = dq.execute();
 
@@ -23,7 +24,7 @@ class DynamicQueryImplTest {
 
     @Test
     void testExecuteOneReturnsFirstElement() {
-        List<String> sampleResults = List.of("first", "second");
+        List<String> sampleResults = Arrays.asList("first", "second");
         DynamicQuery<String> dq = new DynamicQueryImpl<>(sampleResults, "SELECT * FROM SampleTable");
         String first = dq.executeOne();
 
@@ -38,7 +39,7 @@ class DynamicQueryImplTest {
 
     @Test
     void testExecuteCountReturnsSize() {
-        List<Integer> results = List.of(1, 2, 3, 4);
+        List<Integer> results = Arrays.asList(1, 2, 3, 4);
         DynamicQuery<Integer> dq = new DynamicQueryImpl<>(results, "SELECT * FROM SampleTable");
         long count = dq.executeCount();
 

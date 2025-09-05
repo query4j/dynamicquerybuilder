@@ -3,6 +3,7 @@ package com.github.query4j.core.impl;
 import com.github.query4j.core.Page;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +12,7 @@ class PageImplTest {
 
     @Test
     void testPageProperties() {
-        List<String> content = List.of("a", "b", "c");
+        List<String> content = Arrays.asList("a", "b", "c");
         int pageNumber = 1;
         int pageSize = 3;
         long totalElements = 10;
@@ -34,13 +35,13 @@ class PageImplTest {
 
     @Test
     void testFirstAndLastPageIndicators() {
-        Page<String> firstPage = new PageImpl<>(List.of("x"), 0, 3, 3);
+        Page<String> firstPage = new PageImpl<>(Arrays.asList("x"), 0, 3, 3);
         assertTrue(firstPage.isFirst());
-        assertTrue(firstPage.isLast());  // changed from false to true
+        assertTrue(firstPage.isLast()); // changed from false to true
         assertFalse(firstPage.hasPrevious());
         assertFalse(firstPage.hasNext());
 
-        Page<String> lastPage = new PageImpl<>(List.of("z"), 2, 3, 7);
+        Page<String> lastPage = new PageImpl<>(Arrays.asList("z"), 2, 3, 7);
         assertFalse(lastPage.isFirst());
         assertTrue(lastPage.isLast());
         assertTrue(lastPage.hasPrevious());
