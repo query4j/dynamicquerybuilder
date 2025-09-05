@@ -402,11 +402,17 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> limit(int maxResults) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    	if (maxResults <= 0) {
+            throw new IllegalArgumentException("limit must be positive");
+        }
+        return withLimit(maxResults);
     }
 
     @Override
     public QueryBuilder<T> offset(int skipCount) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    	if (skipCount < 0) {
+            throw new IllegalArgumentException("offset must be non-negative");
+        }
+        return withOffset(skipCount);
     }
 }
