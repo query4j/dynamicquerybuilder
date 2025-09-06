@@ -1,12 +1,11 @@
 package com.github.query4j.core.criteria;
 
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-
 import java.util.Collections;
 import java.util.Map;
+
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.Value;
 
 /**
  * Immutable predicate for NULL checks.
@@ -15,7 +14,6 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Value
-@RequiredArgsConstructor
 @EqualsAndHashCode
 public class NullPredicate implements Predicate {
 	

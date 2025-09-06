@@ -5,8 +5,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Immutable predicate for simple field comparisons.

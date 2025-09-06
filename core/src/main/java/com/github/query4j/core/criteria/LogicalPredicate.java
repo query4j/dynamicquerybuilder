@@ -1,12 +1,15 @@
 package com.github.query4j.core.criteria;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Immutable predicate for logical operations (AND, OR, NOT).
@@ -17,7 +20,7 @@ import java.util.stream.Collectors;
 @Value
 @EqualsAndHashCode
 public class LogicalPredicate implements Predicate {
-	
+		
     @NonNull
     String operator;
     

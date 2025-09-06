@@ -88,6 +88,17 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
                 groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
                 orderByClauses, groupByClauses, havingPredicates);
     }
+    
+    /**
+     * Returns the immutable list of predicates in this builder.
+     * Primarily for testing or advanced use cases.
+     *
+     * @return list of predicates
+     */
+    public List<Predicate> getPredicates() {
+        return Collections.unmodifiableList(predicates);
+    }
+
 
     // ==================== WHERE CLAUSE METHODS ====================
 
@@ -99,10 +110,11 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     @Override
     public QueryBuilder<T> where(@NonNull String fieldName, @NonNull String operator, Object value) {
         validateFieldName(fieldName);
-        validateOperator(operator);
+        String normalized = operator.trim().toUpperCase(java.util.Locale.ROOT);
+        validateOperator(normalized);
 
         String paramName = generateParamName(fieldName);
-        SimplePredicate newPredicate = new SimplePredicate(fieldName, operator, value, paramName);
+        SimplePredicate newPredicate = new SimplePredicate(fieldName, normalized, value, paramName);
 
         return addPredicate(newPredicate);
     }
