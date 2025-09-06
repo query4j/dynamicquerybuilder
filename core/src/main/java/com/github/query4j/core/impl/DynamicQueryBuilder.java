@@ -1,16 +1,20 @@
 package com.github.query4j.core.impl;
 
 import com.github.query4j.core.*;
+import com.github.query4j.core.criteria.*;
+
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Immutable, thread-safe implementation of QueryBuilder interface.
- * Provides fluent API for dynamic query building aligned with JPA usage.
+ * Uses predicate-based query building with fluent API.
  *
  * @param <T> Entity type
  * @since 1.0.0
@@ -19,15 +23,18 @@ import java.util.concurrent.CompletableFuture;
 public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @With
+    @NonNull
     private final Class<T> entityClass;
 
-    // Store where conditions as list of strings representing expressions
     @With
-    private final List<String> whereClauses;
+    @NonNull
+    private final List<Predicate> predicates;
 
-    // Parameters map for named parameters in query
     @With
-    private final Map<String, Object> parameters;
+    private final String nextLogicalOperator;
+
+    @With
+    private final int groupDepth;
 
     @With
     private final int offset;
@@ -38,211 +45,323 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     @With
     private final boolean cacheEnabled;
 
+    @With
+    @NonNull
+    private final List<String> selectFields;
+
+    @With
+    @NonNull
+    private final List<String> joinClauses;
+
+    @With
+    @NonNull
+    private final List<String> orderByClauses;
+
+    @With
+    @NonNull
+    private final List<String> groupByClauses;
+
+    @With
+    @NonNull
+    private final List<Predicate> havingPredicates;
+
     // Default constructor for factory method
-    public DynamicQueryBuilder(Class<T> entityClass) {
-        this(Objects.requireNonNull(entityClass, "entityClass must not be null"), Collections.emptyList(), Collections.emptyMap(), 0, -1, false);
+    public DynamicQueryBuilder(@NonNull Class<T> entityClass) {
+        this(entityClass, Collections.emptyList(), null, 0, 0, -1, false,
+                Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
     }
 
-    private DynamicQueryBuilder<T> newInstance(List<String> whereClauses,
-            Map<String, Object> parameters,
+    private DynamicQueryBuilder<T> newInstance(
+            List<Predicate> predicates,
+            String nextLogicalOperator,
+            int groupDepth,
             int offset,
             int limit,
-            boolean cacheEnabled) {
-        return new DynamicQueryBuilder<>(entityClass, whereClauses, parameters, offset, limit, cacheEnabled);
+            boolean cacheEnabled,
+            List<String> selectFields,
+            List<String> joinClauses,
+            List<String> orderByClauses,
+            List<String> groupByClauses,
+            List<Predicate> havingPredicates) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    // ==================== WHERE CLAUSE METHODS ====================
+
+    @Override
+    public QueryBuilder<T> where(@NonNull String fieldName, Object value) {
+        return where(fieldName, "=", value);
     }
 
     @Override
-    public QueryBuilder<T> where(String fieldName, Object value) {
-        Objects.requireNonNull(fieldName, "fieldName must not be null");
-        String trimmed = fieldName.trim();
-        if (trimmed.isEmpty() || !trimmed.matches("[A-Za-z0-9_\\.]+")) {
-            throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
+    public QueryBuilder<T> where(@NonNull String fieldName, @NonNull String operator, Object value) {
+        validateFieldName(fieldName);
+        validateOperator(operator);
+
+        String paramName = generateParamName(fieldName);
+        SimplePredicate newPredicate = new SimplePredicate(fieldName, operator, value, paramName);
+
+        return addPredicate(newPredicate);
+    }
+
+    @Override
+    public QueryBuilder<T> whereIn(@NonNull String fieldName, @NonNull List<Object> values) {
+        validateFieldName(fieldName);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException("values must not be empty");
         }
-        List<String> newClauses = new ArrayList<>(whereClauses);
-        Map<String, Object> newParams = new HashMap<>(parameters);
 
-        String paramName = generateParamName(fieldName, newParams);
-        newClauses.add(fieldName + " = :" + paramName);
-        newParams.put(paramName, value);
+        String paramName = generateParamName(fieldName);
+        InPredicate newPredicate = new InPredicate(fieldName, values, paramName);
 
-        return newInstance(Collections.unmodifiableList(newClauses), Collections.unmodifiableMap(newParams), offset,
-                limit, cacheEnabled);
+        return addPredicate(newPredicate);
     }
 
-    private String generateParamName(String baseName, Map<String, Object> params) {
-        String base = baseName.replaceAll("\\W", "");
-        String paramName = base + "_" + params.size();
-        int i = 1;
-        while (params.containsKey(paramName)) {
-            paramName = base + "_" + (params.size() + i++);
+    @Override
+    public QueryBuilder<T> whereNotIn(@NonNull String fieldName, @NonNull List<Object> values) {
+        validateFieldName(fieldName);
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException("values must not be empty");
         }
-        return paramName;
+
+        String paramName = generateParamName(fieldName);
+        InPredicate inPredicate = new InPredicate(fieldName, values, paramName);
+        LogicalPredicate notPredicate = new LogicalPredicate("NOT", Arrays.asList(inPredicate));
+
+        return addPredicate(notPredicate);
     }
 
     @Override
-    public QueryBuilder<T> where(String fieldName, String operator, Object value) {
-        Objects.requireNonNull(fieldName, "fieldName must not be null");
-        Objects.requireNonNull(operator, "operator must not be null");
-        if (fieldName.trim().isEmpty() || !fieldName.matches("[A-Za-z0-9_\\.]+")) {
-            throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
-        }
-        if (operator.trim().isEmpty() || !operator.matches("=|!=|<>|<|<=|>|>=|LIKE|NOT LIKE|IN|NOT IN|BETWEEN")) {
-            throw new IllegalArgumentException("Invalid operator: " + operator);
-        }
-        List<String> newClauses = new ArrayList<>(whereClauses);
-        Map<String, Object> newParams = new HashMap<>(parameters);
-        String paramName = generateParamName(fieldName, newParams);
-        newClauses.add(fieldName + " " + operator + " :" + paramName);
-        newParams.put(paramName, value);
-        return newInstance(Collections.unmodifiableList(newClauses), Collections.unmodifiableMap(newParams), offset,
-                limit, cacheEnabled);
+    public QueryBuilder<T> whereLike(@NonNull String fieldName, @NonNull String pattern) {
+        validateFieldName(fieldName);
+
+        String paramName = generateParamName(fieldName);
+        LikePredicate newPredicate = new LikePredicate(fieldName, pattern, paramName);
+
+        return addPredicate(newPredicate);
     }
 
     @Override
-    public QueryBuilder<T> whereIn(String fieldName, List<Object> values) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> whereNotLike(@NonNull String fieldName, @NonNull String pattern) {
+        validateFieldName(fieldName);
+
+        String paramName = generateParamName(fieldName);
+        LikePredicate likePredicate = new LikePredicate(fieldName, pattern, paramName);
+        LogicalPredicate notPredicate = new LogicalPredicate("NOT", Arrays.asList(likePredicate));
+
+        return addPredicate(notPredicate);
     }
 
     @Override
-    public QueryBuilder<T> whereNotIn(String fieldName, List<Object> values) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> whereBetween(@NonNull String fieldName, Object startValue, Object endValue) {
+        validateFieldName(fieldName);
+
+        String startParamName = generateParamName(fieldName + "_start");
+        String endParamName = generateParamName(fieldName + "_end");
+        BetweenPredicate newPredicate = new BetweenPredicate(fieldName, startValue, endValue,
+                startParamName, endParamName);
+
+        return addPredicate(newPredicate);
     }
 
     @Override
-    public QueryBuilder<T> whereLike(String fieldName, String pattern) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> whereIsNull(@NonNull String fieldName) {
+        validateFieldName(fieldName);
+        NullPredicate newPredicate = new NullPredicate(fieldName, true);
+        return addPredicate(newPredicate);
     }
 
     @Override
-    public QueryBuilder<T> whereNotLike(String fieldName, String pattern) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> whereIsNotNull(@NonNull String fieldName) {
+        validateFieldName(fieldName);
+        NullPredicate newPredicate = new NullPredicate(fieldName, false);
+        return addPredicate(newPredicate);
     }
 
-    @Override
-    public QueryBuilder<T> whereBetween(String fieldName, Object startValue, Object endValue) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    @Override
-    public QueryBuilder<T> whereIsNull(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    @Override
-    public QueryBuilder<T> whereIsNotNull(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    // ==================== LOGICAL OPERATORS ====================
 
     @Override
     public QueryBuilder<T> and() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return withNextLogicalOperator("AND");
     }
 
     @Override
     public QueryBuilder<T> or() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return withNextLogicalOperator("OR");
     }
 
     @Override
     public QueryBuilder<T> not() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return withNextLogicalOperator("NOT");
     }
 
     @Override
     public QueryBuilder<T> openGroup() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return withGroupDepth(groupDepth + 1);
     }
 
     @Override
     public QueryBuilder<T> closeGroup() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (groupDepth <= 0) {
+            throw new IllegalStateException("Cannot close group - no open groups");
+        }
+        return withGroupDepth(groupDepth - 1);
+    }
+
+    // ==================== JOIN METHODS ====================
+
+    @Override
+    public QueryBuilder<T> join(@NonNull String associationFieldName) {
+        return innerJoin(associationFieldName);
     }
 
     @Override
-    public QueryBuilder<T> join(String associationFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> leftJoin(@NonNull String associationFieldName) {
+        validateFieldName(associationFieldName);
+        List<String> newJoins = new ArrayList<>(joinClauses);
+        newJoins.add("LEFT JOIN " + associationFieldName);
+        return withJoinClauses(Collections.unmodifiableList(newJoins));
     }
 
     @Override
-    public QueryBuilder<T> leftJoin(String associationFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> rightJoin(@NonNull String associationFieldName) {
+        validateFieldName(associationFieldName);
+        List<String> newJoins = new ArrayList<>(joinClauses);
+        newJoins.add("RIGHT JOIN " + associationFieldName);
+        return withJoinClauses(Collections.unmodifiableList(newJoins));
     }
 
     @Override
-    public QueryBuilder<T> rightJoin(String associationFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> innerJoin(@NonNull String associationFieldName) {
+        validateFieldName(associationFieldName);
+        List<String> newJoins = new ArrayList<>(joinClauses);
+        newJoins.add("INNER JOIN " + associationFieldName);
+        return withJoinClauses(Collections.unmodifiableList(newJoins));
     }
 
     @Override
-    public QueryBuilder<T> innerJoin(String associationFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> fetch(@NonNull String associationFieldName) {
+        validateFieldName(associationFieldName);
+        List<String> newJoins = new ArrayList<>(joinClauses);
+        newJoins.add("LEFT JOIN FETCH " + associationFieldName);
+        return withJoinClauses(Collections.unmodifiableList(newJoins));
     }
 
-    @Override
-    public QueryBuilder<T> fetch(String associationFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    // ==================== SELECT METHODS ====================
 
     @Override
-    public QueryBuilder<T> select(String... fieldNames) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> select(@NonNull String... fieldNames) {
+        if (fieldNames.length == 0) {
+            throw new IllegalArgumentException("fieldNames must not be empty");
+        }
+
+        for (String fieldName : fieldNames) {
+            validateFieldName(fieldName);
+        }
+
+        List<String> newSelectFields = new ArrayList<>(Arrays.asList(fieldNames));
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
+
+    // ==================== AGGREGATION METHODS ====================
 
     @Override
     public QueryBuilder<T> countAll() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        List<String> newSelectFields = Arrays.asList("COUNT(*)");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> count(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> count(@NonNull String fieldName) {
+        validateFieldName(fieldName);
+        List<String> newSelectFields = Arrays.asList("COUNT(" + fieldName + ")");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> sum(String numericFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> sum(@NonNull String numericFieldName) {
+        validateFieldName(numericFieldName);
+        List<String> newSelectFields = Arrays.asList("SUM(" + numericFieldName + ")");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> avg(String numericFieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> avg(@NonNull String numericFieldName) {
+        validateFieldName(numericFieldName);
+        List<String> newSelectFields = Arrays.asList("AVG(" + numericFieldName + ")");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> min(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> min(@NonNull String fieldName) {
+        validateFieldName(fieldName);
+        List<String> newSelectFields = Arrays.asList("MIN(" + fieldName + ")");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> max(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> max(@NonNull String fieldName) {
+        validateFieldName(fieldName);
+        List<String> newSelectFields = Arrays.asList("MAX(" + fieldName + ")");
+        return withSelectFields(Collections.unmodifiableList(newSelectFields));
+    }
+
+    // ==================== GROUP BY AND HAVING ====================
+
+    @Override
+    public QueryBuilder<T> groupBy(@NonNull String... fieldNames) {
+        if (fieldNames.length == 0) {
+            throw new IllegalArgumentException("fieldNames must not be empty");
+        }
+
+        for (String fieldName : fieldNames) {
+            validateFieldName(fieldName);
+        }
+
+        List<String> newGroupBy = new ArrayList<>(Arrays.asList(fieldNames));
+        return withGroupByClauses(Collections.unmodifiableList(newGroupBy));
     }
 
     @Override
-    public QueryBuilder<T> groupBy(String... fieldNames) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> having(@NonNull String aggregatedFieldName, @NonNull String operator, Object value) {
+        validateFieldName(aggregatedFieldName);
+        validateOperator(operator);
+
+        String paramName = generateParamName(aggregatedFieldName + "_having");
+        SimplePredicate havingPredicate = new SimplePredicate(aggregatedFieldName, operator, value, paramName);
+
+        List<Predicate> newHavingPredicates = new ArrayList<>(havingPredicates);
+        newHavingPredicates.add(havingPredicate);
+
+        return withHavingPredicates(Collections.unmodifiableList(newHavingPredicates));
+    }
+
+    // ==================== ORDER BY METHODS ====================
+
+    @Override
+    public QueryBuilder<T> orderBy(@NonNull String fieldName) {
+        return orderBy(fieldName, true);
     }
 
     @Override
-    public QueryBuilder<T> having(String aggregatedFieldName, String operator, Object value) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> orderByDescending(@NonNull String fieldName) {
+        return orderBy(fieldName, false);
     }
 
     @Override
-    public QueryBuilder<T> orderBy(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> orderBy(@NonNull String fieldName, boolean ascending) {
+        validateFieldName(fieldName);
+
+        List<String> newOrderBy = new ArrayList<>(orderByClauses);
+        newOrderBy.add(fieldName + (ascending ? " ASC" : " DESC"));
+
+        return withOrderByClauses(Collections.unmodifiableList(newOrderBy));
     }
 
-    @Override
-    public QueryBuilder<T> orderByDescending(String fieldName) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    @Override
-    public QueryBuilder<T> orderBy(String fieldName, boolean ascending) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    // ==================== PAGINATION ====================
 
     @Override
     public QueryBuilder<T> page(int pageNumber, int pageSize) {
@@ -257,50 +376,82 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
+    public QueryBuilder<T> limit(int maxResults) {
+        if (maxResults <= 0) {
+            throw new IllegalArgumentException("limit must be positive");
+        }
+        return withLimit(maxResults);
+    }
+
+    @Override
+    public QueryBuilder<T> offset(int skipCount) {
+        if (skipCount < 0) {
+            throw new IllegalArgumentException("offset must be non-negative");
+        }
+        return withOffset(skipCount);
+    }
+
+    // ==================== SUBQUERIES (STUBS FOR NOW) ====================
+
+    @Override
     public QueryBuilder<T> exists(QueryBuilder<?> subquery) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(subquery, "subquery must not be null");
+        // TODO: Implement EXISTS subquery support
+        throw new UnsupportedOperationException("EXISTS subqueries not implemented yet");
     }
 
     @Override
     public QueryBuilder<T> notExists(QueryBuilder<?> subquery) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(subquery, "subquery must not be null");
+        // TODO: Implement NOT EXISTS subquery support
+        throw new UnsupportedOperationException("NOT EXISTS subqueries not implemented yet");
     }
 
     @Override
-    public QueryBuilder<T> in(String fieldName, QueryBuilder<?> subquery) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> in(@NonNull String fieldName, QueryBuilder<?> subquery) {
+        validateFieldName(fieldName);
+        Objects.requireNonNull(subquery, "subquery must not be null");
+        // TODO: Implement IN subquery support
+        throw new UnsupportedOperationException("IN subqueries not implemented yet");
     }
 
     @Override
-    public QueryBuilder<T> notIn(String fieldName, QueryBuilder<?> subquery) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> notIn(@NonNull String fieldName, QueryBuilder<?> subquery) {
+        validateFieldName(fieldName);
+        Objects.requireNonNull(subquery, "subquery must not be null");
+        // TODO: Implement NOT IN subquery support
+        throw new UnsupportedOperationException("NOT IN subqueries not implemented yet");
+    }
+
+    // ==================== ADVANCED FEATURES (STUBS FOR NOW) ====================
+
+    @Override
+    public QueryBuilder<T> customFunction(@NonNull String functionName, @NonNull String fieldName,
+            Object... parameters) {
+        validateFieldName(fieldName);
+        // TODO: Implement custom function support
+        throw new UnsupportedOperationException("Custom functions not implemented yet");
     }
 
     @Override
-    public QueryBuilder<T> customFunction(String functionName, String fieldName, Object... parameters) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> nativeQuery(@NonNull String sqlQuery) {
+        // TODO: Implement native query support
+        throw new UnsupportedOperationException("Native queries not implemented yet");
     }
 
     @Override
-    public QueryBuilder<T> nativeQuery(String sqlQuery) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> parameter(@NonNull String parameterName, Object parameterValue) {
+        // With predicate-based approach, parameters are handled automatically
+        throw new UnsupportedOperationException("Use predicate-based where methods instead");
     }
 
     @Override
-    public QueryBuilder<T> parameter(String parameterName, Object parameterValue) {
-        java.util.Objects.requireNonNull(parameterName, "parameterName must not be null");
-        java.util.Map<String, Object> newParams = new java.util.HashMap<>(parameters);
-        newParams.put(parameterName, parameterValue);
-        return withParameters(java.util.Collections.unmodifiableMap(newParams));
+    public QueryBuilder<T> parameters(@NonNull Map<String, Object> parameterMap) {
+        // With predicate-based approach, parameters are handled automatically
+        throw new UnsupportedOperationException("Use predicate-based where methods instead");
     }
 
-    @Override
-    public QueryBuilder<T> parameters(Map<String, Object> parameterMap) {
-        java.util.Objects.requireNonNull(parameterMap, "parameterMap must not be null");
-        java.util.Map<String, Object> newParams = new java.util.HashMap<>(parameters);
-        newParams.putAll(parameterMap);
-        return withParameters(java.util.Collections.unmodifiableMap(newParams));
-    }
+    // ==================== CACHING ====================
 
     @Override
     public QueryBuilder<T> cached() {
@@ -309,33 +460,50 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> cached(String cacheRegionName) {
+        // TODO: Implement cache region support
         return withCacheEnabled(true);
     }
 
     @Override
     public QueryBuilder<T> cached(long timeToLiveSeconds) {
+        // TODO: Implement TTL support
         return withCacheEnabled(true);
     }
 
+    // ==================== HINTS AND PERFORMANCE (STUBS FOR NOW)
+    // ====================
+
     @Override
-    public QueryBuilder<T> hint(String hintName, Object hintValue) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public QueryBuilder<T> hint(@NonNull String hintName, Object hintValue) {
+        // TODO: Implement query hints
+        throw new UnsupportedOperationException("Query hints not implemented yet");
     }
 
     @Override
     public QueryBuilder<T> fetchSize(int fetchSize) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (fetchSize <= 0) {
+            throw new IllegalArgumentException("fetchSize must be positive");
+        }
+        // TODO: Implement fetch size
+        throw new UnsupportedOperationException("Fetch size not implemented yet");
     }
 
     @Override
     public QueryBuilder<T> timeout(int timeoutSeconds) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (timeoutSeconds <= 0) {
+            throw new IllegalArgumentException("timeoutSeconds must be positive");
+        }
+        // TODO: Implement query timeout
+        throw new UnsupportedOperationException("Query timeout not implemented yet");
     }
 
     @Override
     public QueryStats getExecutionStats() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // TODO: Implement execution statistics
+        throw new UnsupportedOperationException("Execution stats not implemented yet");
     }
+
+    // ==================== EXECUTION METHODS ====================
 
     @Override
     public long count() {
@@ -383,37 +551,110 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         return new DynamicQueryImpl<>(findAll(), toSQL());
     }
 
+    // ==================== SQL GENERATION ====================
+
     @Override
     public String toSQL() {
-        // Simplistic SQL generation for demo
-        StringBuilder sb = new StringBuilder("SELECT * FROM ");
-        sb.append(entityClass.getSimpleName());
-        if (!whereClauses.isEmpty()) {
-            sb.append(" WHERE ");
-            sb.append(String.join(" AND ", whereClauses));
+        StringBuilder sb = new StringBuilder();
+
+        // SELECT clause
+        sb.append("SELECT ");
+        if (selectFields.isEmpty()) {
+            sb.append("*");
+        } else {
+            sb.append(String.join(", ", selectFields));
         }
+
+        // FROM clause
+        sb.append(" FROM ").append(entityClass.getSimpleName());
+
+        // JOIN clauses
+        if (!joinClauses.isEmpty()) {
+            sb.append(" ").append(String.join(" ", joinClauses));
+        }
+
+        // WHERE clause
+        if (!predicates.isEmpty()) {
+            sb.append(" WHERE ");
+            sb.append(predicates.stream()
+                    .map(Predicate::toSQL)
+                    .collect(Collectors.joining(" AND ")));
+        }
+
+        // GROUP BY clause
+        if (!groupByClauses.isEmpty()) {
+            sb.append(" GROUP BY ").append(String.join(", ", groupByClauses));
+        }
+
+        // HAVING clause
+        if (!havingPredicates.isEmpty()) {
+            sb.append(" HAVING ");
+            sb.append(havingPredicates.stream()
+                    .map(Predicate::toSQL)
+                    .collect(Collectors.joining(" AND ")));
+        }
+
+        // ORDER BY clause
+        if (!orderByClauses.isEmpty()) {
+            sb.append(" ORDER BY ").append(String.join(", ", orderByClauses));
+        }
+
+        // LIMIT clause
         if (limit > 0) {
             sb.append(" LIMIT ").append(limit);
         }
+
+        // OFFSET clause
         if (offset > 0) {
             sb.append(" OFFSET ").append(offset);
         }
+
         return sb.toString();
     }
 
-    @Override
-    public QueryBuilder<T> limit(int maxResults) {
-        if (maxResults <= 0) {
-            throw new IllegalArgumentException("limit must be positive");
+    // ==================== HELPER METHODS ====================
+
+    private QueryBuilder<T> addPredicate(Predicate newPredicate) {
+        List<Predicate> newPredicates = new ArrayList<>(predicates);
+
+        if (predicates.isEmpty() || nextLogicalOperator == null) {
+            newPredicates.add(newPredicate);
+        } else {
+            // Combine with logical operator
+            Predicate lastPredicate = newPredicates.remove(newPredicates.size() - 1);
+            LogicalPredicate combined = new LogicalPredicate(nextLogicalOperator,
+                    Arrays.asList(lastPredicate, newPredicate));
+            newPredicates.add(combined);
         }
-        return withLimit(maxResults);
+
+        return newInstance(Collections.unmodifiableList(newPredicates), null, groupDepth,
+                offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
     }
 
-    @Override
-    public QueryBuilder<T> offset(int skipCount) {
-        if (skipCount < 0) {
-            throw new IllegalArgumentException("offset must be non-negative");
+    private void validateFieldName(String fieldName) {
+        if (fieldName == null || fieldName.trim().isEmpty()) {
+            throw new IllegalArgumentException("fieldName must not be null or empty");
         }
-        return withOffset(skipCount);
+
+        String trimmed = fieldName.trim();
+        if (!trimmed.matches("[A-Za-z0-9_\\.]+")) {
+            throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
+        }
+    }
+
+    private void validateOperator(String operator) {
+        if (operator == null || operator.trim().isEmpty()) {
+            throw new IllegalArgumentException("operator must not be null or empty");
+        }
+
+        if (!operator.matches("=|!=|<>|<|<=|>|>=|LIKE|NOT LIKE|IN|NOT IN|BETWEEN")) {
+            throw new IllegalArgumentException("Invalid operator: " + operator);
+        }
+    }
+
+    private String generateParamName(String baseName) {
+        String base = baseName.replaceAll("\\W", "");
+        return base + "_" + System.currentTimeMillis() + "_" + predicates.size();
     }
 }
