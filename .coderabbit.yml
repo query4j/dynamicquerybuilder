@@ -1,0 +1,20 @@
+post_review:
+  create_branch: "fix/{{ branch }}-review"
+
+  apply_suggestions: true
+
+  create_merge_request:
+    target: "{{ branch }}"
+    title: "chore: fixes from coderabbitai review on {{ branch }}"
+    description: |
+      This MR includes all automated fixes and suggestions from the last CodeRabbit review.
+      - Applied code style and linting fixes
+      - Minor improvements based on review feedback
+
+    labels:
+      - auto-fix
+      - review-suggestions
+
+    reviewers:
+      - "@query4j"
+      - "@sandeep-jaiswar"
