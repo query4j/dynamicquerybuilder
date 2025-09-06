@@ -3,7 +3,7 @@ post_review:
 
   apply_suggestions: true
 
-  create_merge_request:
+  create_pull_request:
     target: "{{ branch }}"
     title: "chore: fixes from coderabbitai review on {{ branch }}"
     description: |
