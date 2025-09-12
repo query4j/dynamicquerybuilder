@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for NullPredicate class.
@@ -40,7 +41,7 @@ class NullPredicateTest {
         @Test
         @DisplayName("should throw NullPointerException for null field")
         void shouldThrowForNullField() {
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new NullPredicate(null, true));
         }
 

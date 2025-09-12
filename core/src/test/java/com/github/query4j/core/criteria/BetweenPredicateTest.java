@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for BetweenPredicate class.
@@ -35,21 +36,21 @@ class BetweenPredicateTest {
         @Test
         @DisplayName("should throw NullPointerException for null field")
         void shouldThrowForNullField() {
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new BetweenPredicate(null, 1, 10, "p1_start", "p1_end"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null startParamName")
         void shouldThrowForNullStartParamName() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new BetweenPredicate("field", 1, 10, null, "p1_end"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null endParamName")
         void shouldThrowForNullEndParamName() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new BetweenPredicate("field", 1, 10, "p1_start", null));
         }
 

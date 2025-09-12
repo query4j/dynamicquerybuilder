@@ -8,8 +8,14 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -21,6 +27,8 @@ import java.util.stream.Collectors;
  */
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
+
+    private static final AtomicLong PARAM_COUNTER = new AtomicLong(0);
 
     @With
     @NonNull
@@ -645,28 +653,47 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     private void validateFieldName(String fieldName) {
-        if (fieldName == null || fieldName.trim().isEmpty()) {
-            throw new IllegalArgumentException("fieldName must not be null or empty");
-        }
-
-        String trimmed = fieldName.trim();
-        if (!trimmed.matches("[A-Za-z0-9_\\.]+")) {
-            throw new IllegalArgumentException("fieldName contains invalid characters: " + fieldName);
+        try {
+            // Use centralized field validation
+            FieldValidator.validateFieldName(fieldName);
+        } catch (QueryBuildException e) {
+            // Convert to IllegalArgumentException for backward compatibility in builder layer
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
     private void validateOperator(String operator) {
-        if (operator == null || operator.trim().isEmpty()) {
-            throw new IllegalArgumentException("operator must not be null or empty");
-        }
-
-        if (!operator.matches("=|!=|<>|<|<=|>|>=|LIKE|NOT LIKE|IN|NOT IN|BETWEEN")) {
-            throw new IllegalArgumentException("Invalid operator: " + operator);
+        try {
+            // Use centralized operator validation
+            OperatorValidator.validateOperator(operator);
+        } catch (QueryBuildException e) {
+            // Convert to IllegalArgumentException for backward compatibility in builder layer
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
     private String generateParamName(String baseName) {
-        String base = baseName.replaceAll("\\W", "");
-        return base + "_" + System.currentTimeMillis() + "_" + predicates.size();
+        // Generate parameter names that comply with strict validation
+        // Remove non-alphanumeric characters except underscores, ensure it starts with a letter
+        String sanitized = baseName.replaceAll("[^A-Za-z0-9_]", "");
+        
+        // Remove consecutive underscores
+        sanitized = sanitized.replaceAll("_{2,}", "_");
+        
+        // Remove leading and trailing underscores
+        sanitized = sanitized.replaceAll("^_+|_+$", "");
+        
+        // Ensure it starts with a letter
+        if (sanitized.isEmpty() || Character.isDigit(sanitized.charAt(0)) || sanitized.charAt(0) == '_') {
+            sanitized = "p" + sanitized;
+        }
+        
+        // If still empty, use default prefix
+        if (sanitized.isEmpty()) {
+            sanitized = "param";
+        }
+        
+        // Add unique suffix
+        return sanitized + "_" + PARAM_COUNTER.incrementAndGet();
     }
 }

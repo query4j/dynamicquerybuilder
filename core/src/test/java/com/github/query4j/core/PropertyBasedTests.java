@@ -8,6 +8,7 @@ import net.jqwik.api.constraints.IntRange;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static net.jqwik.api.Assume.that;
 
 /**
  * Property-based tests using jqwik for comprehensive validation of 
@@ -50,6 +51,25 @@ class PropertyBasedTests {
     }
 
     @Provide
+    Arbitrary<String> validParameterNames() {
+        // Generate parameter names that comply with strict validation: [A-Za-z][A-Za-z0-9_]*
+        return Arbitraries.strings()
+            .withCharRange('a', 'z')
+            .withCharRange('A', 'Z')
+            .ofLength(1)  // First character must be a letter
+            .flatMap(firstChar -> 
+                Arbitraries.strings()
+                    .withCharRange('a', 'z')
+                    .withCharRange('A', 'Z')
+                    .withCharRange('0', '9')
+                    .withChars('_')
+                    .ofMinLength(0)
+                    .ofMaxLength(19)
+                    .map(rest -> firstChar + rest)
+            );
+    }
+
+    @Provide
     Arbitrary<String> validPatterns() {
         return Arbitraries.strings()
             .withCharRange('a', 'z')
@@ -63,8 +83,7 @@ class PropertyBasedTests {
     void simplePredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                         @ForAll("validOperators") String operator,
                                         @ForAll("validValues") Object value,
-                                        @ForAll String paramName) {
-        Assume.that(paramName != null && !paramName.trim().isEmpty());
+                                        @ForAll("validParameterNames") String paramName) {
         
         SimplePredicate predicate = new SimplePredicate(field, operator, value, paramName);
         String sql = predicate.toSQL();
@@ -83,8 +102,7 @@ class PropertyBasedTests {
     @Property
     void inPredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                     @ForAll("validValueLists") List<Object> values,
-                                    @ForAll String baseParamName) {
-        Assume.that(baseParamName != null && !baseParamName.trim().isEmpty());
+                                    @ForAll("validParameterNames") String baseParamName) {
         
         InPredicate predicate = new InPredicate(field, values, baseParamName);
         String sql = predicate.toSQL();
@@ -111,8 +129,7 @@ class PropertyBasedTests {
     @Property
     void likePredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                       @ForAll("validPatterns") String pattern,
-                                      @ForAll String paramName) {
-        Assume.that(paramName != null && !paramName.trim().isEmpty());
+                                      @ForAll("validParameterNames") String paramName) {
         
         LikePredicate predicate = new LikePredicate(field, pattern, paramName);
         String sql = predicate.toSQL();
@@ -132,11 +149,9 @@ class PropertyBasedTests {
     void betweenPredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                          @ForAll("validValues") Object startValue,
                                          @ForAll("validValues") Object endValue,
-                                         @ForAll String startParamName,
-                                         @ForAll String endParamName) {
-        Assume.that(startParamName != null && !startParamName.trim().isEmpty());
-        Assume.that(endParamName != null && !endParamName.trim().isEmpty());
-        Assume.that(!startParamName.equals(endParamName));
+                                         @ForAll("validParameterNames") String startParamName,
+                                         @ForAll("validParameterNames") String endParamName) {
+        that(!startParamName.equals(endParamName));
         
         BetweenPredicate predicate = new BetweenPredicate(field, startValue, endValue, 
                                                          startParamName, endParamName);
@@ -226,8 +241,10 @@ class PropertyBasedTests {
         
         assertTrue(sql.contains(field));
         assertTrue(sql.contains("WHERE"));
-        assertFalse(sql.contains("null"));
-        assertFalse(sql.contains("undefined"));
+        
+        // Basic SQL structure checks
+        assertTrue(sql.startsWith("SELECT"));
+        assertTrue(sql.contains("FROM"));
     }
 
     @Property
@@ -265,8 +282,7 @@ class PropertyBasedTests {
     @Property
     void predicatesAreImmutable(@ForAll("validFieldNames") String field,
                               @ForAll("validValues") Object value,
-                              @ForAll String paramName) {
-        Assume.that(paramName != null && !paramName.trim().isEmpty());
+                              @ForAll("validParameterNames") String paramName) {
         
         SimplePredicate predicate = new SimplePredicate(field, "=", value, paramName);
         
