@@ -122,6 +122,78 @@ class DynamicQueryBuilderAdditionalTest {
             assertTrue(sql.contains("LEFT JOIN profile"));
             assertTrue(sql.contains("RIGHT JOIN permissions"));
         }
+
+        @Test
+        @DisplayName("should throw IllegalArgumentException for invalid association names in joins")
+        void shouldThrowForInvalidAssociationNamesInJoins() {
+            // Test empty string
+            assertThrows(IllegalArgumentException.class, () -> builder.join(""));
+            assertThrows(IllegalArgumentException.class, () -> builder.leftJoin(""));
+            assertThrows(IllegalArgumentException.class, () -> builder.rightJoin(""));
+            assertThrows(IllegalArgumentException.class, () -> builder.innerJoin(""));
+            assertThrows(IllegalArgumentException.class, () -> builder.fetch(""));
+            
+            // Test whitespace only
+            assertThrows(IllegalArgumentException.class, () -> builder.join("   "));
+            assertThrows(IllegalArgumentException.class, () -> builder.leftJoin("   "));
+            assertThrows(IllegalArgumentException.class, () -> builder.rightJoin("   "));
+            assertThrows(IllegalArgumentException.class, () -> builder.innerJoin("   "));
+            assertThrows(IllegalArgumentException.class, () -> builder.fetch("   "));
+            
+            // Test invalid characters
+            assertThrows(IllegalArgumentException.class, () -> builder.join("invalid@field"));
+            assertThrows(IllegalArgumentException.class, () -> builder.leftJoin("invalid-field"));
+            assertThrows(IllegalArgumentException.class, () -> builder.rightJoin("invalid field"));
+            assertThrows(IllegalArgumentException.class, () -> builder.innerJoin("invalid*field"));
+            assertThrows(IllegalArgumentException.class, () -> builder.fetch("invalid#field"));
+        }
+
+        @Test
+        @DisplayName("should accept valid association names with dots and underscores")
+        void shouldAcceptValidAssociationNames() {
+            // Test valid field names with dots and underscores
+            String sql1 = builder.join("user.profile").toSQL();
+            assertTrue(sql1.contains("INNER JOIN user.profile"));
+            
+            String sql2 = builder.leftJoin("order_items").toSQL();
+            assertTrue(sql2.contains("LEFT JOIN order_items"));
+            
+            String sql3 = builder.rightJoin("user123").toSQL();
+            assertTrue(sql3.contains("RIGHT JOIN user123"));
+            
+            String sql4 = builder.innerJoin("department.employees").toSQL();
+            assertTrue(sql4.contains("INNER JOIN department.employees"));
+            
+            String sql5 = builder.fetch("profile_data").toSQL();
+            assertTrue(sql5.contains("LEFT JOIN FETCH profile_data"));
+        }
+
+        @Test
+        @DisplayName("should maintain immutability with join operations")
+        void shouldMaintainImmutabilityWithJoinOperations() {
+            DynamicQueryBuilder<TestEntity> original = builder;
+            
+            DynamicQueryBuilder<TestEntity> withJoin = (DynamicQueryBuilder<TestEntity>) original.join("orders");
+            DynamicQueryBuilder<TestEntity> withLeftJoin = (DynamicQueryBuilder<TestEntity>) withJoin.leftJoin("profile");
+            DynamicQueryBuilder<TestEntity> withRightJoin = (DynamicQueryBuilder<TestEntity>) withLeftJoin.rightJoin("permissions");
+            DynamicQueryBuilder<TestEntity> withFetch = (DynamicQueryBuilder<TestEntity>) withRightJoin.fetch("details");
+            
+            // Original should be unchanged
+            assertEquals("SELECT * FROM TestEntity", original.toSQL());
+            
+            // Each step should be different
+            assertNotSame(original, withJoin);
+            assertNotSame(withJoin, withLeftJoin);
+            assertNotSame(withLeftJoin, withRightJoin);
+            assertNotSame(withRightJoin, withFetch);
+            
+            // Final result should contain all joins
+            String finalSql = withFetch.toSQL();
+            assertTrue(finalSql.contains("INNER JOIN orders"));
+            assertTrue(finalSql.contains("LEFT JOIN profile"));
+            assertTrue(finalSql.contains("RIGHT JOIN permissions"));
+            assertTrue(finalSql.contains("LEFT JOIN FETCH details"));
+        }
     }
 
     @Nested
