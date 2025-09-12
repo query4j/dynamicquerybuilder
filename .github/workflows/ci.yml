@@ -24,6 +24,10 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java-version }}
 
+      # Purge cached dependencies to avoid stale SNAPSHOTs
+      - name: Purge local repository
+        run: mvn dependency:purge-local-repository -DreResolve=true -B
+
       - name: Cache local Maven repository
         uses: actions/cache@v3
         with:
@@ -32,13 +36,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build and test with coverage
-        run: mvn clean verify -B
+      - name: Build, install, and run tests with coverage
+        run: mvn clean install -U -B
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          path: '**/target/site/jacoco/jacoco.xml'
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
