@@ -292,7 +292,13 @@ class NullPredicateTest {
         @Test
         @DisplayName("should handle field with maximum allowed characters")
         void shouldHandleFieldWithMaxCharacters() {
-            String longField = "field_" + "a".repeat(100);
+            // Java 8 compatible alternative to String.repeat()
+            StringBuilder sb = new StringBuilder();
+            sb.append("field_");
+            for (int i = 0; i < 100; i++) {
+                sb.append("a");
+            }
+            String longField = sb.toString();
             NullPredicate predicate = new NullPredicate(longField, false);
             assertEquals(longField + " IS NOT NULL", predicate.toSQL());
         }

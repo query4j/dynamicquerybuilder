@@ -361,7 +361,14 @@ class LikePredicateTest {
         @Test
         @DisplayName("should handle very long patterns")
         void shouldHandleVeryLongPatterns() {
-            String longPattern = "%" + "a".repeat(10000) + "%";
+            // Java 8 compatible alternative to String.repeat()
+            StringBuilder sb = new StringBuilder();
+            sb.append("%");
+            for (int i = 0; i < 10000; i++) {
+                sb.append("a");
+            }
+            sb.append("%");
+            String longPattern = sb.toString();
             LikePredicate predicate = new LikePredicate("field", longPattern, "p1");
             
             assertEquals("field LIKE :p1", predicate.toSQL());
