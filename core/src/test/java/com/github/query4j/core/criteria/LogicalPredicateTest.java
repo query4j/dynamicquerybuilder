@@ -479,6 +479,39 @@ class LogicalPredicateTest {
             assertEquals(predicate, predicate);
             assertEquals(predicate.hashCode(), predicate.hashCode());
         }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation")
+        void shouldProvideMeaningfulToString() {
+            Predicate pred1 = new SimplePredicate("name", "=", "John", "p1");
+            Predicate pred2 = new SimplePredicate("age", ">", 18, "p2");
+            LogicalPredicate predicate = new LogicalPredicate("AND", Arrays.asList(pred1, pred2));
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("LogicalPredicate"));
+            assertTrue(toString.contains("AND"));
+            assertTrue(toString.contains("name"));
+            assertTrue(toString.contains("age"));
+        }
+
+        @Test
+        @DisplayName("should handle nested predicates in toString")
+        void shouldHandleNestedPredicatesInToString() {
+            Predicate pred1 = new SimplePredicate("name", "=", "John", "p1");
+            Predicate pred2 = new SimplePredicate("age", ">", 18, "p2");
+            LogicalPredicate inner = new LogicalPredicate("OR", Arrays.asList(pred1, pred2));
+            
+            Predicate pred3 = new SimplePredicate("status", "=", "ACTIVE", "p3");
+            LogicalPredicate outer = new LogicalPredicate("AND", Arrays.asList(inner, pred3));
+            
+            String toString = outer.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("LogicalPredicate"));
+            assertTrue(toString.contains("AND"));
+            assertTrue(toString.contains("OR"));
+        }
     }
 
     @Nested

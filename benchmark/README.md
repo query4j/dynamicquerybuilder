@@ -26,14 +26,14 @@ The benchmark suite measures query builder performance across three primary scen
 
 | Benchmark | Average Time | Error | Units |
 |-----------|-------------|-------|-------|
-| Basic Query (Full) | 1.695 | ± 0.009 | μs/op |
-| Moderate Query (Full) | 6.746 | ± 1.117 | μs/op |
-| Complex Query (Full) | 17.149 | ± 2.152 | μs/op |
-| Builder Construction (Basic) | 1.430 | ± 0.059 | μs/op |
-| Builder Construction (Complex) | 13.872 | ± 1.736 | μs/op |
-| SQL Generation (Basic) | 1.661 | ± 0.032 | μs/op |
-| SQL Generation (Complex) | 11.844 | ± 1.358 | μs/op |
-| Parameter Extraction (Basic) | 6.778 | ± 0.282 | μs/op |
+| Basic Query (Full) | 1.647 | ± 0.043 | μs/op |
+| Moderate Query (Full) | 6.675 | ± 0.973 | μs/op |
+| Complex Query (Full) | 16.046 | ± 0.158 | μs/op |
+| Builder Construction (Basic) | 1.407 | ± 0.014 | μs/op |
+| Builder Construction (Complex) | 13.821 | ± 0.667 | μs/op |
+| SQL Generation (Basic) | 1.632 | ± 0.036 | μs/op |
+| SQL Generation (Complex) | 11.572 | ± 1.182 | μs/op |
+| Parameter Extraction (Basic) | 6.754 | ± 0.126 | μs/op |
 
 ### Performance Analysis
 
@@ -47,7 +47,7 @@ The benchmark suite measures query builder performance across three primary scen
 
 ### Prerequisites
 
-- JDK 8 or higher
+- JDK 17 or higher
 - Maven 3.6+
 
 ### Quick Run

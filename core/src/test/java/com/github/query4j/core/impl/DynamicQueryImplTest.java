@@ -9,6 +9,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Map;
+
 class DynamicQueryImplTest {
 
     @Test
@@ -58,5 +60,38 @@ class DynamicQueryImplTest {
         DynamicQuery<Object> dq = new DynamicQueryImpl<>(null, null);
         assertNotNull(dq.getSQL());
         assertEquals("", dq.getSQL());
+    }
+
+    @Test
+    void testGetResultsMethod() {
+        List<String> sampleResults = Arrays.asList("result1", "result2", "result3");
+        DynamicQueryImpl<String> dq = new DynamicQueryImpl<>(sampleResults, "SELECT * FROM test");
+        
+        List<String> results = dq.getResults();
+        
+        assertNotNull(results);
+        assertEquals(3, results.size());
+        assertEquals("result1", results.get(0));
+        assertEquals("result2", results.get(1));
+        assertEquals("result3", results.get(2));
+    }
+
+    @Test
+    void testGetResultsWithEmptyList() {
+        DynamicQueryImpl<String> dq = new DynamicQueryImpl<>(Collections.emptyList(), "SELECT * FROM test");
+        
+        List<String> results = dq.getResults();
+        
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void testGetResultsWithNullList() {
+        DynamicQueryImpl<String> dq = new DynamicQueryImpl<>(null, "SELECT * FROM test");
+        
+        List<String> results = dq.getResults();
+        
+        assertNull(results);
     }
 }

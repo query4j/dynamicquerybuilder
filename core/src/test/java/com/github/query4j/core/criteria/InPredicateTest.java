@@ -325,6 +325,36 @@ class InPredicateTest {
             assertEquals(predicate1, predicate2);
             assertEquals(predicate1.hashCode(), predicate2.hashCode());
         }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation")
+        void shouldProvideMeaningfulToString() {
+            List<Object> values = Arrays.asList("A", "B", "C");
+            InPredicate predicate = new InPredicate("status", values, "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("InPredicate"));
+            assertTrue(toString.contains("status"));
+            assertTrue(toString.contains("A"));
+            assertTrue(toString.contains("B"));
+            assertTrue(toString.contains("C"));
+            assertTrue(toString.contains("p1"));
+        }
+
+        @Test
+        @DisplayName("should handle null values in toString")
+        void shouldHandleNullValuesInToString() {
+            List<Object> values = Arrays.asList(null, "value", null);
+            InPredicate predicate = new InPredicate("field", values, "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("InPredicate"));
+            assertTrue(toString.contains("field"));
+            assertTrue(toString.contains("null"));
+            assertTrue(toString.contains("value"));
+        }
     }
 
     @Nested

@@ -322,6 +322,31 @@ class LikePredicateTest {
             assertEquals(predicate, predicate);
             assertEquals(predicate.hashCode(), predicate.hashCode());
         }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation")
+        void shouldProvideMeaningfulToString() {
+            LikePredicate predicate = new LikePredicate("name", "%John%", "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("LikePredicate"));
+            assertTrue(toString.contains("name"));
+            assertTrue(toString.contains("%John%"));
+            assertTrue(toString.contains("p1"));
+        }
+
+        @Test
+        @DisplayName("should handle special characters in toString")
+        void shouldHandleSpecialCharactersInToString() {
+            LikePredicate predicate = new LikePredicate("field", "%O'Malley%", "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("LikePredicate"));
+            assertTrue(toString.contains("field"));
+            assertTrue(toString.contains("%O'Malley%"));
+        }
     }
 
     @Nested

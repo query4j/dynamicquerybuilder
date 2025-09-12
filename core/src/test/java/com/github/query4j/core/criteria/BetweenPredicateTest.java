@@ -372,6 +372,33 @@ class BetweenPredicateTest {
         }
 
         @Test
+        @DisplayName("should provide meaningful toString representation")
+        void shouldProvideMeaningfulToString() {
+            BetweenPredicate predicate = new BetweenPredicate("age", 18, 65, "p1_start", "p1_end");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("BetweenPredicate"));
+            assertTrue(toString.contains("age"));
+            assertTrue(toString.contains("18"));
+            assertTrue(toString.contains("65"));
+            assertTrue(toString.contains("p1_start"));
+            assertTrue(toString.contains("p1_end"));
+        }
+
+        @Test
+        @DisplayName("should handle null values in toString")
+        void shouldHandleNullValuesInToString() {
+            BetweenPredicate predicate = new BetweenPredicate("field", null, null, "p1_start", "p1_end");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("BetweenPredicate"));
+            assertTrue(toString.contains("field"));
+            assertTrue(toString.contains("null"));
+        }
+
+        @Test
         @DisplayName("should not be equal to null")
         void shouldNotBeEqualToNull() {
             BetweenPredicate predicate = new BetweenPredicate("age", 18, 65, "p1_start", "p1_end");

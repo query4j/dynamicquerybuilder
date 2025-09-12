@@ -267,6 +267,33 @@ class SimplePredicateTest {
             assertEquals(predicate1, predicate2);
             assertEquals(predicate1.hashCode(), predicate2.hashCode());
         }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation")
+        void shouldProvideMeaningfulToString() {
+            SimplePredicate predicate = new SimplePredicate("name", "=", "John", "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("SimplePredicate"));
+            assertTrue(toString.contains("name"));
+            assertTrue(toString.contains("="));
+            assertTrue(toString.contains("John"));
+            assertTrue(toString.contains("p1"));
+        }
+
+        @Test
+        @DisplayName("should handle null values in toString")
+        void shouldHandleNullValuesInToString() {
+            SimplePredicate predicate = new SimplePredicate("field", "IS", null, "p1");
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("SimplePredicate"));
+            assertTrue(toString.contains("field"));
+            assertTrue(toString.contains("IS"));
+            assertTrue(toString.contains("null"));
+        }
     }
 
     @Nested
