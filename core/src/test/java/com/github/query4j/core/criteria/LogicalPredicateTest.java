@@ -1,5 +1,6 @@
 package com.github.query4j.core.criteria;
 
+import com.github.query4j.core.QueryBuildException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -89,29 +90,29 @@ class LogicalPredicateTest {
         }
 
         @Test
-        @DisplayName("should throw IllegalArgumentException for empty children list")
+        @DisplayName("should throw QueryBuildException for empty children list")
         void shouldThrowForEmptyChildrenList() {
             List<Predicate> emptyChildren = Collections.emptyList();
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LogicalPredicate("AND", emptyChildren));
         }
 
         @Test
-        @DisplayName("should throw IllegalArgumentException for invalid operator")
+        @DisplayName("should throw QueryBuildException for invalid operator")
         void shouldThrowForInvalidOperator() {
             List<Predicate> children = Arrays.asList(new SimplePredicate("field", "=", "value", "p1"));
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LogicalPredicate("INVALID", children));
         }
 
         @Test
-        @DisplayName("should throw IllegalArgumentException for NOT with multiple children")
+        @DisplayName("should throw QueryBuildException for NOT with multiple children")
         void shouldThrowForNotWithMultipleChildren() {
             Predicate pred1 = new SimplePredicate("name", "=", "John", "p1");
             Predicate pred2 = new SimplePredicate("age", ">", 18, "p2");
             List<Predicate> children = Arrays.asList(pred1, pred2);
             
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LogicalPredicate("NOT", children));
         }
 

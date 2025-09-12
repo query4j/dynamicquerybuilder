@@ -1,5 +1,6 @@
 package com.github.query4j.core.criteria;
 
+import com.github.query4j.core.QueryBuildException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -54,10 +55,10 @@ class InPredicateTest {
         }
 
         @Test
-        @DisplayName("should throw IllegalArgumentException for empty values list")
+        @DisplayName("should throw QueryBuildException for empty values list")
         void shouldThrowForEmptyValuesList() {
             List<Object> emptyValues = Collections.emptyList();
-            assertThrows(IllegalArgumentException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new InPredicate("field", emptyValues, "p1"));
         }
 
