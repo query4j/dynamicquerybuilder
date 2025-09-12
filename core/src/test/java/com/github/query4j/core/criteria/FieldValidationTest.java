@@ -222,4 +222,72 @@ class FieldValidationTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("Validator Static Method Coverage")
+    class ValidatorStaticMethodCoverage {
+
+        @Test
+        @DisplayName("should verify FieldValidator static method functionality")
+        void shouldVerifyFieldValidatorStaticMethodFunctionality() {
+            // Test validateFieldName static method
+            assertDoesNotThrow(() -> FieldValidator.validateFieldName("valid_field"));
+            assertThrows(QueryBuildException.class, () -> FieldValidator.validateFieldName("invalid@field"));
+
+            // Test validateParameterName static method
+            assertDoesNotThrow(() -> FieldValidator.validateParameterName("valid_param"));
+            assertThrows(QueryBuildException.class, () -> FieldValidator.validateParameterName("invalid@param"));
+        }
+
+        @Test
+        @DisplayName("should verify OperatorValidator static method functionality")
+        void shouldVerifyOperatorValidatorStaticMethodFunctionality() {
+            // Test validateOperator static method
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("="));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("LIKE"));
+            assertThrows(QueryBuildException.class, () -> OperatorValidator.validateOperator("INVALID_OP"));
+        }
+
+        @Test
+        @DisplayName("should test additional FieldValidator edge cases")
+        void shouldTestAdditionalFieldValidatorEdgeCases() {
+            // Test empty field name
+            assertThrows(QueryBuildException.class, () -> FieldValidator.validateFieldName(""));
+            
+            // Test null field name
+            assertThrows(QueryBuildException.class, () -> FieldValidator.validateFieldName(null));
+            
+            // Test valid complex field names
+            assertDoesNotThrow(() -> FieldValidator.validateFieldName("user.profile.firstName"));
+            assertDoesNotThrow(() -> FieldValidator.validateFieldName("table123.column_name"));
+        }
+
+        @Test
+        @DisplayName("should test additional OperatorValidator edge cases")
+        void shouldTestAdditionalOperatorValidatorEdgeCases() {
+            // Test all valid operators
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("="));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("!="));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("<>"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("<"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator(">"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("<="));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator(">="));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("LIKE"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("NOT LIKE"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("IN"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("NOT IN"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("IS"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("IS NOT"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("EXISTS"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("NOT EXISTS"));
+            assertDoesNotThrow(() -> OperatorValidator.validateOperator("BETWEEN"));
+            
+            // Test invalid operators
+            assertThrows(QueryBuildException.class, () -> OperatorValidator.validateOperator("INVALID"));
+            assertThrows(QueryBuildException.class, () -> OperatorValidator.validateOperator("==="));
+            assertThrows(QueryBuildException.class, () -> OperatorValidator.validateOperator(""));
+            assertThrows(QueryBuildException.class, () -> OperatorValidator.validateOperator(null));
+        }
+    }
 }

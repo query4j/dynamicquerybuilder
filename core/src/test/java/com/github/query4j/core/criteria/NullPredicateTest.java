@@ -276,6 +276,30 @@ class NullPredicateTest {
             assertEquals(predicate, predicate);
             assertEquals(predicate.hashCode(), predicate.hashCode());
         }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation for IS NULL")
+        void shouldProvideMeaningfulToStringForIsNull() {
+            NullPredicate predicate = new NullPredicate("status", true);
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("NullPredicate"));
+            assertTrue(toString.contains("status"));
+            assertTrue(toString.contains("true"));
+        }
+
+        @Test
+        @DisplayName("should provide meaningful toString representation for IS NOT NULL")
+        void shouldProvideMeaningfulToStringForIsNotNull() {
+            NullPredicate predicate = new NullPredicate("name", false);
+            String toString = predicate.toString();
+            
+            assertNotNull(toString);
+            assertTrue(toString.contains("NullPredicate"));
+            assertTrue(toString.contains("name"));
+            assertTrue(toString.contains("false"));
+        }
     }
 
     @Nested
