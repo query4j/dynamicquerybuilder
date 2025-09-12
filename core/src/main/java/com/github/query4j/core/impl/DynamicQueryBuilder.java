@@ -3,11 +3,6 @@ package com.github.query4j.core.impl;
 import com.github.query4j.core.*;
 import com.github.query4j.core.criteria.*;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.With;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,59 +20,69 @@ import java.util.stream.Collectors;
  * @param <T> Entity type
  * @since 1.0.0
  */
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     private static final AtomicLong PARAM_COUNTER = new AtomicLong(0);
 
-    @With
-    @NonNull
     private final Class<T> entityClass;
 
-    @With
-    @NonNull
     private final List<Predicate> predicates;
 
-    @With
     private final String nextLogicalOperator;
 
-    @With
     private final int groupDepth;
 
-    @With
     private final int offset;
 
-    @With
     private final int limit;
 
-    @With
     private final boolean cacheEnabled;
 
-    @With
-    @NonNull
     private final List<String> selectFields;
 
-    @With
-    @NonNull
     private final List<String> joinClauses;
 
-    @With
-    @NonNull
     private final List<String> orderByClauses;
 
-    @With
-    @NonNull
     private final List<String> groupByClauses;
 
-    @With
-    @NonNull
     private final List<Predicate> havingPredicates;
 
-    // Default constructor for factory method
-    public DynamicQueryBuilder(@NonNull Class<T> entityClass) {
-        this(entityClass, Collections.emptyList(), null, 0, 0, -1, false,
-                Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList());
+    // Single parameter constructor for factory method
+    public DynamicQueryBuilder(Class<T> entityClass) {
+        Objects.requireNonNull(entityClass, "entityClass must not be null");
+        this.entityClass = entityClass;
+        this.predicates = Collections.emptyList();
+        this.nextLogicalOperator = null;
+        this.groupDepth = 0;
+        this.offset = 0;
+        this.limit = -1;
+        this.cacheEnabled = false;
+        this.selectFields = Collections.emptyList();
+        this.joinClauses = Collections.emptyList();
+        this.orderByClauses = Collections.emptyList();
+        this.groupByClauses = Collections.emptyList();
+        this.havingPredicates = Collections.emptyList();
+    }
+
+    // All-args constructor for internal use
+    DynamicQueryBuilder(Class<T> entityClass, List<Predicate> predicates, 
+                       String nextLogicalOperator, int groupDepth, int offset, int limit, 
+                       boolean cacheEnabled, List<String> selectFields, 
+                       List<String> joinClauses, List<String> orderByClauses,
+                       List<String> groupByClauses, List<Predicate> havingPredicates) {
+        this.entityClass = Objects.requireNonNull(entityClass, "entityClass must not be null");
+        this.predicates = Objects.requireNonNull(predicates, "predicates must not be null");
+        this.nextLogicalOperator = nextLogicalOperator;
+        this.groupDepth = groupDepth;
+        this.offset = offset;
+        this.limit = limit;
+        this.cacheEnabled = cacheEnabled;
+        this.selectFields = Objects.requireNonNull(selectFields, "selectFields must not be null");
+        this.joinClauses = Objects.requireNonNull(joinClauses, "joinClauses must not be null");
+        this.orderByClauses = Objects.requireNonNull(orderByClauses, "orderByClauses must not be null");
+        this.groupByClauses = Objects.requireNonNull(groupByClauses, "groupByClauses must not be null");
+        this.havingPredicates = Objects.requireNonNull(havingPredicates, "havingPredicates must not be null");
     }
 
     private DynamicQueryBuilder<T> newInstance(
@@ -92,6 +97,73 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
             List<String> orderByClauses,
             List<String> groupByClauses,
             List<Predicate> havingPredicates) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    // Manual with* methods to replace Lombok @With functionality
+    private DynamicQueryBuilder<T> withPredicates(List<Predicate> predicates) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withNextLogicalOperator(String nextLogicalOperator) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withGroupDepth(int groupDepth) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withOffset(int offset) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withLimit(int limit) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withCacheEnabled(boolean cacheEnabled) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withSelectFields(List<String> selectFields) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withJoinClauses(List<String> joinClauses) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withOrderByClauses(List<String> orderByClauses) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withGroupByClauses(List<String> groupByClauses) {
+        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private DynamicQueryBuilder<T> withHavingPredicates(List<Predicate> havingPredicates) {
         return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
                 groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
                 orderByClauses, groupByClauses, havingPredicates);
@@ -111,12 +183,15 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== WHERE CLAUSE METHODS ====================
 
     @Override
-    public QueryBuilder<T> where(@NonNull String fieldName, Object value) {
+    public QueryBuilder<T> where(String fieldName, Object value) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         return where(fieldName, "=", value);
     }
 
     @Override
-    public QueryBuilder<T> where(@NonNull String fieldName, @NonNull String operator, Object value) {
+    public QueryBuilder<T> where(String fieldName, String operator, Object value) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(operator, "operator must not be null");
         validateFieldName(fieldName);
         String normalized = operator.trim().toUpperCase(java.util.Locale.ROOT);
         validateOperator(normalized);
@@ -128,7 +203,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereIn(@NonNull String fieldName, @NonNull List<Object> values) {
+    public QueryBuilder<T> whereIn(String fieldName, List<Object> values) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(values, "values must not be null");
         validateFieldName(fieldName);
         if (values.isEmpty()) {
             throw new IllegalArgumentException("values must not be empty");
@@ -141,7 +218,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereNotIn(@NonNull String fieldName, @NonNull List<Object> values) {
+    public QueryBuilder<T> whereNotIn(String fieldName, List<Object> values) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(values, "values must not be null");
         validateFieldName(fieldName);
         if (values.isEmpty()) {
             throw new IllegalArgumentException("values must not be empty");
@@ -155,7 +234,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereLike(@NonNull String fieldName, @NonNull String pattern) {
+    public QueryBuilder<T> whereLike(String fieldName, String pattern) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(pattern, "pattern must not be null");
         validateFieldName(fieldName);
 
         String paramName = generateParamName(fieldName);
@@ -165,7 +246,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereNotLike(@NonNull String fieldName, @NonNull String pattern) {
+    public QueryBuilder<T> whereNotLike(String fieldName, String pattern) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
+        Objects.requireNonNull(pattern, "pattern must not be null");
         validateFieldName(fieldName);
 
         String paramName = generateParamName(fieldName);
@@ -176,7 +259,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereBetween(@NonNull String fieldName, Object startValue, Object endValue) {
+    public QueryBuilder<T> whereBetween(String fieldName, Object startValue, Object endValue) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
 
         String startParamName = generateParamName(fieldName + "_start");
@@ -188,14 +272,16 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> whereIsNull(@NonNull String fieldName) {
+    public QueryBuilder<T> whereIsNull(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
         NullPredicate newPredicate = new NullPredicate(fieldName, true);
         return addPredicate(newPredicate);
     }
 
     @Override
-    public QueryBuilder<T> whereIsNotNull(@NonNull String fieldName) {
+    public QueryBuilder<T> whereIsNotNull(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
         NullPredicate newPredicate = new NullPredicate(fieldName, false);
         return addPredicate(newPredicate);
@@ -234,12 +320,13 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== JOIN METHODS ====================
 
     @Override
-    public QueryBuilder<T> join(@NonNull String associationFieldName) {
+    public QueryBuilder<T> join(String associationFieldName) {
         return innerJoin(associationFieldName);
     }
 
     @Override
-    public QueryBuilder<T> leftJoin(@NonNull String associationFieldName) {
+    public QueryBuilder<T> leftJoin(String associationFieldName) {
+        Objects.requireNonNull(associationFieldName, "associationFieldName must not be null");
         validateFieldName(associationFieldName);
         List<String> newJoins = new ArrayList<>(joinClauses);
         newJoins.add("LEFT JOIN " + associationFieldName);
@@ -247,7 +334,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> rightJoin(@NonNull String associationFieldName) {
+    public QueryBuilder<T> rightJoin(String associationFieldName) {
+        Objects.requireNonNull(associationFieldName, "associationFieldName must not be null");
         validateFieldName(associationFieldName);
         List<String> newJoins = new ArrayList<>(joinClauses);
         newJoins.add("RIGHT JOIN " + associationFieldName);
@@ -255,7 +343,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> innerJoin(@NonNull String associationFieldName) {
+    public QueryBuilder<T> innerJoin(String associationFieldName) {
+        Objects.requireNonNull(associationFieldName, "associationFieldName must not be null");
         validateFieldName(associationFieldName);
         List<String> newJoins = new ArrayList<>(joinClauses);
         newJoins.add("INNER JOIN " + associationFieldName);
@@ -263,7 +352,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> fetch(@NonNull String associationFieldName) {
+    public QueryBuilder<T> fetch(String associationFieldName) {
+        Objects.requireNonNull(associationFieldName, "associationFieldName must not be null");
         validateFieldName(associationFieldName);
         List<String> newJoins = new ArrayList<>(joinClauses);
         newJoins.add("LEFT JOIN FETCH " + associationFieldName);
@@ -273,7 +363,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== SELECT METHODS ====================
 
     @Override
-    public QueryBuilder<T> select(@NonNull String... fieldNames) {
+    public QueryBuilder<T> select(String... fieldNames) {
+        Objects.requireNonNull(fieldNames, "fieldNames must not be null");
         if (fieldNames.length == 0) {
             throw new IllegalArgumentException("fieldNames must not be empty");
         }
@@ -295,35 +386,40 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> count(@NonNull String fieldName) {
+    public QueryBuilder<T> count(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
         List<String> newSelectFields = Arrays.asList("COUNT(" + fieldName + ")");
         return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> sum(@NonNull String numericFieldName) {
+    public QueryBuilder<T> sum(String numericFieldName) {
+        Objects.requireNonNull(numericFieldName, "numericFieldName must not be null");
         validateFieldName(numericFieldName);
         List<String> newSelectFields = Arrays.asList("SUM(" + numericFieldName + ")");
         return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> avg(@NonNull String numericFieldName) {
+    public QueryBuilder<T> avg(String numericFieldName) {
+        Objects.requireNonNull(numericFieldName, "numericFieldName must not be null");
         validateFieldName(numericFieldName);
         List<String> newSelectFields = Arrays.asList("AVG(" + numericFieldName + ")");
         return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> min(@NonNull String fieldName) {
+    public QueryBuilder<T> min(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
         List<String> newSelectFields = Arrays.asList("MIN(" + fieldName + ")");
         return withSelectFields(Collections.unmodifiableList(newSelectFields));
     }
 
     @Override
-    public QueryBuilder<T> max(@NonNull String fieldName) {
+    public QueryBuilder<T> max(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
         List<String> newSelectFields = Arrays.asList("MAX(" + fieldName + ")");
         return withSelectFields(Collections.unmodifiableList(newSelectFields));
@@ -332,7 +428,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== GROUP BY AND HAVING ====================
 
     @Override
-    public QueryBuilder<T> groupBy(@NonNull String... fieldNames) {
+    public QueryBuilder<T> groupBy(String... fieldNames) {
+        Objects.requireNonNull(fieldNames, "fieldNames must not be null");
         if (fieldNames.length == 0) {
             throw new IllegalArgumentException("fieldNames must not be empty");
         }
@@ -346,7 +443,9 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> having(@NonNull String aggregatedFieldName, @NonNull String operator, Object value) {
+    public QueryBuilder<T> having(String aggregatedFieldName, String operator, Object value) {
+        Objects.requireNonNull(aggregatedFieldName, "aggregatedFieldName must not be null");
+        Objects.requireNonNull(operator, "operator must not be null");
         validateFieldName(aggregatedFieldName);
         validateOperator(operator);
 
@@ -362,17 +461,20 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== ORDER BY METHODS ====================
 
     @Override
-    public QueryBuilder<T> orderBy(@NonNull String fieldName) {
+    public QueryBuilder<T> orderBy(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         return orderBy(fieldName, true);
     }
 
     @Override
-    public QueryBuilder<T> orderByDescending(@NonNull String fieldName) {
+    public QueryBuilder<T> orderByDescending(String fieldName) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         return orderBy(fieldName, false);
     }
 
     @Override
-    public QueryBuilder<T> orderBy(@NonNull String fieldName, boolean ascending) {
+    public QueryBuilder<T> orderBy(String fieldName, boolean ascending) {
+        Objects.requireNonNull(fieldName, "fieldName must not be null");
         validateFieldName(fieldName);
 
         List<String> newOrderBy = new ArrayList<>(orderByClauses);
@@ -428,7 +530,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> in(@NonNull String fieldName, QueryBuilder<?> subquery) {
+    public QueryBuilder<T> in(String fieldName, QueryBuilder<?> subquery) {
         validateFieldName(fieldName);
         Objects.requireNonNull(subquery, "subquery must not be null");
         // TODO: Implement IN subquery support
@@ -436,7 +538,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> notIn(@NonNull String fieldName, QueryBuilder<?> subquery) {
+    public QueryBuilder<T> notIn(String fieldName, QueryBuilder<?> subquery) {
         validateFieldName(fieldName);
         Objects.requireNonNull(subquery, "subquery must not be null");
         // TODO: Implement NOT IN subquery support
@@ -446,7 +548,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ==================== ADVANCED FEATURES (STUBS FOR NOW) ====================
 
     @Override
-    public QueryBuilder<T> customFunction(@NonNull String functionName, @NonNull String fieldName,
+    public QueryBuilder<T> customFunction(String functionName, String fieldName,
             Object... parameters) {
         validateFieldName(fieldName);
         // TODO: Implement custom function support
@@ -454,19 +556,19 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     @Override
-    public QueryBuilder<T> nativeQuery(@NonNull String sqlQuery) {
+    public QueryBuilder<T> nativeQuery(String sqlQuery) {
         // TODO: Implement native query support
         throw new UnsupportedOperationException("Native queries not implemented yet");
     }
 
     @Override
-    public QueryBuilder<T> parameter(@NonNull String parameterName, Object parameterValue) {
+    public QueryBuilder<T> parameter(String parameterName, Object parameterValue) {
         // With predicate-based approach, parameters are handled automatically
         throw new UnsupportedOperationException("Use predicate-based where methods instead");
     }
 
     @Override
-    public QueryBuilder<T> parameters(@NonNull Map<String, Object> parameterMap) {
+    public QueryBuilder<T> parameters(Map<String, Object> parameterMap) {
         // With predicate-based approach, parameters are handled automatically
         throw new UnsupportedOperationException("Use predicate-based where methods instead");
     }
@@ -494,7 +596,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     // ====================
 
     @Override
-    public QueryBuilder<T> hint(@NonNull String hintName, Object hintValue) {
+    public QueryBuilder<T> hint(String hintName, Object hintValue) {
         // TODO: Implement query hints
         throw new UnsupportedOperationException("Query hints not implemented yet");
     }
