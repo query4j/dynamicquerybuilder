@@ -4,7 +4,8 @@ import com.github.query4j.core.QueryBuildException;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Immutable predicate for simple field comparisons.
