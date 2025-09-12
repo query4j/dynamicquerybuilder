@@ -95,8 +95,7 @@ class PropertyBasedTests {
     @Property
     void inPredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                     @ForAll("validValueLists") List<Object> values,
-                                    @ForAll String baseParamName) {
-        Assume.that(baseParamName != null && !baseParamName.trim().isEmpty());
+                                    @ForAll("validParameterNames") String baseParamName) {
         
         InPredicate predicate = new InPredicate(field, values, baseParamName);
         String sql = predicate.toSQL();

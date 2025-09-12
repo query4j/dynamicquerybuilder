@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for InPredicate class.
@@ -35,14 +36,14 @@ class InPredicateTest {
         @DisplayName("should throw NullPointerException for null field")
         void shouldThrowForNullField() {
             List<Object> values = Arrays.asList("A", "B");
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new InPredicate(null, values, "p1"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null values")
         void shouldThrowForNullValues() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new InPredicate("field", null, "p1"));
         }
 
@@ -50,7 +51,7 @@ class InPredicateTest {
         @DisplayName("should throw NullPointerException for null baseParamName")
         void shouldThrowForNullBaseParamName() {
             List<Object> values = Arrays.asList("A", "B");
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new InPredicate("field", values, null));
         }
 

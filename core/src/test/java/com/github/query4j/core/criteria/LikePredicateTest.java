@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for LikePredicate class.
@@ -32,21 +33,21 @@ class LikePredicateTest {
         @Test
         @DisplayName("should throw NullPointerException for null field")
         void shouldThrowForNullField() {
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new LikePredicate(null, "%pattern%", "p1"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null pattern")
         void shouldThrowForNullPattern() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LikePredicate("field", null, "p1"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null paramName")
         void shouldThrowForNullParamName() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LikePredicate("field", "%pattern%", null));
         }
 

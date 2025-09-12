@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for LogicalPredicate class.
@@ -78,14 +79,14 @@ class LogicalPredicateTest {
         @DisplayName("should throw NullPointerException for null operator")
         void shouldThrowForNullOperator() {
             List<Predicate> children = Arrays.asList(new SimplePredicate("field", "=", "value", "p1"));
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new LogicalPredicate(null, children));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null children")
         void shouldThrowForNullChildren() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new LogicalPredicate("AND", null));
         }
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.github.query4j.core.QueryBuildException;
 
 /**
  * Comprehensive unit tests for SimplePredicate class.
@@ -33,21 +34,21 @@ class SimplePredicateTest {
         @Test
         @DisplayName("should throw NullPointerException for null field")
         void shouldThrowForNullField() {
-            assertThrows(NullPointerException.class, 
+            assertThrows(QueryBuildException.class, 
                 () -> new SimplePredicate(null, "=", "value", "p1"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null operator")
         void shouldThrowForNullOperator() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new SimplePredicate("field", null, "value", "p1"));
         }
 
         @Test
         @DisplayName("should throw NullPointerException for null paramName")
         void shouldThrowForNullParamName() {
-            assertThrows(NullPointerException.class,
+            assertThrows(QueryBuildException.class,
                 () -> new SimplePredicate("field", "=", "value", null));
         }
 
