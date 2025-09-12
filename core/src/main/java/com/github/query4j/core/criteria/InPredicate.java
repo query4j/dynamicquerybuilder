@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
  * <ul>
  * <li>Field name must match pattern {@code [A-Za-z0-9_\.]+}</li>
  * <li>Values list must not be null or empty</li>
- * <li>Base parameter name must not be null or empty</li>
+ * <li>Base parameter name must match pattern {@code [A-Za-z][A-Za-z0-9_]*}</li>
  * </ul>
  * 
  * @author query4j team
@@ -48,11 +48,11 @@ public class InPredicate implements Predicate {
      * 
      * @param field the field name for the IN comparison (must match pattern [A-Za-z0-9_\.]+)
      * @param values the list of values for the IN clause (must not be null or empty)
-     * @param baseParamName the base parameter name for SQL binding (must not be null or empty)
+     * @param baseParamName the base parameter name for SQL binding (must match pattern [A-Za-z][A-Za-z0-9_]*)
      * @throws QueryBuildException if any parameter is invalid
      */
     public InPredicate(String field, List<Object> values, String baseParamName) {
-        // Validate field name (this will handle null check)
+        // Validate field name (this will handle null check and whitespace)
         FieldValidator.validateFieldName(field);
         
         // Validate values list
@@ -63,13 +63,8 @@ public class InPredicate implements Predicate {
             throw new QueryBuildException("Values list must not be empty");
         }
         
-        // Validate base parameter name
-        if (baseParamName == null) {
-            throw new QueryBuildException("Base parameter name must not be null");
-        }
-        if (baseParamName.trim().isEmpty()) {
-            throw new QueryBuildException("Base parameter name must not be empty");
-        }
+        // Validate base parameter name (this will handle null check, whitespace, and pattern)
+        FieldValidator.validateParameterName(baseParamName);
         
         this.field = field.trim();
         this.values = Collections.unmodifiableList(new ArrayList<>(values));

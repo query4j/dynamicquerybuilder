@@ -21,8 +21,8 @@ import java.util.Map;
  * </p>
  * <ul>
  * <li>Field name must match pattern {@code [A-Za-z0-9_\.]+}</li>
- * <li>Start parameter name must not be null or empty</li>
- * <li>End parameter name must not be null or empty</li>
+ * <li>Start parameter name must match pattern {@code [A-Za-z][A-Za-z0-9_]*}</li>
+ * <li>End parameter name must match pattern {@code [A-Za-z][A-Za-z0-9_]*}</li>
  * </ul>
  * 
  * @author query4j team
@@ -49,28 +49,18 @@ public class BetweenPredicate implements Predicate {
      * @param field the field name for the BETWEEN comparison (must match pattern [A-Za-z0-9_\.]+)
      * @param startValue the start value for the BETWEEN clause (may be null)
      * @param endValue the end value for the BETWEEN clause (may be null)
-     * @param startParamName the parameter name for the start value (must not be null or empty)
-     * @param endParamName the parameter name for the end value (must not be null or empty)
+     * @param startParamName the parameter name for the start value (must match pattern [A-Za-z][A-Za-z0-9_]*)
+     * @param endParamName the parameter name for the end value (must match pattern [A-Za-z][A-Za-z0-9_]*)
      * @throws QueryBuildException if any parameter is invalid
      */
     public BetweenPredicate(String field, Object startValue, Object endValue, 
                            String startParamName, String endParamName) {
-        // Validate field name (this will handle null check)
+        // Validate field name (this will handle null check and whitespace)
         FieldValidator.validateFieldName(field);
         
-        // Validate parameter names
-        if (startParamName == null) {
-            throw new QueryBuildException("Start parameter name must not be null");
-        }
-        if (startParamName.trim().isEmpty()) {
-            throw new QueryBuildException("Start parameter name must not be empty");
-        }
-        if (endParamName == null) {
-            throw new QueryBuildException("End parameter name must not be null");
-        }
-        if (endParamName.trim().isEmpty()) {
-            throw new QueryBuildException("End parameter name must not be empty");
-        }
+        // Validate parameter names (this will handle null check, whitespace, and pattern)
+        FieldValidator.validateParameterName(startParamName);
+        FieldValidator.validateParameterName(endParamName);
         
         this.field = field.trim();
         this.startValue = startValue;

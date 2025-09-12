@@ -28,6 +28,7 @@ import lombok.Value;
  * <ul>
  * <li>Operator must be one of: AND, OR, NOT (case-insensitive)</li>
  * <li>Children list must not be null or empty</li>
+ * <li>Children list must not contain any null predicates</li>
  * <li>NOT operator must have exactly one child predicate</li>
  * <li>AND and OR operators must have at least one child predicate</li>
  * </ul>
@@ -50,7 +51,7 @@ public class LogicalPredicate implements Predicate {
 	 * Constructs a new LogicalPredicate with validation.
 	 * 
 	 * @param operator the logical operator (AND, OR, NOT - case insensitive)
-	 * @param children the child predicates to combine (must not be null or empty)
+	 * @param children the child predicates to combine (must not be null, empty, or contain null predicates)
 	 * @throws QueryBuildException if the operator is invalid or children constraints are violated
 	 */
 	public LogicalPredicate(String operator, List<Predicate> children) {
@@ -63,6 +64,14 @@ public class LogicalPredicate implements Predicate {
 		if (children.isEmpty()) {
 			throw new QueryBuildException("Children list must not be empty");
 		}
+		
+		// Prevent null children to avoid NPEs later
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i) == null) {
+				throw new QueryBuildException("Child predicate at index " + i + " must not be null");
+			}
+		}
+		
 		String op = operator.trim().toUpperCase();
 		if (!ALLOWED_OPERATORS.contains(op)) {
 			throw new QueryBuildException("Invalid logical operator: '" + operator + "'. Allowed operators are: AND, OR, NOT");

@@ -20,8 +20,8 @@ import java.util.Map;
  * </p>
  * <ul>
  * <li>Field name must match pattern {@code [A-Za-z0-9_\.]+}</li>
- * <li>Operator must not be null or empty</li>
- * <li>Parameter name must not be null or empty</li>
+ * <li>Operator must be from the predefined whitelist of SQL operators</li>
+ * <li>Parameter name must match pattern {@code [A-Za-z][A-Za-z0-9_]*}</li>
  * </ul>
  * 
  * @author query4j team
@@ -44,30 +44,20 @@ public class SimplePredicate implements Predicate {
      * Constructs a new SimplePredicate with validation.
      * 
      * @param field the field name to compare (must match pattern [A-Za-z0-9_\.]+)
-     * @param operator the comparison operator (must not be null or empty)
+     * @param operator the comparison operator (must be from the allowed whitelist)
      * @param value the value to compare against (may be null)
-     * @param paramName the parameter name for SQL binding (must not be null or empty)
+     * @param paramName the parameter name for SQL binding (must match pattern [A-Za-z][A-Za-z0-9_]*)
      * @throws QueryBuildException if any parameter is invalid
      */
     public SimplePredicate(String field, String operator, Object value, String paramName) {
-        // Validate field name (this will handle null check)
+        // Validate field name (this will handle null check and whitespace)
         FieldValidator.validateFieldName(field);
         
-        // Validate operator
-        if (operator == null) {
-            throw new QueryBuildException("Operator must not be null");
-        }
-        if (operator.trim().isEmpty()) {
-            throw new QueryBuildException("Operator must not be empty");
-        }
+        // Validate operator against whitelist
+        OperatorValidator.validateOperator(operator);
         
-        // Validate parameter name
-        if (paramName == null) {
-            throw new QueryBuildException("Parameter name must not be null");
-        }
-        if (paramName.trim().isEmpty()) {
-            throw new QueryBuildException("Parameter name must not be empty");
-        }
+        // Validate parameter name (this will handle null check, whitespace, and pattern)
+        FieldValidator.validateParameterName(paramName);
         
         this.field = field.trim();
         this.operator = operator.trim();
