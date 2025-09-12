@@ -18,6 +18,7 @@
     <module>optimizer</module>
     <module>examples</module>
     <module>test</module>
+    <module>benchmark</module>
   </modules>
 
   <properties>
@@ -100,4 +101,36 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Benchmark profile for running JMH performance tests -->
+    <profile>
+      <id>benchmark</id>
+      <modules>
+        <module>benchmark</module>
+      </modules>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-exec-plugin</artifactId>
+            <version>3.1.0</version>
+            <configuration>
+              <mainClass>org.openjdk.jmh.Main</mainClass>
+              <commandlineArgs>
+                -rf json 
+                -rff ${project.build.directory}/jmh-result.json
+                -f 1
+                -wi 5
+                -i 10
+                -tu us
+                -bm avgt
+                -o ${project.build.directory}/jmh-report.txt
+              </commandlineArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
