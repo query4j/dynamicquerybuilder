@@ -13,29 +13,73 @@ A high-performance, thread-safe Java library for building dynamic SQL queries wi
 
 ## Quick Start
 
+### Basic Query Construction
+
 ```java
-DynamicQueryBuilder builder = new DynamicQueryBuilder("users")
-    .where("status", Operator.EQUALS, "active")
+// Simple equality query
+List<User> activeUsers = QueryBuilder.forEntity(User.class)
+    .where("active", true)
+    .findAll();
+
+// Complex query with multiple conditions
+List<User> users = QueryBuilder.forEntity(User.class)
+    .where("department", "Engineering")
     .and()
-    .whereIn("role", Arrays.asList("admin", "user"))
+    .whereIn("role", Arrays.asList("admin", "developer"))
     .or()
     .openGroup()
-        .where("created_date", Operator.GREATER_THAN, LocalDate.now().minusDays(30))
+        .where("joinDate", ">", LocalDate.now().minusDays(30))
         .and()
         .whereIsNotNull("email")
     .closeGroup()
-    .orderBy("created_date", SortOrder.DESC)
-    .limit(50);
+    .orderByDescending("joinDate")
+    .limit(50)
+    .findAll();
+```
 
-String sql = builder.toSQL();
-Map<String, Object> parameters = builder.getParameters();
+### Pagination and Caching
+
+```java
+// Paginated results with caching
+Page<User> userPage = QueryBuilder.forEntity(User.class)
+    .where("active", true)
+    .orderBy("lastName")
+    .page(0, 20)
+    .cached(3600) // Cache for 1 hour
+    .findPage();
+
+System.out.println("Total users: " + userPage.getTotalElements());
+System.out.println("Current page: " + userPage.getNumber());
+```
+
+### Asynchronous Execution
+
+```java
+// Async query execution  
+CompletableFuture<List<User>> futureUsers = QueryBuilder.forEntity(User.class)
+    .where("active", true)
+    .findAllAsync();
+
+futureUsers.thenAccept(users -> {
+    users.forEach(System.out::println);
+});
 ```
 
 ## Documentation
 
-- [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
+- **[API Reference Guide](docs/API_GUIDE.md)** - Comprehensive API documentation with examples
+- **[JavaDoc API](https://query4j.github.io/dynamicquerybuilder/)** - Generated API documentation
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project  
 - [CodeRabbit-Copilot Integration](docs/CODERABBIT_COPILOT_INTEGRATION.md) - Automated code review workflow
-- [API Documentation](docs/) - Detailed API reference
+
+### API Entry Points
+
+| Entry Point | Module | Description | Example |
+|-------------|---------|-------------|---------|
+| `QueryBuilder.forEntity()` | Core | Primary fluent query builder | `QueryBuilder.forEntity(User.class).where("name", "John").findAll()` |
+| `DynamicQuery` | Core | Reusable compiled query | `query.execute()` |
+| `Page<T>` | Core | Paginated results container | `page.getContent()` |
+| `QueryStats` | Core | Execution metrics and performance data | `stats.getExecutionTimeMs()` |
 
 ## Automated Code Quality
 
