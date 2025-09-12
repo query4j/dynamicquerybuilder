@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuickStartExamples.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">examples</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.examples</a> &gt; <span class="el_source">QuickStartExamples.java</span></div><h1>QuickStartExamples.java</h1><pre class="source lang-java linenums">package com.github.query4j.examples;
+
+import com.github.query4j.core.QueryBuilder;
+import com.github.query4j.core.DynamicQuery;
+import com.github.query4j.core.Page;
+import com.github.query4j.examples.model.User;
+import com.github.query4j.examples.model.Order;
+import com.github.query4j.examples.model.Product;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * Quick start examples demonstrating Query4j API entry points.
+ * 
+ * This class showcases the primary API patterns and usage for the
+ * Query4j Dynamic Query Builder library.
+ */
+<span class="nc" id="L21">public class QuickStartExamples {</span>
+
+    /**
+     * Basic query construction examples.
+     */
+    public void basicQueries() {
+<span class="nc" id="L27">        System.out.println(&quot;=== Basic Query Examples ===&quot;);</span>
+        
+        // Simple equality query
+<span class="nc" id="L30">        List&lt;User&gt; activeUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L31">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L32">            .findAll();</span>
+        
+<span class="nc" id="L34">        System.out.println(&quot;Found &quot; + activeUsers.size() + &quot; active users&quot;);</span>
+
+        // Multiple conditions with logical operators
+<span class="nc" id="L37">        List&lt;User&gt; engineeringUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L38">            .where(&quot;department&quot;, &quot;Engineering&quot;)</span>
+<span class="nc" id="L39">            .and()</span>
+<span class="nc" id="L40">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L41">            .orderBy(&quot;lastName&quot;)</span>
+<span class="nc" id="L42">            .findAll();</span>
+
+        // Complex conditions with grouping
+<span class="nc" id="L45">        List&lt;User&gt; complexQuery = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L46">            .openGroup()</span>
+<span class="nc" id="L47">                .where(&quot;department&quot;, &quot;Engineering&quot;)</span>
+<span class="nc" id="L48">                .or()</span>
+<span class="nc" id="L49">                .where(&quot;department&quot;, &quot;Product&quot;)</span>
+<span class="nc" id="L50">            .closeGroup()</span>
+<span class="nc" id="L51">            .and()</span>
+<span class="nc" id="L52">            .whereIn(&quot;role&quot;, Arrays.asList(&quot;manager&quot;, &quot;lead&quot;, &quot;architect&quot;))</span>
+<span class="nc" id="L53">            .and()</span>
+<span class="nc" id="L54">            .where(&quot;joinDate&quot;, &quot;&gt;&quot;, LocalDate.now().minusYears(2))</span>
+<span class="nc" id="L55">            .orderByDescending(&quot;joinDate&quot;)</span>
+<span class="nc" id="L56">            .limit(50)</span>
+<span class="nc" id="L57">            .findAll();</span>
+
+<span class="nc" id="L59">        System.out.println(&quot;Complex query returned &quot; + complexQuery.size() + &quot; users&quot;);</span>
+<span class="nc" id="L60">    }</span>
+
+    /**
+     * Pattern matching and null check examples.
+     */
+    public void patternMatchingAndNulls() {
+<span class="nc" id="L66">        System.out.println(&quot;=== Pattern Matching and Null Checks ===&quot;);</span>
+
+        // LIKE pattern matching
+<span class="nc" id="L69">        List&lt;Product&gt; laptops = QueryBuilder.forEntity(Product.class)</span>
+<span class="nc" id="L70">            .whereLike(&quot;name&quot;, &quot;%laptop%&quot;)</span>
+<span class="nc" id="L71">            .and()</span>
+<span class="nc" id="L72">            .whereIsNotNull(&quot;price&quot;)</span>
+<span class="nc" id="L73">            .and()</span>
+<span class="nc" id="L74">            .where(&quot;price&quot;, &quot;&gt;&quot;, 500.0)</span>
+<span class="nc" id="L75">            .orderBy(&quot;price&quot;)</span>
+<span class="nc" id="L76">            .findAll();</span>
+
+        // NOT LIKE with null checks
+<span class="nc" id="L79">        List&lt;User&gt; validUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L80">            .whereIsNotNull(&quot;email&quot;)</span>
+<span class="nc" id="L81">            .and()</span>
+<span class="nc" id="L82">            .whereNotLike(&quot;email&quot;, &quot;%test%&quot;)</span>
+<span class="nc" id="L83">            .and()</span>
+<span class="nc" id="L84">            .whereIsNull(&quot;deletedAt&quot;)</span>
+<span class="nc" id="L85">            .findAll();</span>
+
+        // BETWEEN ranges
+<span class="nc" id="L88">        List&lt;Order&gt; recentOrders = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L89">            .whereBetween(&quot;orderDate&quot;, </span>
+<span class="nc" id="L90">                LocalDate.now().minusDays(30), </span>
+<span class="nc" id="L91">                LocalDate.now())</span>
+<span class="nc" id="L92">            .and()</span>
+<span class="nc" id="L93">            .where(&quot;status&quot;, &quot;!=&quot;, &quot;CANCELLED&quot;)</span>
+<span class="nc" id="L94">            .findAll();</span>
+
+<span class="nc" id="L96">        System.out.println(&quot;Found &quot; + recentOrders.size() + &quot; recent orders&quot;);</span>
+<span class="nc" id="L97">    }</span>
+
+    /**
+     * JOIN operations and associations.
+     */
+    public void joinsAndAssociations() {
+<span class="nc" id="L103">        System.out.println(&quot;=== JOIN Operations ===&quot;);</span>
+
+        // Inner join with conditions on related entity
+<span class="nc" id="L106">        List&lt;Order&gt; ordersWithCustomers = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L107">            .join(&quot;customer&quot;)</span>
+<span class="nc" id="L108">            .where(&quot;customer.country&quot;, &quot;USA&quot;)</span>
+<span class="nc" id="L109">            .and()</span>
+<span class="nc" id="L110">            .where(&quot;status&quot;, &quot;SHIPPED&quot;)</span>
+<span class="nc" id="L111">            .orderBy(&quot;orderDate&quot;)</span>
+<span class="nc" id="L112">            .findAll();</span>
+
+        // Left join with fetch for eager loading
+<span class="nc" id="L115">        List&lt;User&gt; usersWithRoles = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L116">            .leftJoin(&quot;roles&quot;)</span>
+<span class="nc" id="L117">            .fetch(&quot;roles&quot;) // Eager loading to avoid N+1</span>
+<span class="nc" id="L118">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L119">            .findAll();</span>
+
+        // Multiple joins
+<span class="nc" id="L122">        List&lt;Order&gt; complexJoin = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L123">            .join(&quot;customer&quot;)</span>
+<span class="nc" id="L124">            .leftJoin(&quot;orderItems&quot;)</span>
+<span class="nc" id="L125">            .join(&quot;orderItems.product&quot;)</span>
+<span class="nc" id="L126">            .where(&quot;customer.vipStatus&quot;, true)</span>
+<span class="nc" id="L127">            .and()</span>
+<span class="nc" id="L128">            .where(&quot;orderItems.product.category&quot;, &quot;Electronics&quot;)</span>
+<span class="nc" id="L129">            .findAll();</span>
+
+<span class="nc" id="L131">        System.out.println(&quot;Complex join returned &quot; + complexJoin.size() + &quot; orders&quot;);</span>
+<span class="nc" id="L132">    }</span>
+
+    /**
+     * Aggregation and grouping examples.
+     */
+    public void aggregationAndGrouping() {
+<span class="nc" id="L138">        System.out.println(&quot;=== Aggregation and Grouping ===&quot;);</span>
+
+        // Simple count
+<span class="nc" id="L141">        long activeUserCount = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L142">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L143">            .count();</span>
+
+<span class="nc" id="L145">        System.out.println(&quot;Active users count: &quot; + activeUserCount);</span>
+
+        // Existence check (more efficient than count &gt; 0)
+<span class="nc" id="L148">        boolean hasActiveUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L149">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L150">            .exists();</span>
+
+        // Aggregation with grouping
+        // Note: In practice, aggregation queries return Object[] for projection results
+<span class="nc" id="L154">        List&lt;Order&gt; salesByRegion = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L155">            .select(&quot;customer.region&quot;)</span>
+<span class="nc" id="L156">            .sum(&quot;totalAmount&quot;)</span>
+<span class="nc" id="L157">            .groupBy(&quot;customer.region&quot;)</span>
+<span class="nc" id="L158">            .having(&quot;SUM(totalAmount)&quot;, &quot;&gt;&quot;, 100000.0)</span>
+<span class="nc" id="L159">            .orderByDescending(&quot;SUM(totalAmount)&quot;)</span>
+<span class="nc" id="L160">            .findAll();</span>
+
+        // Multiple aggregations  
+<span class="nc" id="L163">        List&lt;Order&gt; productStats = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L164">            .select(&quot;product.category&quot;)</span>
+<span class="nc" id="L165">            .countAll()</span>
+<span class="nc" id="L166">            .avg(&quot;totalAmount&quot;)</span>
+<span class="nc" id="L167">            .max(&quot;totalAmount&quot;)</span>
+<span class="nc" id="L168">            .min(&quot;totalAmount&quot;)</span>
+<span class="nc" id="L169">            .groupBy(&quot;product.category&quot;)</span>
+<span class="nc" id="L170">            .findAll();</span>
+
+<span class="nc" id="L172">        System.out.println(&quot;Product categories with stats: &quot; + productStats.size());</span>
+<span class="nc" id="L173">    }</span>
+
+    /**
+     * Pagination examples.
+     */
+    public void pagination() {
+<span class="nc" id="L179">        System.out.println(&quot;=== Pagination Examples ===&quot;);</span>
+
+        // Page-based pagination with metadata
+<span class="nc" id="L182">        Page&lt;User&gt; userPage = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L183">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L184">            .orderBy(&quot;lastName&quot;)</span>
+<span class="nc" id="L185">            .page(0, 20) // First page, 20 items per page</span>
+<span class="nc" id="L186">            .findPage();</span>
+
+<span class="nc" id="L188">        System.out.println(&quot;Page &quot; + (userPage.getNumber() + 1) + &quot; of &quot; + userPage.getTotalPages());</span>
+<span class="nc" id="L189">        System.out.println(&quot;Total users: &quot; + userPage.getTotalElements());</span>
+<span class="nc" id="L190">        System.out.println(&quot;Current page size: &quot; + userPage.getContent().size());</span>
+
+        // Manual pagination with offset/limit
+<span class="nc" id="L193">        List&lt;User&gt; manualPage = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L194">            .where(&quot;department&quot;, &quot;Engineering&quot;)</span>
+<span class="nc" id="L195">            .orderBy(&quot;joinDate&quot;)</span>
+<span class="nc" id="L196">            .offset(50)</span>
+<span class="nc" id="L197">            .limit(25)</span>
+<span class="nc" id="L198">            .findAll();</span>
+
+        // Iterate through all pages
+<span class="nc" id="L201">        int pageNumber = 0;</span>
+<span class="nc" id="L202">        int pageSize = 50;</span>
+        Page&lt;User&gt; page;
+        
+        do {
+<span class="nc" id="L206">            page = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L207">                .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L208">                .orderBy(&quot;id&quot;)</span>
+<span class="nc" id="L209">                .page(pageNumber++, pageSize)</span>
+<span class="nc" id="L210">                .findPage();</span>
+                
+            // Process page content
+<span class="nc" id="L213">            processUsers(page.getContent());</span>
+            
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        } while (page.hasNext());</span>
+<span class="nc" id="L216">    }</span>
+
+    /**
+     * Caching examples.
+     */
+    public void caching() {
+<span class="nc" id="L222">        System.out.println(&quot;=== Caching Examples ===&quot;);</span>
+
+        // Enable default caching
+<span class="nc" id="L225">        List&lt;User&gt; cachedUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L226">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L227">            .cached()</span>
+<span class="nc" id="L228">            .findAll();</span>
+
+        // Region-specific caching
+<span class="nc" id="L231">        List&lt;Product&gt; featuredProducts = QueryBuilder.forEntity(Product.class)</span>
+<span class="nc" id="L232">            .where(&quot;featured&quot;, true)</span>
+<span class="nc" id="L233">            .cached(&quot;featured-products&quot;)</span>
+<span class="nc" id="L234">            .findAll();</span>
+
+        // TTL-based caching (1 hour)
+<span class="nc" id="L237">        List&lt;User&gt; recentUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L238">            .where(&quot;joinDate&quot;, &quot;&gt;&quot;, LocalDate.now().minusDays(7))</span>
+<span class="nc" id="L239">            .cached(3600) // 3600 seconds = 1 hour</span>
+<span class="nc" id="L240">            .findAll();</span>
+
+<span class="nc" id="L242">        System.out.println(&quot;Cached queries executed successfully&quot;);</span>
+<span class="nc" id="L243">    }</span>
+
+    /**
+     * Asynchronous execution examples.
+     */
+    public void asyncExecution() {
+<span class="nc" id="L249">        System.out.println(&quot;=== Asynchronous Execution ===&quot;);</span>
+
+        // Async query execution
+<span class="nc" id="L252">        CompletableFuture&lt;List&lt;User&gt;&gt; futureUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L253">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L254">            .findAllAsync();</span>
+
+        // Process results when available
+<span class="nc" id="L257">        futureUsers.thenAccept(users -&gt; {</span>
+<span class="nc" id="L258">            System.out.println(&quot;Async query completed: &quot; + users.size() + &quot; users found&quot;);</span>
+<span class="nc" id="L259">            users.forEach(this::processUser);</span>
+<span class="nc" id="L260">        });</span>
+
+        // Async count query
+<span class="nc" id="L263">        CompletableFuture&lt;Long&gt; futureCount = QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L264">            .where(&quot;status&quot;, &quot;PENDING&quot;)</span>
+<span class="nc" id="L265">            .countAsync();</span>
+
+<span class="nc" id="L267">        futureCount.thenAccept(count -&gt; {</span>
+<span class="nc" id="L268">            System.out.println(&quot;Pending orders: &quot; + count);</span>
+<span class="nc" id="L269">        });</span>
+
+        // Combine multiple async queries
+<span class="nc" id="L272">        CompletableFuture&lt;List&lt;User&gt;&gt; activeUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L273">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L274">            .findAllAsync();</span>
+            
+<span class="nc" id="L276">        CompletableFuture&lt;List&lt;User&gt;&gt; recentUsers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L277">            .where(&quot;joinDate&quot;, &quot;&gt;&quot;, LocalDate.now().minusDays(30))</span>
+<span class="nc" id="L278">            .findAllAsync();</span>
+
+<span class="nc" id="L280">        CompletableFuture.allOf(activeUsers, recentUsers)</span>
+<span class="nc" id="L281">            .thenRun(() -&gt; {</span>
+<span class="nc" id="L282">                System.out.println(&quot;All async queries completed&quot;);</span>
+<span class="nc" id="L283">            });</span>
+<span class="nc" id="L284">    }</span>
+
+    /**
+     * Query building and reuse examples.
+     */
+    public void queryBuildingAndReuse() {
+<span class="nc" id="L290">        System.out.println(&quot;=== Query Building and Reuse ===&quot;);</span>
+
+        // Build reusable query
+<span class="nc" id="L293">        DynamicQuery&lt;User&gt; activeUsersQuery = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L294">            .where(&quot;active&quot;, true)</span>
+<span class="nc" id="L295">            .orderBy(&quot;lastName&quot;)</span>
+<span class="nc" id="L296">            .build();</span>
+
+        // Execute multiple times with optimal performance
+<span class="nc" id="L299">        List&lt;User&gt; batch1 = activeUsersQuery.execute();</span>
+<span class="nc" id="L300">        List&lt;User&gt; batch2 = activeUsersQuery.execute();</span>
+
+        // Get generated SQL for debugging
+<span class="nc" id="L303">        String sql = activeUsersQuery.getSQL();</span>
+<span class="nc" id="L304">        System.out.println(&quot;Generated SQL: &quot; + sql);</span>
+
+        // Build query with debugging information
+<span class="nc" id="L307">        QueryBuilder&lt;User&gt; builder = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L308">            .where(&quot;department&quot;, &quot;Engineering&quot;)</span>
+<span class="nc" id="L309">            .and()</span>
+<span class="nc" id="L310">            .where(&quot;salary&quot;, &quot;&gt;&quot;, 75000);</span>
+
+        // Debug SQL before execution
+<span class="nc" id="L313">        String debugSql = builder.toSQL();</span>
+<span class="nc" id="L314">        System.out.println(&quot;Debug SQL: &quot; + debugSql);</span>
+
+        // Execute and get stats
+<span class="nc" id="L317">        List&lt;User&gt; results = builder.findAll();</span>
+        // Note: QueryStats would be available in a real implementation
+<span class="nc" id="L319">    }</span>
+
+    /**
+     * Subquery examples.
+     */
+    public void subqueries() {
+<span class="nc" id="L325">        System.out.println(&quot;=== Subquery Examples ===&quot;);</span>
+
+        // EXISTS subquery
+<span class="nc" id="L328">        List&lt;User&gt; usersWithOrders = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L329">            .exists(</span>
+<span class="nc" id="L330">                QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L331">                    .where(&quot;customerId&quot;, &quot;users.id&quot;) // Correlated subquery</span>
+<span class="nc" id="L332">                    .and()</span>
+<span class="nc" id="L333">                    .where(&quot;status&quot;, &quot;COMPLETED&quot;)</span>
+            )
+<span class="nc" id="L335">            .findAll();</span>
+
+        // IN subquery
+<span class="nc" id="L338">        List&lt;User&gt; topCustomers = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L339">            .in(&quot;id&quot;, </span>
+<span class="nc" id="L340">                QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L341">                    .select(&quot;customerId&quot;)</span>
+<span class="nc" id="L342">                    .groupBy(&quot;customerId&quot;)</span>
+<span class="nc" id="L343">                    .having(&quot;SUM(totalAmount)&quot;, &quot;&gt;&quot;, 10000)</span>
+            )
+<span class="nc" id="L345">            .findAll();</span>
+
+        // NOT EXISTS subquery
+<span class="nc" id="L348">        List&lt;User&gt; usersWithoutOrders = QueryBuilder.forEntity(User.class)</span>
+<span class="nc" id="L349">            .notExists(</span>
+<span class="nc" id="L350">                QueryBuilder.forEntity(Order.class)</span>
+<span class="nc" id="L351">                    .where(&quot;customerId&quot;, &quot;users.id&quot;)</span>
+            )
+<span class="nc" id="L353">            .findAll();</span>
+
+<span class="nc" id="L355">        System.out.println(&quot;Subquery examples completed&quot;);</span>
+<span class="nc" id="L356">    }</span>
+
+    // Helper methods
+    private void processUsers(List&lt;User&gt; users) {
+<span class="nc" id="L360">        users.forEach(this::processUser);</span>
+<span class="nc" id="L361">    }</span>
+
+    private void processUser(User user) {
+<span class="nc" id="L364">        System.out.println(&quot;Processing user: &quot; + user.getId());</span>
+<span class="nc" id="L365">    }</span>
+
+    /**
+     * Main method to run all examples.
+     */
+    public static void main(String[] args) {
+<span class="nc" id="L371">        QuickStartExamples examples = new QuickStartExamples();</span>
+        
+        try {
+<span class="nc" id="L374">            examples.basicQueries();</span>
+<span class="nc" id="L375">            examples.patternMatchingAndNulls();</span>
+<span class="nc" id="L376">            examples.joinsAndAssociations();</span>
+<span class="nc" id="L377">            examples.aggregationAndGrouping();</span>
+<span class="nc" id="L378">            examples.pagination();</span>
+<span class="nc" id="L379">            examples.caching();</span>
+<span class="nc" id="L380">            examples.asyncExecution();</span>
+<span class="nc" id="L381">            examples.queryBuildingAndReuse();</span>
+<span class="nc" id="L382">            examples.subqueries();</span>
+            
+<span class="nc" id="L384">            System.out.println(&quot;All examples completed successfully!&quot;);</span>
+            
+<span class="nc" id="L386">        } catch (Exception e) {</span>
+<span class="nc" id="L387">            System.err.println(&quot;Example execution failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L388">            e.printStackTrace();</span>
+<span class="nc" id="L389">        }</span>
+<span class="nc" id="L390">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

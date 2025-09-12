@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"com.github.query4j.optimizer","c":"Main","l":"Main()","u":"%3Cinit%3E()"}];updateSearchResults();

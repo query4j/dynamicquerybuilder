@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FieldValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core.criteria</a> &gt; <span class="el_source">FieldValidator.java</span></div><h1>FieldValidator.java</h1><pre class="source lang-java linenums">package com.github.query4j.core.criteria;
+
+import com.github.query4j.core.QueryBuildException;
+import java.util.regex.Pattern;
+
+/**
+ * Utility class for validating field names and parameter names in predicates.
+ * 
+ * &lt;p&gt;
+ * This class provides centralized validation logic for field names and parameter names
+ * used in predicate construction, ensuring they conform to the required patterns and 
+ * are not null or empty. This validation prevents SQL injection attacks through 
+ * malformed field names and parameter names.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * Valid field names must match the pattern {@code [A-Za-z0-9_\.]+}, supporting:
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;Alphanumeric characters (a-z, A-Z, 0-9)&lt;/li&gt;
+ * &lt;li&gt;Underscores (_)&lt;/li&gt;
+ * &lt;li&gt;Dots (.) for qualified field names&lt;/li&gt;
+ * &lt;/ul&gt;
+ * 
+ * &lt;p&gt;
+ * Valid parameter names must match the pattern {@code [A-Za-z][A-Za-z0-9_]*}, supporting:
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;Must start with a letter (a-z, A-Z)&lt;/li&gt;
+ * &lt;li&gt;Can contain alphanumeric characters and underscores after the first character&lt;/li&gt;
+ * &lt;li&gt;Cannot start with numbers or special characters&lt;/li&gt;
+ * &lt;/ul&gt;
+ * 
+ * @author query4j team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+public final class FieldValidator {
+    
+    /**
+     * Precompiled pattern for valid field names.
+     * Allows alphanumeric characters, underscores, and dots.
+     */
+<span class="fc" id="L44">    private static final Pattern FIELD_PATTERN = Pattern.compile(&quot;^[A-Za-z0-9_\\.]+$&quot;);</span>
+    
+    /**
+     * Precompiled pattern for valid parameter names.
+     * Must start with a letter, then allows letters, numbers, and underscores.
+     */
+<span class="fc" id="L50">    private static final Pattern PARAM_PATTERN = Pattern.compile(&quot;^[A-Za-z][A-Za-z0-9_]*$&quot;);</span>
+    
+    /**
+     * Private constructor to prevent instantiation.
+     */
+<span class="nc" id="L55">    private FieldValidator() {</span>
+<span class="nc" id="L56">        throw new AssertionError(&quot;Utility class should not be instantiated&quot;);</span>
+    }
+    
+    /**
+     * Validates that the given field name is valid for use in predicates.
+     * 
+     * &lt;p&gt;
+     * A valid field name must:
+     * &lt;/p&gt;
+     * &lt;ul&gt;
+     * &lt;li&gt;Not be null&lt;/li&gt;
+     * &lt;li&gt;Not be empty or only whitespace&lt;/li&gt;
+     * &lt;li&gt;Match the pattern {@code [A-Za-z0-9_\.]+}&lt;/li&gt;
+     * &lt;/ul&gt;
+     * 
+     * @param fieldName the field name to validate
+     * @throws QueryBuildException if the field name is null, empty, or contains invalid characters
+     */
+    public static void validateFieldName(String fieldName) {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (fieldName == null) {</span>
+<span class="nc" id="L76">            throw new QueryBuildException(&quot;Field name must not be null&quot;);</span>
+        }
+        
+        // Normalize by trimming leading/trailing whitespace
+<span class="fc" id="L80">        String trimmed = fieldName.trim();</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (trimmed.isEmpty()) {</span>
+<span class="nc" id="L82">            throw new QueryBuildException(&quot;Field name must not be empty&quot;);</span>
+        }
+        
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (!FIELD_PATTERN.matcher(trimmed).matches()) {</span>
+<span class="nc" id="L86">            throw new QueryBuildException(</span>
+                &quot;Field name contains invalid characters: '&quot; + fieldName + 
+                &quot;'. Valid pattern is [A-Za-z0-9_\\.]+&quot;
+            );
+        }
+<span class="fc" id="L91">    }</span>
+    
+    /**
+     * Validates that the given parameter name is valid for use in SQL placeholders.
+     * 
+     * &lt;p&gt;
+     * A valid parameter name must:
+     * &lt;/p&gt;
+     * &lt;ul&gt;
+     * &lt;li&gt;Not be null&lt;/li&gt;
+     * &lt;li&gt;Not be empty or only whitespace&lt;/li&gt;
+     * &lt;li&gt;Start with a letter (a-z, A-Z)&lt;/li&gt;
+     * &lt;li&gt;Contain only letters, numbers, and underscores after the first character&lt;/li&gt;
+     * &lt;li&gt;Match the pattern {@code [A-Za-z][A-Za-z0-9_]*}&lt;/li&gt;
+     * &lt;/ul&gt;
+     * 
+     * &lt;p&gt;
+     * This validation prevents SQL injection attacks through malformed parameter names
+     * and ensures compatibility with SQL parameter binding mechanisms.
+     * &lt;/p&gt;
+     * 
+     * @param paramName the parameter name to validate
+     * @throws QueryBuildException if the parameter name is null, empty, or contains invalid characters
+     */
+    public static void validateParameterName(String paramName) {
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (paramName == null) {</span>
+<span class="nc" id="L117">            throw new QueryBuildException(&quot;Parameter name must not be null&quot;);</span>
+        }
+        
+        // Normalize by trimming leading/trailing whitespace
+<span class="fc" id="L121">        String trimmed = paramName.trim();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (trimmed.isEmpty()) {</span>
+<span class="nc" id="L123">            throw new QueryBuildException(&quot;Parameter name must not be empty&quot;);</span>
+        }
+        
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (!PARAM_PATTERN.matcher(trimmed).matches()) {</span>
+<span class="nc" id="L127">            throw new QueryBuildException(</span>
+                &quot;Parameter name contains invalid characters: '&quot; + paramName + 
+                &quot;'. Parameter names must start with a letter and contain only letters, numbers, and underscores&quot;
+            );
+        }
+<span class="fc" id="L132">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

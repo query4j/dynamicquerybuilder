@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Integration tests and benchmarks'
+
+// Configure test JAR creation (equivalent to Maven test-jar goal)
+jar {
+    from sourceSets.test.output
+    archiveClassifier = 'tests'
+}
+
+task testJar(type: Jar) {
+    from sourceSets.test.output
+    archiveClassifier = 'tests'
+}
+
+artifacts {
+    archives testJar
+}
+
+dependencies {
+    // Add integration test dependencies as needed
+}

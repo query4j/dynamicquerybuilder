@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryExecutionException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dynamicquerybuilder</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core</a> &gt; <span class="el_source">QueryExecutionException.java</span></div><h1>QueryExecutionException.java</h1><pre class="source lang-java linenums">package com.github.query4j.core;
+
+/**
+ * Exception thrown when a query execution fails unexpectedly.
+ * 
+ * &lt;p&gt;
+ * This unchecked exception wraps any lower level exceptions thrown
+ * during query building or execution phases. It extends DynamicQueryException
+ * to maintain consistency with the Query4j exception hierarchy.
+ * &lt;/p&gt;
+ * 
+ * @author query4j team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+public class QueryExecutionException extends DynamicQueryException {
+
+    /**
+     * Serialization version UID.
+     */
+    private static final long serialVersionUID = 2036606562622219299L;
+
+    /**
+     * Constructs a new QueryExecutionException with the specified detail message.
+     * 
+     * @param message the detail message, may be null
+     */
+    public QueryExecutionException(String message) {
+<span class="nc" id="L29">        super(message);</span>
+<span class="nc" id="L30">    }</span>
+
+    /**
+     * Constructs a new QueryExecutionException with the specified
+     * detail message and cause.
+     * 
+     * @param message the detail message, may be null
+     * @param cause   the cause (which is saved for later retrieval), may be null
+     */
+    public QueryExecutionException(String message, Throwable cause) {
+<span class="nc" id="L40">        super(message, cause);</span>
+<span class="nc" id="L41">    }</span>
+
+    /**
+     * Constructs a new QueryExecutionException with the specified cause.
+     * 
+     * @param cause the cause (which is saved for later retrieval), may be null
+     */
+    public QueryExecutionException(Throwable cause) {
+<span class="nc" id="L49">        super(cause);</span>
+<span class="nc" id="L50">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

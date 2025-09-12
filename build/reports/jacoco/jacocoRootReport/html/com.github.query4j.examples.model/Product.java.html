@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Product.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dynamicquerybuilder</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.examples.model</a> &gt; <span class="el_source">Product.java</span></div><h1>Product.java</h1><pre class="source lang-java linenums">package com.github.query4j.examples.model;
+
+import java.math.BigDecimal;
+
+/**
+ * Example Product entity for Query4j documentation and examples.
+ */
+public class Product {
+    
+    private Long id;
+    private String name;
+    private String description;
+    private String category;
+    private BigDecimal price;
+    private String currency;
+    private Boolean featured;
+    private Boolean active;
+    private Integer stockQuantity;
+    
+    // Constructors
+<span class="nc" id="L21">    public Product() {}</span>
+    
+<span class="nc" id="L23">    public Product(String name, String category, BigDecimal price) {</span>
+<span class="nc" id="L24">        this.name = name;</span>
+<span class="nc" id="L25">        this.category = category;</span>
+<span class="nc" id="L26">        this.price = price;</span>
+<span class="nc" id="L27">        this.currency = &quot;USD&quot;;</span>
+<span class="nc" id="L28">        this.active = true;</span>
+<span class="nc" id="L29">        this.featured = false;</span>
+<span class="nc" id="L30">    }</span>
+    
+    // Getters and setters
+<span class="nc" id="L33">    public Long getId() { return id; }</span>
+<span class="nc" id="L34">    public void setId(Long id) { this.id = id; }</span>
+    
+<span class="nc" id="L36">    public String getName() { return name; }</span>
+<span class="nc" id="L37">    public void setName(String name) { this.name = name; }</span>
+    
+<span class="nc" id="L39">    public String getDescription() { return description; }</span>
+<span class="nc" id="L40">    public void setDescription(String description) { this.description = description; }</span>
+    
+<span class="nc" id="L42">    public String getCategory() { return category; }</span>
+<span class="nc" id="L43">    public void setCategory(String category) { this.category = category; }</span>
+    
+<span class="nc" id="L45">    public BigDecimal getPrice() { return price; }</span>
+<span class="nc" id="L46">    public void setPrice(BigDecimal price) { this.price = price; }</span>
+    
+<span class="nc" id="L48">    public String getCurrency() { return currency; }</span>
+<span class="nc" id="L49">    public void setCurrency(String currency) { this.currency = currency; }</span>
+    
+<span class="nc" id="L51">    public Boolean getFeatured() { return featured; }</span>
+<span class="nc" id="L52">    public void setFeatured(Boolean featured) { this.featured = featured; }</span>
+    
+<span class="nc" id="L54">    public Boolean getActive() { return active; }</span>
+<span class="nc" id="L55">    public void setActive(Boolean active) { this.active = active; }</span>
+    
+<span class="nc" id="L57">    public Integer getStockQuantity() { return stockQuantity; }</span>
+<span class="nc" id="L58">    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }</span>
+    
+    @Override
+    public String toString() {
+<span class="nc" id="L62">        return String.format(&quot;Product{id=%d, name='%s', category='%s', price=%s}&quot;,</span>
+            id, name, category, price);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

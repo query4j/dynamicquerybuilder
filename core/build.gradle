@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Core dynamic query builder functionality'
+
+dependencies {
+    // Property-based testing with jqwik
+    testImplementation "net.jqwik:jqwik:${jqwikVersion}"
+}
+
+// Configure tests to include jqwik
+test {
+    useJUnitPlatform {
+        includeEngines 'jqwik'
+    }
+}
+
+// JaCoCo configuration for this module
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+test.finalizedBy jacocoTestReport

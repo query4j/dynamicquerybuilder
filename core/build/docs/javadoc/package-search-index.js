@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.github.query4j.core"},{"l":"com.github.query4j.core.criteria"},{"l":"com.github.query4j.core.impl"}];updateSearchResults();

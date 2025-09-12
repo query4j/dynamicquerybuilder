@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core</a> &gt; <span class="el_source">QueryBuilder.java</span></div><h1>QueryBuilder.java</h1><pre class="source lang-java linenums">package com.github.query4j.core;
+
+import com.github.query4j.core.impl.DynamicQueryBuilder;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * Core interface for dynamic query building with fluent API design.
+ * 
+ * &lt;p&gt;
+ * Provides comprehensive support for JPA query construction with advanced
+ * features
+ * including complex filtering, joins, aggregations, pagination, and caching.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * This interface follows the Builder pattern, allowing method chaining for
+ * readable and maintainable query construction. All implementations must be
+ * immutable to ensure thread safety.
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * Example usage:
+ * &lt;/p&gt;
+ * 
+ * &lt;pre&gt;{@code
+ * List&lt;User&gt; users = QueryBuilder.forEntity(User.class)
+ *         .where(&quot;active&quot;, true)
+ *         .and()
+ *         .where(&quot;department&quot;, &quot;Engineering&quot;)
+ *         .orderBy(&quot;lastName&quot;)
+ *         .limit(50)
+ *         .cached()
+ *         .findAll();
+ * }&lt;/pre&gt;
+ * 
+ * @param &lt;T&gt; the entity type this query builder operates on
+ * @author query4j team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+public interface QueryBuilder&lt;T&gt; {
+
+    /**
+     * Creates a new QueryBuilder instance for the specified entity class.
+     * 
+     * @param &lt;T&gt;         the entity type
+     * @param entityClass the JPA entity class, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if entityClass is null
+     * @since 1.0.0
+     */
+    static &lt;T&gt; QueryBuilder&lt;T&gt; forEntity(Class&lt;T&gt; entityClass) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (entityClass == null) {</span>
+<span class="nc" id="L56">            throw new IllegalArgumentException(&quot;Entity class must not be null&quot;);</span>
+        }
+<span class="nc" id="L58">        return new DynamicQueryBuilder&lt;&gt;(entityClass);</span>
+    }
+
+    // ========== WHERE Conditions ==========
+
+    /**
+     * Adds an equality condition to the query.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param value     the expected value, may be null
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; where(String fieldName, Object value);
+
+    /**
+     * Adds a condition with a specific operator.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param operator  the comparison operator (=, !=, &lt;, &lt;=, &gt;, &gt;=, LIKE), must
+     *                  not be null
+     * @param value     the comparison value, may be null for IS NULL/IS NOT NULL
+     *                  operators
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName or operator is null or empty,
+     *                                  or operator is invalid
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; where(String fieldName, String operator, Object value);
+
+    /**
+     * Adds an IN condition for the specified field.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param values    the list of possible values, must not be null or empty
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName is null/empty or values is
+     *                                  null/empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereIn(String fieldName, List&lt;Object&gt; values);
+
+    /**
+     * Adds a NOT IN condition for the specified field.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param values    the list of excluded values, must not be null or empty
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName is null/empty or values is
+     *                                  null/empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereNotIn(String fieldName, List&lt;Object&gt; values);
+
+    /**
+     * Adds a LIKE pattern matching condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param pattern   the pattern to match (supports % and _ wildcards), must not
+     *                  be null
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName or pattern is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereLike(String fieldName, String pattern);
+
+    /**
+     * Adds a NOT LIKE pattern matching condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param pattern   the pattern to exclude, must not be null
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName or pattern is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereNotLike(String fieldName, String pattern);
+
+    /**
+     * Adds a BETWEEN range condition.
+     * 
+     * @param fieldName  the field name, must not be null or empty
+     * @param startValue the start value (inclusive), must not be null
+     * @param endValue   the end value (inclusive), must not be null
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if any parameter is null or fieldName is
+     *                                  empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereBetween(String fieldName, Object startValue, Object endValue);
+
+    /**
+     * Adds an IS NULL condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereIsNull(String fieldName);
+
+    /**
+     * Adds an IS NOT NULL condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @return a new QueryBuilder instance with the condition added
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; whereIsNotNull(String fieldName);
+
+    // ========== Logical Operators ==========
+
+    /**
+     * Adds an AND logical operator between conditions.
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; and();
+
+    /**
+     * Adds an OR logical operator between conditions.
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; or();
+
+    /**
+     * Adds a NOT logical operator to negate the next condition.
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; not();
+
+    // ========== Condition Grouping ==========
+
+    /**
+     * Opens a new group of conditions (equivalent to opening parentheses).
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; openGroup();
+
+    /**
+     * Closes the current group of conditions (equivalent to closing parentheses).
+     * 
+     * @return a new QueryBuilder instance
+     * @throws IllegalStateException if no group is currently open
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; closeGroup();
+
+    // ========== JOIN Operations ==========
+
+    /**
+     * Adds an INNER JOIN on the specified association field.
+     * 
+     * @param associationFieldName the association field name, must not be null or
+     *                             empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if associationFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; join(String associationFieldName);
+
+    /**
+     * Adds a LEFT JOIN on the specified association field.
+     * 
+     * @param associationFieldName the association field name, must not be null or
+     *                             empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if associationFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; leftJoin(String associationFieldName);
+
+    /**
+     * Adds a RIGHT JOIN on the specified association field.
+     * 
+     * @param associationFieldName the association field name, must not be null or
+     *                             empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if associationFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; rightJoin(String associationFieldName);
+
+    /**
+     * Adds an INNER JOIN on the specified association field.
+     * This is an alias for {@link #join(String)} for improved readability.
+     * 
+     * @param associationFieldName the association field name, must not be null or
+     *                             empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if associationFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; innerJoin(String associationFieldName);
+
+    /**
+     * Adds a fetch join to eagerly load the specified association.
+     * 
+     * @param associationFieldName the association field name, must not be null or
+     *                             empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if associationFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; fetch(String associationFieldName);
+
+    // ========== Selection and Aggregation ==========
+
+    /**
+     * Specifies which fields to select in the query result.
+     * 
+     * @param fieldNames the field names to select, must not be null or empty array
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldNames array is null, empty, or
+     *                                  contains null/empty elements
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; select(String... fieldNames);
+
+    /**
+     * Adds a COUNT(*) aggregation function.
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; countAll();
+
+    /**
+     * Adds a COUNT(fieldName) aggregation function.
+     * 
+     * @param fieldName the field to count, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; count(String fieldName);
+
+    /**
+     * Adds a SUM aggregation function for numeric fields.
+     * 
+     * @param numericFieldName the numeric field to sum, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if numericFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; sum(String numericFieldName);
+
+    /**
+     * Adds an AVG (average) aggregation function for numeric fields.
+     * 
+     * @param numericFieldName the numeric field to average, must not be null or
+     *                         empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if numericFieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; avg(String numericFieldName);
+
+    /**
+     * Adds a MIN aggregation function to find minimum value.
+     * 
+     * @param fieldName the field to find minimum value, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; min(String fieldName);
+
+    /**
+     * Adds a MAX aggregation function to find maximum value.
+     * 
+     * @param fieldName the field to find maximum value, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; max(String fieldName);
+
+    // ========== GROUP BY and HAVING ==========
+
+    /**
+     * Adds GROUP BY clause with specified fields.
+     * 
+     * @param fieldNames the fields to group by, must not be null or empty array
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldNames array is null, empty, or
+     *                                  contains null/empty elements
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; groupBy(String... fieldNames);
+
+    /**
+     * Adds a HAVING condition for aggregated results.
+     * 
+     * @param aggregatedFieldName the aggregated field name, must not be null or
+     *                            empty
+     * @param operator            the comparison operator, must not be null or empty
+     * @param value               the comparison value, may be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if aggregatedFieldName or operator is null
+     *                                  or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; having(String aggregatedFieldName, String operator, Object value);
+
+    // ========== ORDER BY ==========
+
+    /**
+     * Adds ascending ORDER BY for the specified field.
+     * 
+     * @param fieldName the field name to sort by, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; orderBy(String fieldName);
+
+    /**
+     * Adds descending ORDER BY for the specified field.
+     * 
+     * @param fieldName the field name to sort by, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; orderByDescending(String fieldName);
+
+    /**
+     * Adds ORDER BY with specified direction.
+     * 
+     * @param fieldName the field name to sort by, must not be null or empty
+     * @param ascending true for ASC, false for DESC
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; orderBy(String fieldName, boolean ascending);
+
+    // ========== Pagination ==========
+
+    /**
+     * Sets the maximum number of results to return.
+     * 
+     * @param maxResults the maximum number of results, must be positive
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if maxResults is not positive
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; limit(int maxResults);
+
+    /**
+     * Sets the number of results to skip.
+     * 
+     * @param skipCount the number of results to skip, must not be negative
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if skipCount is negative
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; offset(int skipCount);
+
+    /**
+     * Sets pagination using page number and page size.
+     * 
+     * @param pageNumber the page number (0-based), must not be negative
+     * @param pageSize   the page size, must be positive
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if pageNumber is negative or pageSize is not
+     *                                  positive
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; page(int pageNumber, int pageSize);
+
+    // ========== Subqueries ==========
+
+    /**
+     * Adds an EXISTS subquery condition.
+     * 
+     * @param subquery the subquery builder, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if subquery is null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; exists(QueryBuilder&lt;?&gt; subquery);
+
+    /**
+     * Adds a NOT EXISTS subquery condition.
+     * 
+     * @param subquery the subquery builder, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if subquery is null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; notExists(QueryBuilder&lt;?&gt; subquery);
+
+    /**
+     * Adds an IN subquery condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param subquery  the subquery builder, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null/empty or subquery is
+     *                                  null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; in(String fieldName, QueryBuilder&lt;?&gt; subquery);
+
+    /**
+     * Adds a NOT IN subquery condition.
+     * 
+     * @param fieldName the field name, must not be null or empty
+     * @param subquery  the subquery builder, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fieldName is null/empty or subquery is
+     *                                  null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; notIn(String fieldName, QueryBuilder&lt;?&gt; subquery);
+
+    // ========== Custom Functions ==========
+
+    /**
+     * Adds a custom database function call.
+     * 
+     * @param functionName the name of the database function, must not be null or
+     *                     empty
+     * @param fieldName    the field to apply the function to, must not be null or
+     *                     empty
+     * @param parameters   additional function parameters, may be empty but not null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if functionName or fieldName is null or
+     *                                  empty, or parameters is null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; customFunction(String functionName, String fieldName, Object... parameters);
+
+    // ========== Native Query Support ==========
+
+    /**
+     * Executes a native SQL query instead of JPA criteria.
+     * 
+     * @param sqlQuery the native SQL query string, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if sqlQuery is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; nativeQuery(String sqlQuery);
+
+    /**
+     * Sets a named parameter for native queries.
+     * 
+     * @param parameterName  the parameter name, must not be null or empty
+     * @param parameterValue the parameter value, may be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if parameterName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; parameter(String parameterName, Object parameterValue);
+
+    /**
+     * Sets multiple named parameters for native queries.
+     * 
+     * @param parameterMap map of parameter names and values, must not be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if parameterMap is null
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; parameters(Map&lt;String, Object&gt; parameterMap);
+
+    // ========== Caching ==========
+
+    /**
+     * Enables caching for this query with default settings.
+     * 
+     * @return a new QueryBuilder instance
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; cached();
+
+    /**
+     * Enables caching for this query in the specified cache region.
+     * 
+     * @param cacheRegionName the cache region name, must not be null or empty
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if cacheRegionName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; cached(String cacheRegionName);
+
+    /**
+     * Enables caching for this query with specified time-to-live.
+     * 
+     * @param timeToLiveSeconds the cache entry TTL in seconds, must not be negative
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if timeToLiveSeconds is negative
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; cached(long timeToLiveSeconds);
+
+    // ========== Query Hints ==========
+
+    /**
+     * Sets a query hint for performance tuning.
+     * 
+     * @param hintName  the hint name, must not be null or empty
+     * @param hintValue the hint value, may be null
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if hintName is null or empty
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; hint(String hintName, Object hintValue);
+
+    /**
+     * Sets the fetch size hint for result processing.
+     * 
+     * @param fetchSize the fetch size, must be positive
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if fetchSize is not positive
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; fetchSize(int fetchSize);
+
+    /**
+     * Sets the query timeout in seconds.
+     * 
+     * @param timeoutSeconds the timeout in seconds, must not be negative
+     * @return a new QueryBuilder instance
+     * @throws IllegalArgumentException if timeoutSeconds is negative
+     * @since 1.0.0
+     */
+    QueryBuilder&lt;T&gt; timeout(int timeoutSeconds);
+
+    // ========== Query Execution ==========
+
+    /**
+     * Executes the query and returns all matching results.
+     * 
+     * @return list of matching entities, never null but may be empty
+     * @throws QueryExecutionException if query execution fails
+     * @since 1.0.0
+     */
+    List&lt;T&gt; findAll();
+
+    /**
+     * Executes the query and returns the first result, or null if no results.
+     * 
+     * @return the first matching entity or null if no results found
+     * @throws QueryExecutionException if query execution fails
+     * @since 1.0.0
+     */
+    T findOne();
+
+    /**
+     * Executes a count query and returns the number of matching results.
+     * 
+     * @return the count of matching entities, always non-negative
+     * @throws QueryExecutionException if query execution fails
+     * @since 1.0.0
+     */
+    long count();
+
+    /**
+     * Checks if any results exist for this query.
+     * 
+     * @return true if at least one result exists, false otherwise
+     * @throws QueryExecutionException if query execution fails
+     * @since 1.0.0
+     */
+    boolean exists();
+
+    // ========== Asynchronous Execution ==========
+
+    /**
+     * Executes the query asynchronously and returns all matching results.
+     * 
+     * @return CompletableFuture containing list of matching entities, never null
+     * @since 1.0.0
+     */
+    CompletableFuture&lt;List&lt;T&gt;&gt; findAllAsync();
+
+    /**
+     * Executes the query asynchronously and returns the first result.
+     * 
+     * @return CompletableFuture containing the first matching entity or null
+     * @since 1.0.0
+     */
+    CompletableFuture&lt;T&gt; findOneAsync();
+
+    /**
+     * Executes a count query asynchronously.
+     * 
+     * @return CompletableFuture containing the count of matching entities
+     * @since 1.0.0
+     */
+    CompletableFuture&lt;Long&gt; countAsync();
+
+    // ========== Pagination Results ==========
+
+    /**
+     * Executes the query and returns paginated results with metadata.
+     * 
+     * @return a Page containing results and pagination information, never null
+     * @throws QueryExecutionException if query execution fails
+     * @since 1.0.0
+     */
+    Page&lt;T&gt; findPage();
+
+    // ========== Query Building ==========
+
+    /**
+     * Builds and returns a DynamicQuery instance without executing it.
+     * This allows for query reuse and performance optimization.
+     * 
+     * @return a DynamicQuery instance representing this builder's state, never null
+     * @since 1.0.0
+     */
+    DynamicQuery&lt;T&gt; build();
+
+    // ========== Debugging and Diagnostics ==========
+
+    /**
+     * Generates the SQL representation of this query for debugging purposes.
+     * 
+     * @return the generated SQL string, never null but may be empty if not
+     *         available
+     * @since 1.0.0
+     */
+    String toSQL();
+
+    /**
+     * Returns query execution statistics and performance metrics.
+     * 
+     * @return QueryStats containing execution information, never null
+     * @since 1.0.0
+     */
+    QueryStats getExecutionStats();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

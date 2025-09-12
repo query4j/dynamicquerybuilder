@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DynamicQueryBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">dynamicquerybuilder</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core.impl</a> &gt; <span class="el_source">DynamicQueryBuilder.java</span></div><h1>DynamicQueryBuilder.java</h1><pre class="source lang-java linenums">package com.github.query4j.core.impl;
+
+import com.github.query4j.core.*;
+import com.github.query4j.core.criteria.*;
+
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.With;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
+/**
+ * Immutable, thread-safe implementation of QueryBuilder interface.
+ * Uses predicate-based query building with fluent API.
+ *
+ * @param &lt;T&gt; Entity type
+ * @since 1.0.0
+ */
+<span class="pc bpc" id="L28" title="7 of 14 branches missed.">@RequiredArgsConstructor(access = AccessLevel.PACKAGE)</span>
+public final class DynamicQueryBuilder&lt;T&gt; implements QueryBuilder&lt;T&gt; {
+
+<span class="fc" id="L31">    private static final AtomicLong PARAM_COUNTER = new AtomicLong(0);</span>
+
+<span class="nc bnc" id="L33" title="All 4 branches missed.">    @With</span>
+    @NonNull
+    private final Class&lt;T&gt; entityClass;
+
+<span class="nc bnc" id="L37" title="All 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;Predicate&gt; predicates;
+
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">    @With</span>
+    private final String nextLogicalOperator;
+
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">    @With</span>
+    private final int groupDepth;
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">    @With</span>
+    private final int offset;
+
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">    @With</span>
+    private final int limit;
+
+<span class="nc bnc" id="L53" title="All 2 branches missed.">    @With</span>
+    private final boolean cacheEnabled;
+
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;String&gt; selectFields;
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;String&gt; joinClauses;
+
+<span class="pc bpc" id="L64" title="2 of 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;String&gt; orderByClauses;
+
+<span class="pc bpc" id="L68" title="2 of 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;String&gt; groupByClauses;
+
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">    @With</span>
+    @NonNull
+    private final List&lt;Predicate&gt; havingPredicates;
+
+    // Default constructor for factory method
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">    public DynamicQueryBuilder(@NonNull Class&lt;T&gt; entityClass) {</span>
+<span class="fc" id="L78">        this(entityClass, Collections.emptyList(), null, 0, 0, -1, false,</span>
+<span class="fc" id="L79">                Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),</span>
+<span class="fc" id="L80">                Collections.emptyList(), Collections.emptyList());</span>
+<span class="fc" id="L81">    }</span>
+
+    private DynamicQueryBuilder&lt;T&gt; newInstance(
+            List&lt;Predicate&gt; predicates,
+            String nextLogicalOperator,
+            int groupDepth,
+            int offset,
+            int limit,
+            boolean cacheEnabled,
+            List&lt;String&gt; selectFields,
+            List&lt;String&gt; joinClauses,
+            List&lt;String&gt; orderByClauses,
+            List&lt;String&gt; groupByClauses,
+            List&lt;Predicate&gt; havingPredicates) {
+<span class="fc" id="L95">        return new DynamicQueryBuilder&lt;&gt;(entityClass, predicates, nextLogicalOperator,</span>
+                groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+    
+    /**
+     * Returns the immutable list of predicates in this builder.
+     * Primarily for testing or advanced use cases.
+     *
+     * @return list of predicates
+     */
+    public List&lt;Predicate&gt; getPredicates() {
+<span class="fc" id="L107">        return Collections.unmodifiableList(predicates);</span>
+    }
+
+
+    // ==================== WHERE CLAUSE METHODS ====================
+
+    @Override
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; where(@NonNull String fieldName, Object value) {</span>
+<span class="fc" id="L115">        return where(fieldName, &quot;=&quot;, value);</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L119" title="2 of 4 branches missed.">    public QueryBuilder&lt;T&gt; where(@NonNull String fieldName, @NonNull String operator, Object value) {</span>
+<span class="fc" id="L120">        validateFieldName(fieldName);</span>
+<span class="fc" id="L121">        String normalized = operator.trim().toUpperCase(java.util.Locale.ROOT);</span>
+<span class="fc" id="L122">        validateOperator(normalized);</span>
+
+<span class="fc" id="L124">        String paramName = generateParamName(fieldName);</span>
+<span class="fc" id="L125">        SimplePredicate newPredicate = new SimplePredicate(fieldName, normalized, value, paramName);</span>
+
+<span class="fc" id="L127">        return addPredicate(newPredicate);</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L131" title="2 of 4 branches missed.">    public QueryBuilder&lt;T&gt; whereIn(@NonNull String fieldName, @NonNull List&lt;Object&gt; values) {</span>
+<span class="fc" id="L132">        validateFieldName(fieldName);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (values.isEmpty()) {</span>
+<span class="nc" id="L134">            throw new IllegalArgumentException(&quot;values must not be empty&quot;);</span>
+        }
+
+<span class="fc" id="L137">        String paramName = generateParamName(fieldName);</span>
+<span class="fc" id="L138">        InPredicate newPredicate = new InPredicate(fieldName, values, paramName);</span>
+
+<span class="fc" id="L140">        return addPredicate(newPredicate);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L144" title="All 4 branches missed.">    public QueryBuilder&lt;T&gt; whereNotIn(@NonNull String fieldName, @NonNull List&lt;Object&gt; values) {</span>
+<span class="nc" id="L145">        validateFieldName(fieldName);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (values.isEmpty()) {</span>
+<span class="nc" id="L147">            throw new IllegalArgumentException(&quot;values must not be empty&quot;);</span>
+        }
+
+<span class="nc" id="L150">        String paramName = generateParamName(fieldName);</span>
+<span class="nc" id="L151">        InPredicate inPredicate = new InPredicate(fieldName, values, paramName);</span>
+<span class="nc" id="L152">        LogicalPredicate notPredicate = new LogicalPredicate(&quot;NOT&quot;, Arrays.asList(inPredicate));</span>
+
+<span class="nc" id="L154">        return addPredicate(notPredicate);</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L158" title="2 of 4 branches missed.">    public QueryBuilder&lt;T&gt; whereLike(@NonNull String fieldName, @NonNull String pattern) {</span>
+<span class="fc" id="L159">        validateFieldName(fieldName);</span>
+
+<span class="fc" id="L161">        String paramName = generateParamName(fieldName);</span>
+<span class="fc" id="L162">        LikePredicate newPredicate = new LikePredicate(fieldName, pattern, paramName);</span>
+
+<span class="fc" id="L164">        return addPredicate(newPredicate);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L168" title="All 4 branches missed.">    public QueryBuilder&lt;T&gt; whereNotLike(@NonNull String fieldName, @NonNull String pattern) {</span>
+<span class="nc" id="L169">        validateFieldName(fieldName);</span>
+
+<span class="nc" id="L171">        String paramName = generateParamName(fieldName);</span>
+<span class="nc" id="L172">        LikePredicate likePredicate = new LikePredicate(fieldName, pattern, paramName);</span>
+<span class="nc" id="L173">        LogicalPredicate notPredicate = new LogicalPredicate(&quot;NOT&quot;, Arrays.asList(likePredicate));</span>
+
+<span class="nc" id="L175">        return addPredicate(notPredicate);</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; whereBetween(@NonNull String fieldName, Object startValue, Object endValue) {</span>
+<span class="fc" id="L180">        validateFieldName(fieldName);</span>
+
+<span class="fc" id="L182">        String startParamName = generateParamName(fieldName + &quot;_start&quot;);</span>
+<span class="fc" id="L183">        String endParamName = generateParamName(fieldName + &quot;_end&quot;);</span>
+<span class="fc" id="L184">        BetweenPredicate newPredicate = new BetweenPredicate(fieldName, startValue, endValue,</span>
+                startParamName, endParamName);
+
+<span class="fc" id="L187">        return addPredicate(newPredicate);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L191" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; whereIsNull(@NonNull String fieldName) {</span>
+<span class="nc" id="L192">        validateFieldName(fieldName);</span>
+<span class="nc" id="L193">        NullPredicate newPredicate = new NullPredicate(fieldName, true);</span>
+<span class="nc" id="L194">        return addPredicate(newPredicate);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L198" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; whereIsNotNull(@NonNull String fieldName) {</span>
+<span class="nc" id="L199">        validateFieldName(fieldName);</span>
+<span class="nc" id="L200">        NullPredicate newPredicate = new NullPredicate(fieldName, false);</span>
+<span class="nc" id="L201">        return addPredicate(newPredicate);</span>
+    }
+
+    // ==================== LOGICAL OPERATORS ====================
+
+    @Override
+    public QueryBuilder&lt;T&gt; and() {
+<span class="fc" id="L208">        return withNextLogicalOperator(&quot;AND&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; or() {
+<span class="fc" id="L213">        return withNextLogicalOperator(&quot;OR&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; not() {
+<span class="nc" id="L218">        return withNextLogicalOperator(&quot;NOT&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; openGroup() {
+<span class="fc" id="L223">        return withGroupDepth(groupDepth + 1);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; closeGroup() {
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if (groupDepth &lt;= 0) {</span>
+<span class="nc" id="L229">            throw new IllegalStateException(&quot;Cannot close group - no open groups&quot;);</span>
+        }
+<span class="fc" id="L231">        return withGroupDepth(groupDepth - 1);</span>
+    }
+
+    // ==================== JOIN METHODS ====================
+
+    @Override
+<span class="nc bnc" id="L237" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; join(@NonNull String associationFieldName) {</span>
+<span class="nc" id="L238">        return innerJoin(associationFieldName);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L242" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; leftJoin(@NonNull String associationFieldName) {</span>
+<span class="nc" id="L243">        validateFieldName(associationFieldName);</span>
+<span class="nc" id="L244">        List&lt;String&gt; newJoins = new ArrayList&lt;&gt;(joinClauses);</span>
+<span class="nc" id="L245">        newJoins.add(&quot;LEFT JOIN &quot; + associationFieldName);</span>
+<span class="nc" id="L246">        return withJoinClauses(Collections.unmodifiableList(newJoins));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L250" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; rightJoin(@NonNull String associationFieldName) {</span>
+<span class="nc" id="L251">        validateFieldName(associationFieldName);</span>
+<span class="nc" id="L252">        List&lt;String&gt; newJoins = new ArrayList&lt;&gt;(joinClauses);</span>
+<span class="nc" id="L253">        newJoins.add(&quot;RIGHT JOIN &quot; + associationFieldName);</span>
+<span class="nc" id="L254">        return withJoinClauses(Collections.unmodifiableList(newJoins));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L258" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; innerJoin(@NonNull String associationFieldName) {</span>
+<span class="nc" id="L259">        validateFieldName(associationFieldName);</span>
+<span class="nc" id="L260">        List&lt;String&gt; newJoins = new ArrayList&lt;&gt;(joinClauses);</span>
+<span class="nc" id="L261">        newJoins.add(&quot;INNER JOIN &quot; + associationFieldName);</span>
+<span class="nc" id="L262">        return withJoinClauses(Collections.unmodifiableList(newJoins));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L266" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; fetch(@NonNull String associationFieldName) {</span>
+<span class="nc" id="L267">        validateFieldName(associationFieldName);</span>
+<span class="nc" id="L268">        List&lt;String&gt; newJoins = new ArrayList&lt;&gt;(joinClauses);</span>
+<span class="nc" id="L269">        newJoins.add(&quot;LEFT JOIN FETCH &quot; + associationFieldName);</span>
+<span class="nc" id="L270">        return withJoinClauses(Collections.unmodifiableList(newJoins));</span>
+    }
+
+    // ==================== SELECT METHODS ====================
+
+    @Override
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; select(@NonNull String... fieldNames) {</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">        if (fieldNames.length == 0) {</span>
+<span class="nc" id="L278">            throw new IllegalArgumentException(&quot;fieldNames must not be empty&quot;);</span>
+        }
+
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        for (String fieldName : fieldNames) {</span>
+<span class="fc" id="L282">            validateFieldName(fieldName);</span>
+        }
+
+<span class="fc" id="L285">        List&lt;String&gt; newSelectFields = new ArrayList&lt;&gt;(Arrays.asList(fieldNames));</span>
+<span class="fc" id="L286">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    // ==================== AGGREGATION METHODS ====================
+
+    @Override
+    public QueryBuilder&lt;T&gt; countAll() {
+<span class="nc" id="L293">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;COUNT(*)&quot;);</span>
+<span class="nc" id="L294">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L298" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; count(@NonNull String fieldName) {</span>
+<span class="nc" id="L299">        validateFieldName(fieldName);</span>
+<span class="nc" id="L300">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;COUNT(&quot; + fieldName + &quot;)&quot;);</span>
+<span class="nc" id="L301">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L305" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; sum(@NonNull String numericFieldName) {</span>
+<span class="nc" id="L306">        validateFieldName(numericFieldName);</span>
+<span class="nc" id="L307">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;SUM(&quot; + numericFieldName + &quot;)&quot;);</span>
+<span class="nc" id="L308">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L312" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; avg(@NonNull String numericFieldName) {</span>
+<span class="nc" id="L313">        validateFieldName(numericFieldName);</span>
+<span class="nc" id="L314">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;AVG(&quot; + numericFieldName + &quot;)&quot;);</span>
+<span class="nc" id="L315">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L319" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; min(@NonNull String fieldName) {</span>
+<span class="nc" id="L320">        validateFieldName(fieldName);</span>
+<span class="nc" id="L321">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;MIN(&quot; + fieldName + &quot;)&quot;);</span>
+<span class="nc" id="L322">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L326" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; max(@NonNull String fieldName) {</span>
+<span class="nc" id="L327">        validateFieldName(fieldName);</span>
+<span class="nc" id="L328">        List&lt;String&gt; newSelectFields = Arrays.asList(&quot;MAX(&quot; + fieldName + &quot;)&quot;);</span>
+<span class="nc" id="L329">        return withSelectFields(Collections.unmodifiableList(newSelectFields));</span>
+    }
+
+    // ==================== GROUP BY AND HAVING ====================
+
+    @Override
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; groupBy(@NonNull String... fieldNames) {</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if (fieldNames.length == 0) {</span>
+<span class="nc" id="L337">            throw new IllegalArgumentException(&quot;fieldNames must not be empty&quot;);</span>
+        }
+
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        for (String fieldName : fieldNames) {</span>
+<span class="fc" id="L341">            validateFieldName(fieldName);</span>
+        }
+
+<span class="fc" id="L344">        List&lt;String&gt; newGroupBy = new ArrayList&lt;&gt;(Arrays.asList(fieldNames));</span>
+<span class="fc" id="L345">        return withGroupByClauses(Collections.unmodifiableList(newGroupBy));</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L349" title="2 of 4 branches missed.">    public QueryBuilder&lt;T&gt; having(@NonNull String aggregatedFieldName, @NonNull String operator, Object value) {</span>
+<span class="fc" id="L350">        validateFieldName(aggregatedFieldName);</span>
+<span class="fc" id="L351">        validateOperator(operator);</span>
+
+<span class="fc" id="L353">        String paramName = generateParamName(aggregatedFieldName + &quot;_having&quot;);</span>
+<span class="fc" id="L354">        SimplePredicate havingPredicate = new SimplePredicate(aggregatedFieldName, operator, value, paramName);</span>
+
+<span class="fc" id="L356">        List&lt;Predicate&gt; newHavingPredicates = new ArrayList&lt;&gt;(havingPredicates);</span>
+<span class="fc" id="L357">        newHavingPredicates.add(havingPredicate);</span>
+
+<span class="fc" id="L359">        return withHavingPredicates(Collections.unmodifiableList(newHavingPredicates));</span>
+    }
+
+    // ==================== ORDER BY METHODS ====================
+
+    @Override
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; orderBy(@NonNull String fieldName) {</span>
+<span class="fc" id="L366">        return orderBy(fieldName, true);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L370" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; orderByDescending(@NonNull String fieldName) {</span>
+<span class="nc" id="L371">        return orderBy(fieldName, false);</span>
+    }
+
+    @Override
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">    public QueryBuilder&lt;T&gt; orderBy(@NonNull String fieldName, boolean ascending) {</span>
+<span class="fc" id="L376">        validateFieldName(fieldName);</span>
+
+<span class="fc" id="L378">        List&lt;String&gt; newOrderBy = new ArrayList&lt;&gt;(orderByClauses);</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">        newOrderBy.add(fieldName + (ascending ? &quot; ASC&quot; : &quot; DESC&quot;));</span>
+
+<span class="fc" id="L381">        return withOrderByClauses(Collections.unmodifiableList(newOrderBy));</span>
+    }
+
+    // ==================== PAGINATION ====================
+
+    @Override
+    public QueryBuilder&lt;T&gt; page(int pageNumber, int pageSize) {
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if (pageNumber &lt; 1) {</span>
+<span class="nc" id="L389">            throw new IllegalArgumentException(&quot;pageNumber must be &gt;= 1&quot;);</span>
+        }
+<span class="nc bnc" id="L391" title="All 2 branches missed.">        if (pageSize &lt; 1) {</span>
+<span class="nc" id="L392">            throw new IllegalArgumentException(&quot;pageSize must be &gt;= 1&quot;);</span>
+        }
+<span class="nc" id="L394">        int newOffset = Math.multiplyExact(pageNumber - 1, pageSize);</span>
+<span class="nc" id="L395">        return withOffset(newOffset).withLimit(pageSize);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; limit(int maxResults) {
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">        if (maxResults &lt;= 0) {</span>
+<span class="nc" id="L401">            throw new IllegalArgumentException(&quot;limit must be positive&quot;);</span>
+        }
+<span class="fc" id="L403">        return withLimit(maxResults);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; offset(int skipCount) {
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">        if (skipCount &lt; 0) {</span>
+<span class="nc" id="L409">            throw new IllegalArgumentException(&quot;offset must be non-negative&quot;);</span>
+        }
+<span class="fc" id="L411">        return withOffset(skipCount);</span>
+    }
+
+    // ==================== SUBQUERIES (STUBS FOR NOW) ====================
+
+    @Override
+    public QueryBuilder&lt;T&gt; exists(QueryBuilder&lt;?&gt; subquery) {
+<span class="nc" id="L418">        Objects.requireNonNull(subquery, &quot;subquery must not be null&quot;);</span>
+        // TODO: Implement EXISTS subquery support
+<span class="nc" id="L420">        throw new UnsupportedOperationException(&quot;EXISTS subqueries not implemented yet&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; notExists(QueryBuilder&lt;?&gt; subquery) {
+<span class="nc" id="L425">        Objects.requireNonNull(subquery, &quot;subquery must not be null&quot;);</span>
+        // TODO: Implement NOT EXISTS subquery support
+<span class="nc" id="L427">        throw new UnsupportedOperationException(&quot;NOT EXISTS subqueries not implemented yet&quot;);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L431" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; in(@NonNull String fieldName, QueryBuilder&lt;?&gt; subquery) {</span>
+<span class="nc" id="L432">        validateFieldName(fieldName);</span>
+<span class="nc" id="L433">        Objects.requireNonNull(subquery, &quot;subquery must not be null&quot;);</span>
+        // TODO: Implement IN subquery support
+<span class="nc" id="L435">        throw new UnsupportedOperationException(&quot;IN subqueries not implemented yet&quot;);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L439" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; notIn(@NonNull String fieldName, QueryBuilder&lt;?&gt; subquery) {</span>
+<span class="nc" id="L440">        validateFieldName(fieldName);</span>
+<span class="nc" id="L441">        Objects.requireNonNull(subquery, &quot;subquery must not be null&quot;);</span>
+        // TODO: Implement NOT IN subquery support
+<span class="nc" id="L443">        throw new UnsupportedOperationException(&quot;NOT IN subqueries not implemented yet&quot;);</span>
+    }
+
+    // ==================== ADVANCED FEATURES (STUBS FOR NOW) ====================
+
+    @Override
+<span class="nc bnc" id="L449" title="All 4 branches missed.">    public QueryBuilder&lt;T&gt; customFunction(@NonNull String functionName, @NonNull String fieldName,</span>
+            Object... parameters) {
+<span class="nc" id="L451">        validateFieldName(fieldName);</span>
+        // TODO: Implement custom function support
+<span class="nc" id="L453">        throw new UnsupportedOperationException(&quot;Custom functions not implemented yet&quot;);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L457" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; nativeQuery(@NonNull String sqlQuery) {</span>
+        // TODO: Implement native query support
+<span class="nc" id="L459">        throw new UnsupportedOperationException(&quot;Native queries not implemented yet&quot;);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L463" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; parameter(@NonNull String parameterName, Object parameterValue) {</span>
+        // With predicate-based approach, parameters are handled automatically
+<span class="nc" id="L465">        throw new UnsupportedOperationException(&quot;Use predicate-based where methods instead&quot;);</span>
+    }
+
+    @Override
+<span class="nc bnc" id="L469" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; parameters(@NonNull Map&lt;String, Object&gt; parameterMap) {</span>
+        // With predicate-based approach, parameters are handled automatically
+<span class="nc" id="L471">        throw new UnsupportedOperationException(&quot;Use predicate-based where methods instead&quot;);</span>
+    }
+
+    // ==================== CACHING ====================
+
+    @Override
+    public QueryBuilder&lt;T&gt; cached() {
+<span class="nc" id="L478">        return withCacheEnabled(true);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; cached(String cacheRegionName) {
+        // TODO: Implement cache region support
+<span class="nc" id="L484">        return withCacheEnabled(true);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; cached(long timeToLiveSeconds) {
+        // TODO: Implement TTL support
+<span class="nc" id="L490">        return withCacheEnabled(true);</span>
+    }
+
+    // ==================== HINTS AND PERFORMANCE (STUBS FOR NOW)
+    // ====================
+
+    @Override
+<span class="nc bnc" id="L497" title="All 2 branches missed.">    public QueryBuilder&lt;T&gt; hint(@NonNull String hintName, Object hintValue) {</span>
+        // TODO: Implement query hints
+<span class="nc" id="L499">        throw new UnsupportedOperationException(&quot;Query hints not implemented yet&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; fetchSize(int fetchSize) {
+<span class="nc bnc" id="L504" title="All 2 branches missed.">        if (fetchSize &lt;= 0) {</span>
+<span class="nc" id="L505">            throw new IllegalArgumentException(&quot;fetchSize must be positive&quot;);</span>
+        }
+        // TODO: Implement fetch size
+<span class="nc" id="L508">        throw new UnsupportedOperationException(&quot;Fetch size not implemented yet&quot;);</span>
+    }
+
+    @Override
+    public QueryBuilder&lt;T&gt; timeout(int timeoutSeconds) {
+<span class="nc bnc" id="L513" title="All 2 branches missed.">        if (timeoutSeconds &lt;= 0) {</span>
+<span class="nc" id="L514">            throw new IllegalArgumentException(&quot;timeoutSeconds must be positive&quot;);</span>
+        }
+        // TODO: Implement query timeout
+<span class="nc" id="L517">        throw new UnsupportedOperationException(&quot;Query timeout not implemented yet&quot;);</span>
+    }
+
+    @Override
+    public QueryStats getExecutionStats() {
+        // TODO: Implement execution statistics
+<span class="nc" id="L523">        throw new UnsupportedOperationException(&quot;Execution stats not implemented yet&quot;);</span>
+    }
+
+    // ==================== EXECUTION METHODS ====================
+
+    @Override
+    public long count() {
+        // Implementation stub: real query execution logic would go here
+<span class="nc" id="L531">        return 0L;</span>
+    }
+
+    @Override
+    public List&lt;T&gt; findAll() {
+<span class="nc" id="L536">        return Collections.emptyList();</span>
+    }
+
+    @Override
+    public T findOne() {
+<span class="nc" id="L541">        return null;</span>
+    }
+
+    @Override
+    public boolean exists() {
+<span class="nc" id="L546">        return false;</span>
+    }
+
+    @Override
+    public CompletableFuture&lt;List&lt;T&gt;&gt; findAllAsync() {
+<span class="nc" id="L551">        return CompletableFuture.completedFuture(findAll());</span>
+    }
+
+    @Override
+    public CompletableFuture&lt;T&gt; findOneAsync() {
+<span class="nc" id="L556">        return CompletableFuture.completedFuture(findOne());</span>
+    }
+
+    @Override
+    public CompletableFuture&lt;Long&gt; countAsync() {
+<span class="nc" id="L561">        return CompletableFuture.completedFuture(count());</span>
+    }
+
+    @Override
+    public Page&lt;T&gt; findPage() {
+<span class="nc" id="L566">        return PageImpl.empty();</span>
+    }
+
+    @Override
+    public DynamicQuery&lt;T&gt; build() {
+<span class="nc" id="L571">        return new DynamicQueryImpl&lt;&gt;(findAll(), toSQL());</span>
+    }
+
+    // ==================== SQL GENERATION ====================
+
+    @Override
+    public String toSQL() {
+<span class="fc" id="L578">        StringBuilder sb = new StringBuilder();</span>
+
+        // SELECT clause
+<span class="fc" id="L581">        sb.append(&quot;SELECT &quot;);</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">        if (selectFields.isEmpty()) {</span>
+<span class="fc" id="L583">            sb.append(&quot;*&quot;);</span>
+        } else {
+<span class="fc" id="L585">            sb.append(String.join(&quot;, &quot;, selectFields));</span>
+        }
+
+        // FROM clause
+<span class="fc" id="L589">        sb.append(&quot; FROM &quot;).append(entityClass.getSimpleName());</span>
+
+        // JOIN clauses
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">        if (!joinClauses.isEmpty()) {</span>
+<span class="nc" id="L593">            sb.append(&quot; &quot;).append(String.join(&quot; &quot;, joinClauses));</span>
+        }
+
+        // WHERE clause
+<span class="fc bfc" id="L597" title="All 2 branches covered.">        if (!predicates.isEmpty()) {</span>
+<span class="fc" id="L598">            sb.append(&quot; WHERE &quot;);</span>
+<span class="fc" id="L599">            sb.append(predicates.stream()</span>
+<span class="fc" id="L600">                    .map(Predicate::toSQL)</span>
+<span class="fc" id="L601">                    .collect(Collectors.joining(&quot; AND &quot;)));</span>
+        }
+
+        // GROUP BY clause
+<span class="fc bfc" id="L605" title="All 2 branches covered.">        if (!groupByClauses.isEmpty()) {</span>
+<span class="fc" id="L606">            sb.append(&quot; GROUP BY &quot;).append(String.join(&quot;, &quot;, groupByClauses));</span>
+        }
+
+        // HAVING clause
+<span class="fc bfc" id="L610" title="All 2 branches covered.">        if (!havingPredicates.isEmpty()) {</span>
+<span class="fc" id="L611">            sb.append(&quot; HAVING &quot;);</span>
+<span class="fc" id="L612">            sb.append(havingPredicates.stream()</span>
+<span class="fc" id="L613">                    .map(Predicate::toSQL)</span>
+<span class="fc" id="L614">                    .collect(Collectors.joining(&quot; AND &quot;)));</span>
+        }
+
+        // ORDER BY clause
+<span class="fc bfc" id="L618" title="All 2 branches covered.">        if (!orderByClauses.isEmpty()) {</span>
+<span class="fc" id="L619">            sb.append(&quot; ORDER BY &quot;).append(String.join(&quot;, &quot;, orderByClauses));</span>
+        }
+
+        // LIMIT clause
+<span class="fc bfc" id="L623" title="All 2 branches covered.">        if (limit &gt; 0) {</span>
+<span class="fc" id="L624">            sb.append(&quot; LIMIT &quot;).append(limit);</span>
+        }
+
+        // OFFSET clause
+<span class="fc bfc" id="L628" title="All 2 branches covered.">        if (offset &gt; 0) {</span>
+<span class="fc" id="L629">            sb.append(&quot; OFFSET &quot;).append(offset);</span>
+        }
+
+<span class="fc" id="L632">        return sb.toString();</span>
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private QueryBuilder&lt;T&gt; addPredicate(Predicate newPredicate) {
+<span class="fc" id="L638">        List&lt;Predicate&gt; newPredicates = new ArrayList&lt;&gt;(predicates);</span>
+
+<span class="fc bfc" id="L640" title="All 4 branches covered.">        if (predicates.isEmpty() || nextLogicalOperator == null) {</span>
+<span class="fc" id="L641">            newPredicates.add(newPredicate);</span>
+        } else {
+            // Combine with logical operator
+<span class="fc" id="L644">            Predicate lastPredicate = newPredicates.remove(newPredicates.size() - 1);</span>
+<span class="fc" id="L645">            LogicalPredicate combined = new LogicalPredicate(nextLogicalOperator,</span>
+<span class="fc" id="L646">                    Arrays.asList(lastPredicate, newPredicate));</span>
+<span class="fc" id="L647">            newPredicates.add(combined);</span>
+        }
+
+<span class="fc" id="L650">        return newInstance(Collections.unmodifiableList(newPredicates), null, groupDepth,</span>
+                offset, limit, cacheEnabled, selectFields, joinClauses,
+                orderByClauses, groupByClauses, havingPredicates);
+    }
+
+    private void validateFieldName(String fieldName) {
+        try {
+            // Use centralized field validation
+<span class="fc" id="L658">            FieldValidator.validateFieldName(fieldName);</span>
+<span class="nc" id="L659">        } catch (QueryBuildException e) {</span>
+            // Convert to IllegalArgumentException for backward compatibility in builder layer
+<span class="nc" id="L661">            throw new IllegalArgumentException(e.getMessage(), e);</span>
+<span class="fc" id="L662">        }</span>
+<span class="fc" id="L663">    }</span>
+
+    private void validateOperator(String operator) {
+        try {
+            // Use centralized operator validation
+<span class="fc" id="L668">            OperatorValidator.validateOperator(operator);</span>
+<span class="nc" id="L669">        } catch (QueryBuildException e) {</span>
+            // Convert to IllegalArgumentException for backward compatibility in builder layer
+<span class="nc" id="L671">            throw new IllegalArgumentException(e.getMessage(), e);</span>
+<span class="fc" id="L672">        }</span>
+<span class="fc" id="L673">    }</span>
+
+    private String generateParamName(String baseName) {
+        // Generate parameter names that comply with strict validation
+        // Remove non-alphanumeric characters except underscores, ensure it starts with a letter
+<span class="fc" id="L678">        String sanitized = baseName.replaceAll(&quot;[^A-Za-z0-9_]&quot;, &quot;&quot;);</span>
+        
+        // Remove consecutive underscores
+<span class="fc" id="L681">        sanitized = sanitized.replaceAll(&quot;_{2,}&quot;, &quot;_&quot;);</span>
+        
+        // Remove leading and trailing underscores
+<span class="fc" id="L684">        sanitized = sanitized.replaceAll(&quot;^_+|_+$&quot;, &quot;&quot;);</span>
+        
+        // Ensure it starts with a letter
+<span class="pc bpc" id="L687" title="1 of 6 branches missed.">        if (sanitized.isEmpty() || Character.isDigit(sanitized.charAt(0)) || sanitized.charAt(0) == '_') {</span>
+<span class="fc" id="L688">            sanitized = &quot;p&quot; + sanitized;</span>
+        }
+        
+        // If still empty, use default prefix
+<span class="pc bpc" id="L692" title="1 of 2 branches missed.">        if (sanitized.isEmpty()) {</span>
+<span class="nc" id="L693">            sanitized = &quot;param&quot;;</span>
+        }
+        
+        // Add unique suffix
+<span class="fc" id="L697">        return sanitized + &quot;_&quot; + PARAM_COUNTER.incrementAndGet();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

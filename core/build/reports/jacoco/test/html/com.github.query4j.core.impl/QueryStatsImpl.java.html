@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryStatsImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core.impl</a> &gt; <span class="el_source">QueryStatsImpl.java</span></div><h1>QueryStatsImpl.java</h1><pre class="source lang-java linenums">package com.github.query4j.core.impl;
+
+import com.github.query4j.core.QueryStats;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Basic implementation of QueryStats interface.
+ * Provides execution timing, result count, SQL and hints info.
+ * 
+ * @since 1.0.0
+ */
+<span class="nc" id="L17">@NoArgsConstructor</span>
+public final class QueryStatsImpl implements QueryStats {
+
+<span class="nc" id="L20">    @Getter</span>
+    private long executionTimeMs;
+
+<span class="nc" id="L23">    @Getter</span>
+    private int resultCount;
+
+<span class="nc" id="L26">    @Getter</span>
+    private String generatedSQL = &quot;&quot;;
+
+<span class="nc" id="L29">    @Getter</span>
+<span class="nc" id="L30">    private Map&lt;String, Object&gt; hints = Collections.emptyMap();</span>
+
+<span class="nc" id="L32">    @Getter</span>
+    private boolean cacheHit;
+
+<span class="nc" id="L35">    @Getter</span>
+<span class="nc" id="L36">    private long executionTimestamp = System.currentTimeMillis();</span>
+
+    /**
+     * Updates the statistics data.
+     * 
+     * @param executionTimeMs execution time in milliseconds
+     * @param resultCount     number of results returned
+     * @param cacheHit        whether cache was hit
+     */
+    public void update(long executionTimeMs, int resultCount, boolean cacheHit) {
+<span class="nc" id="L46">        this.executionTimeMs = executionTimeMs;</span>
+<span class="nc" id="L47">        this.resultCount = resultCount;</span>
+<span class="nc" id="L48">        this.cacheHit = cacheHit;</span>
+<span class="nc" id="L49">        this.executionTimestamp = System.currentTimeMillis();</span>
+<span class="nc" id="L50">    }</span>
+
+    @Override
+    public boolean wasCacheHit() {
+<span class="nc" id="L54">        return cacheHit;</span>
+    }
+
+    /**
+     * Sets/overwrites the generated SQL text.
+     */
+    public QueryStatsImpl sql(String sql) {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        this.generatedSQL = (sql == null) ? &quot;&quot; : sql;</span>
+<span class="nc" id="L62">        return this;</span>
+    }
+
+    /**
+     * Replaces the hints map with an unmodifiable defensive copy.
+     */
+    public QueryStatsImpl hints(Map&lt;String, Object&gt; hints) {
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        if (hints == null || hints.isEmpty()) {</span>
+<span class="nc" id="L70">            this.hints = Collections.emptyMap();</span>
+        } else {
+<span class="nc" id="L72">            this.hints = Collections.unmodifiableMap(new HashMap&lt;&gt;(hints));</span>
+        }
+<span class="nc" id="L74">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

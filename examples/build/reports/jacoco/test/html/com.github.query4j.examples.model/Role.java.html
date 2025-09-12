@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Role.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">examples</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.examples.model</a> &gt; <span class="el_source">Role.java</span></div><h1>Role.java</h1><pre class="source lang-java linenums">package com.github.query4j.examples.model;
+
+/**
+ * Example Role entity for Query4j documentation and examples.
+ */
+public class Role {
+    
+    private Long id;
+    private String name;
+    private String description;
+    private Boolean active;
+    
+    // Constructors
+<span class="nc" id="L14">    public Role() {}</span>
+    
+<span class="nc" id="L16">    public Role(String name) {</span>
+<span class="nc" id="L17">        this.name = name;</span>
+<span class="nc" id="L18">        this.active = true;</span>
+<span class="nc" id="L19">    }</span>
+    
+    // Getters and setters
+<span class="nc" id="L22">    public Long getId() { return id; }</span>
+<span class="nc" id="L23">    public void setId(Long id) { this.id = id; }</span>
+    
+<span class="nc" id="L25">    public String getName() { return name; }</span>
+<span class="nc" id="L26">    public void setName(String name) { this.name = name; }</span>
+    
+<span class="nc" id="L28">    public String getDescription() { return description; }</span>
+<span class="nc" id="L29">    public void setDescription(String description) { this.description = description; }</span>
+    
+<span class="nc" id="L31">    public Boolean getActive() { return active; }</span>
+<span class="nc" id="L32">    public void setActive(Boolean active) { this.active = active; }</span>
+    
+    @Override
+    public String toString() {
+<span class="nc" id="L36">        return String.format(&quot;Role{id=%d, name='%s'}&quot;, id, name);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - PropertyBasedTests</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>PropertyBasedTests</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.github.query4j.core.html">com.github.query4j.core</a> &gt; PropertyBasedTests</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">12</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">3.041s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+<li>
+<a href="#tab2">Standard error</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">betweenPredicateGeneratesValidSQL</td>
+<td class="success">0.180s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">builderIsImmutable</td>
+<td class="success">0.092s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">complexQueryCompositionMaintainsStructure</td>
+<td class="success">0.285s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">inPredicateGeneratesValidSQL</td>
+<td class="success">0.293s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">likePredicateGeneratesValidSQL</td>
+<td class="success">0.168s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">logicalPredicateGeneratesValidSQL</td>
+<td class="success">0.236s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">multiplePredicatesGenerateUniqueParameters</td>
+<td class="success">0.192s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">nullPredicateGeneratesValidSQL</td>
+<td class="success">0.164s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">predicatesAreImmutable</td>
+<td class="success">0.430s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">queryBuilderGeneratesValidSQL</td>
+<td class="success">0.111s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">randomFieldNamesGenerateValidSQL</td>
+<td class="success">0.717s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">simplePredicateGeneratesValidSQL</td>
+<td class="success">0.173s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>timestamp = 2025-09-12T21:30:36.122428315, PropertyBasedTests:randomFieldNamesGenerateValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 8          | # of all combined edge cases
+edge-cases#tried = 8          | # of edge cases tried in current run
+seed = -390307251127044254    | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:36.294725048, PropertyBasedTests:nullPredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 16         | # of all combined edge cases
+edge-cases#tried = 16         | # of edge cases tried in current run
+seed = -8904739872906122487   | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:36.727701853, PropertyBasedTests:predicatesAreImmutable = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1056       | # of all combined edge cases
+edge-cases#tried = 160        | # of edge cases tried in current run
+seed = 3715750756835841515    | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:36.964672034, PropertyBasedTests:logicalPredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1024       | # of all combined edge cases
+edge-cases#tried = 170        | # of edge cases tried in current run
+seed = -3275562849471174547   | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:37.139500541, PropertyBasedTests:simplePredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1056       | # of all combined edge cases
+edge-cases#tried = 175        | # of edge cases tried in current run
+seed = 2475733109303083545    | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:37.251460668, PropertyBasedTests:queryBuilderGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 176        | # of all combined edge cases
+edge-cases#tried = 171        | # of edge cases tried in current run
+seed = -4185285529675070291   | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:37.535318092, PropertyBasedTests:complexQueryCompositionMaintainsStructure = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1024       | # of all combined edge cases
+edge-cases#tried = 178        | # of edge cases tried in current run
+seed = -5320267482425061069   | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:37.829976113, PropertyBasedTests:inPredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1056       | # of all combined edge cases
+edge-cases#tried = 188        | # of edge cases tried in current run
+seed = 4099543163731091967    | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:38.022338460, PropertyBasedTests:multiplePredicatesGenerateUniqueParameters = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1024       | # of all combined edge cases
+edge-cases#tried = 158        | # of edge cases tried in current run
+seed = 5535632040610760265    | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:38.191721534, PropertyBasedTests:likePredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1008       | # of all combined edge cases
+edge-cases#tried = 147        | # of edge cases tried in current run
+seed = 42965707283386286      | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:38.284982404, PropertyBasedTests:builderIsImmutable = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 1000                 | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 176        | # of all combined edge cases
+edge-cases#tried = 153        | # of edge cases tried in current run
+seed = -5412647590326137970   | random seed to reproduce generated values
+
+
+timestamp = 2025-09-12T21:30:38.465291481, PropertyBasedTests:betweenPredicateGeneratesValidSQL = 
+                              |-----------------------jqwik-----------------------
+tries = 1000                  | # of calls to property
+checks = 850                  | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = MIXIN       | edge cases are mixed in
+edge-cases#total = 1056       | # of all combined edge cases
+edge-cases#tried = 150        | # of edge cases tried in current run
+seed = 4117614584174607485    | random seed to reproduce generated values
+
+
+</pre>
+</span>
+</div>
+<div id="tab2" class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre>Sep 12, 2025 9:30:36 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1056 generated cases.
+Sep 12, 2025 9:30:36 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1024 generated cases.
+Sep 12, 2025 9:30:36 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1056 generated cases.
+Sep 12, 2025 9:30:37 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1024 generated cases.
+Sep 12, 2025 9:30:37 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1056 generated cases.
+Sep 12, 2025 9:30:37 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1024 generated cases.
+Sep 12, 2025 9:30:38 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1008 generated cases.
+Sep 12, 2025 9:30:38 PM net.jqwik.engine.properties.RandomizedShrinkablesGenerator logEdgeCasesOutnumberTriesIfApplicable
+INFO: Edge case generation exceeds number of tries. Stopped after 1056 generated cases.
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.5</a> at Sep 12, 2025, 9:30:38 PM</p>
+</div>
+</div>
+</body>
+</html>

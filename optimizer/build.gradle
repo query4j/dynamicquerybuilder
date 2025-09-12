@@ -1,0 +1,9 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'SQL query analysis and optimization'
+
+dependencies {
+    // Add optimizer-specific dependencies as needed
+}

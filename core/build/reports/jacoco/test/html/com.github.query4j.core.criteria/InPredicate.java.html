@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InPredicate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">core</a> &gt; <a href="index.source.html" class="el_package">com.github.query4j.core.criteria</a> &gt; <span class="el_source">InPredicate.java</span></div><h1>InPredicate.java</h1><pre class="source lang-java linenums">package com.github.query4j.core.criteria;
+
+import com.github.query4j.core.QueryBuildException;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+/**
+ * Immutable predicate for IN clauses.
+ * 
+ * &lt;p&gt;
+ * Example: {@code field IN (value1, value2, value3)}
+ * &lt;/p&gt;
+ * 
+ * &lt;p&gt;
+ * This predicate is thread-safe and immutable. All constructor parameters are validated
+ * to ensure they conform to the required constraints:
+ * &lt;/p&gt;
+ * &lt;ul&gt;
+ * &lt;li&gt;Field name must match pattern {@code [A-Za-z0-9_\.]+}&lt;/li&gt;
+ * &lt;li&gt;Values list must not be null or empty&lt;/li&gt;
+ * &lt;li&gt;Base parameter name must match pattern {@code [A-Za-z][A-Za-z0-9_]*}&lt;/li&gt;
+ * &lt;/ul&gt;
+ * 
+ * @author query4j team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+<span class="nc" id="L36">@Value</span>
+<span class="nc bnc" id="L37" title="All 28 branches missed.">@EqualsAndHashCode</span>
+public class InPredicate implements Predicate {
+	
+<span class="nc" id="L40">    String field;</span>
+    
+<span class="nc" id="L42">    List&lt;Object&gt; values;</span>
+    
+<span class="nc" id="L44">    String baseParamName;</span>
+
+    /**
+     * Constructs a new InPredicate with validation.
+     * 
+     * @param field the field name for the IN comparison (must match pattern [A-Za-z0-9_\.]+)
+     * @param values the list of values for the IN clause (must not be null or empty)
+     * @param baseParamName the base parameter name for SQL binding (must match pattern [A-Za-z][A-Za-z0-9_]*)
+     * @throws QueryBuildException if any parameter is invalid
+     */
+<span class="fc" id="L54">    public InPredicate(String field, List&lt;Object&gt; values, String baseParamName) {</span>
+        // Validate field name (this will handle null check and whitespace)
+<span class="fc" id="L56">        FieldValidator.validateFieldName(field);</span>
+        
+        // Validate values list
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (values == null) {</span>
+<span class="nc" id="L60">            throw new QueryBuildException(&quot;Values list must not be null&quot;);</span>
+        }
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (values.isEmpty()) {</span>
+<span class="nc" id="L63">            throw new QueryBuildException(&quot;Values list must not be empty&quot;);</span>
+        }
+        
+        // Validate base parameter name (this will handle null check, whitespace, and pattern)
+<span class="fc" id="L67">        FieldValidator.validateParameterName(baseParamName);</span>
+        
+<span class="fc" id="L69">        this.field = field.trim();</span>
+<span class="fc" id="L70">        this.values = Collections.unmodifiableList(new ArrayList&lt;&gt;(values));</span>
+<span class="fc" id="L71">        this.baseParamName = baseParamName.trim();</span>
+<span class="fc" id="L72">    }</span>
+
+    @Override
+    public String toSQL() {
+<span class="fc" id="L76">        String placeholders = IntStream.range(0, values.size())</span>
+<span class="fc" id="L77">                .mapToObj(i -&gt; &quot;:&quot; + baseParamName + &quot;_&quot; + i)</span>
+<span class="fc" id="L78">                .collect(Collectors.joining(&quot;, &quot;));</span>
+<span class="fc" id="L79">        return field + &quot; IN (&quot; + placeholders + &quot;)&quot;;</span>
+    }
+
+    @Override
+    public Map&lt;String, Object&gt; getParameters() {
+<span class="fc" id="L84">        Map&lt;String, Object&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (int i = 0; i &lt; values.size(); i++) {</span>
+<span class="fc" id="L86">            params.put(baseParamName + &quot;_&quot; + i, values.get(i));</span>
+        }
+<span class="fc" id="L88">        return Collections.unmodifiableMap(params);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="QueryPerformanceBenchmark Tests" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-09-12T21:30:27" hostname="runnervmf4ws1" time="0.129">
+  <properties/>
+  <testcase name="should execute all individual component benchmarks" classname="com.github.query4j.benchmark.QueryPerformanceBenchmarkTest" time="0.11"/>
+  <testcase name="should execute basic query benchmark without errors" classname="com.github.query4j.benchmark.QueryPerformanceBenchmarkTest" time="0.004"/>
+  <testcase name="should execute moderate query benchmark without errors" classname="com.github.query4j.benchmark.QueryPerformanceBenchmarkTest" time="0.005"/>
+  <testcase name="should execute complex query benchmark without errors" classname="com.github.query4j.benchmark.QueryPerformanceBenchmarkTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
