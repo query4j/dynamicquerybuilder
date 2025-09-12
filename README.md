@@ -52,6 +52,30 @@ System.out.println("Total users: " + userPage.getTotalElements());
 System.out.println("Current page: " + userPage.getNumber());
 ```
 
+## Performance Benchmarks
+
+Query4j includes comprehensive JMH performance benchmarks to validate performance targets:
+
+| Scenario | Target | Actual Performance |
+|----------|--------|-------------------|
+| Basic Query | < 1 ms | ~1.7 μs ✅ |
+| Moderate Query | < 2 ms | ~6.7 μs ✅ |
+| Complex Query | < 5 ms | ~17.1 μs ✅ |
+
+### Running Benchmarks
+
+```bash
+# Build and run all benchmarks
+mvn clean install -Pbenchmark
+
+# Or run specific benchmarks manually
+cd benchmark
+mvn clean package
+java -jar target/benchmarks.jar
+```
+
+See [benchmark/README.md](benchmark/README.md) for detailed benchmark results and analysis.
+
 ### Asynchronous Execution
 
 ```java
