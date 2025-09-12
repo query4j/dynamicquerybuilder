@@ -308,5 +308,36 @@ class SimplePredicateTest {
             SimplePredicate predicate = new SimplePredicate("field123", "=", "value", "p1");
             assertEquals("field123 = :p1", predicate.toSQL());
         }
+        
+        @Test
+        @DisplayName("should handle multiple predicates with same field names")
+        void shouldHandleMultiplePredicatesWithSameFieldNames() {
+            // Multiple predicates with same field should work independently
+            SimplePredicate predicate1 = new SimplePredicate("name", "=", "John", "p1");
+            SimplePredicate predicate2 = new SimplePredicate("name", "!=", "Jane", "p2");
+            SimplePredicate predicate3 = new SimplePredicate("name", ">", "A", "p3");
+            
+            // All should generate correct SQL independently
+            assertEquals("name = :p1", predicate1.toSQL());
+            assertEquals("name != :p2", predicate2.toSQL());
+            assertEquals("name > :p3", predicate3.toSQL());
+            
+            // Parameters should be distinct
+            Map<String, Object> params1 = predicate1.getParameters();
+            Map<String, Object> params2 = predicate2.getParameters();
+            Map<String, Object> params3 = predicate3.getParameters();
+            
+            assertEquals("John", params1.get("p1"));
+            assertEquals("Jane", params2.get("p2"));
+            assertEquals("A", params3.get("p3"));
+            
+            // Parameter names should not conflict
+            assertFalse(params1.containsKey("p2"));
+            assertFalse(params1.containsKey("p3"));
+            assertFalse(params2.containsKey("p1"));
+            assertFalse(params2.containsKey("p3"));
+            assertFalse(params3.containsKey("p1"));
+            assertFalse(params3.containsKey("p2"));
+        }
     }
 }

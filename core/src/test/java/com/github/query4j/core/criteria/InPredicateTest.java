@@ -389,5 +389,35 @@ class InPredicateTest {
             assertEquals(3.14, params.get("p1_2"));
             assertEquals(true, params.get("p1_3"));
         }
+        
+        @Test
+        @DisplayName("should handle multiple InPredicates with different base parameter names")
+        void shouldHandleMultipleInPredicatesWithDifferentBaseNames() {
+            List<Object> values1 = Arrays.asList("A", "B");
+            List<Object> values2 = Arrays.asList("X", "Y", "Z");
+            
+            InPredicate predicate1 = new InPredicate("status", values1, "p1");
+            InPredicate predicate2 = new InPredicate("category", values2, "p2");
+            
+            // SQL should be generated correctly for each
+            assertEquals("status IN (:p1_0, :p1_1)", predicate1.toSQL());
+            assertEquals("category IN (:p2_0, :p2_1, :p2_2)", predicate2.toSQL());
+            
+            // Parameters should not conflict
+            Map<String, Object> params1 = predicate1.getParameters();
+            Map<String, Object> params2 = predicate2.getParameters();
+            
+            assertEquals("A", params1.get("p1_0"));
+            assertEquals("B", params1.get("p1_1"));
+            assertEquals("X", params2.get("p2_0"));
+            assertEquals("Y", params2.get("p2_1"));
+            assertEquals("Z", params2.get("p2_2"));
+            
+            // No parameter name conflicts
+            Set<String> allParamNames = new HashSet<>();
+            allParamNames.addAll(params1.keySet());
+            allParamNames.addAll(params2.keySet());
+            assertEquals(5, allParamNames.size()); // Should be exactly 5 unique names
+        }
     }
 }
