@@ -18,10 +18,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class DynamicQueryImpl<T> implements DynamicQuery<T> {
 
-    @Getter
     private final List<T> results;
 
-    @Getter
     private final String sql;
 
     @Override
@@ -45,5 +43,21 @@ public final class DynamicQueryImpl<T> implements DynamicQuery<T> {
     @Override
     public String getSQL() {
         return sql != null ? sql : "";
+    }
+
+    /**
+     * Gets the results list.
+     * @return the results list
+     */
+    public List<T> getResults() {
+        return results;
+    }
+
+    /**
+     * Gets the SQL string.
+     * @return the SQL string
+     */
+    public String getSql() {
+        return sql;
     }
 }
