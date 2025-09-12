@@ -3,6 +3,11 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 .mvn/wrapper/maven-wrapper.properties
 
+# Gradle build
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
 # IDEs
 # IntelliJ
 .idea/

@@ -24,30 +24,41 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java-version }}
 
-      # Purge cached dependencies to avoid stale SNAPSHOTs
-      - name: Purge local repository
-        run: mvn dependency:purge-local-repository -DreResolve=true -B
-
-      - name: Cache local Maven repository
+      - name: Cache Gradle dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-gradle-
 
-      - name: Build, install, and run tests with coverage
-        run: mvn clean install -U -B
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build, test, and generate coverage report
+        run: ./gradlew clean build jacocoRootReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
 
       - name: Archive test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: target/surefire-reports/
+          path: |
+            **/build/reports/tests/test/
+            build/reports/jacoco/jacocoRootReport/
+
+      - name: Archive benchmark JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-jar
+          path: benchmark/build/libs/benchmarks-*.jar

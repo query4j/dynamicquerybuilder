@@ -149,13 +149,13 @@ The build process includes automated checks:
 
 ```bash
 # Validate examples compile
-mvn clean compile -pl examples
+./gradlew examples:compileJava
 
 # Generate JavaDoc (fails on errors)  
-mvn javadoc:javadoc
+./gradlew javadoc
 
 # Run documentation tests
-mvn test -Dtest="*DocumentationTest"
+./gradlew test -Ptest.single="*DocumentationTest"
 ```
 
 #### Manual Validation
@@ -200,18 +200,13 @@ For each API documentation update:
 ### Documentation Generation
 
 #### JavaDoc Configuration
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-javadoc-plugin</artifactId>
-    <version>3.4.1</version>
-    <configuration>
-        <source>17</source>
-        <doclint>all,-missing</doclint>
-        <quiet>true</quiet>
-    </configuration>
-</plugin>
-```
+```gradle
+// In build.gradle (applied to all subprojects)
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:all,-missing', '-quiet')
+    failOnError = false
+}
 
 #### Example Validation
 Create tests that validate documentation examples:

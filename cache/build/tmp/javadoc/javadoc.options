@@ -1,9 +1,0 @@
--Xdoclint:all,-missing '-quiet'
--classpath '/home/runner/work/dynamicquerybuilder/dynamicquerybuilder/cache/build/classes/java/main:/home/runner/work/dynamicquerybuilder/dynamicquerybuilder/cache/build/resources/main:/home/runner/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.28/a2ff5da8bcd8b1b26f36b806ced63213362c6dcc/lombok-1.18.28.jar'
--d '/home/runner/work/dynamicquerybuilder/dynamicquerybuilder/cache/build/docs/javadoc'
--doctitle 'cache 1.0.0-SNAPSHOT API'
--encoding 'UTF-8'
--notimestamp 
--quiet 
--windowtitle 'cache 1.0.0-SNAPSHOT API'
-'/home/runner/work/dynamicquerybuilder/dynamicquerybuilder/cache/src/main/java/com/github/query4j/cache/Main.java'

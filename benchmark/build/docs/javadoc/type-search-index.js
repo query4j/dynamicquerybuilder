@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"com.github.query4j.benchmark","l":"QueryPerformanceBenchmark"},{"p":"com.github.query4j.benchmark","l":"TestEntity"}];updateSearchResults();

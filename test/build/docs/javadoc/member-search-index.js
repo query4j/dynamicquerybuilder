@@ -1,1 +1,0 @@
-memberSearchIndex = [{"p":"com.github.query4j.test","c":"Main","l":"Main()","u":"%3Cinit%3E()"}];updateSearchResults();

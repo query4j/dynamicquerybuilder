@@ -14,7 +14,7 @@ A high-performance, thread-safe Java library for building dynamic SQL queries wi
 ## Requirements
 
 - **Java 17** or higher
-- **Maven 3.6+** for building from source
+- **Gradle 8.5+** for building from source
 
 ## Quick Start
 
@@ -130,16 +130,22 @@ See the [integration guide](docs/CODERABBIT_COPILOT_INTEGRATION.md) for detailed
 
 ```bash
 # Build the project
-mvn clean compile
+./gradlew clean build
 
 # Run tests
-mvn test
+./gradlew test
 
 # Generate coverage report
-mvn verify
+./gradlew jacocoRootReport
 
-# Build with full integration tests
-mvn clean verify
+# Build with all checks and coverage
+./gradlew clean build jacocoRootReport
+
+# Run benchmarks
+./gradlew benchmark:benchmark
+
+# Create benchmark executable JAR
+./gradlew benchmark:benchmarkJar
 ```
 
 ## Architecture
