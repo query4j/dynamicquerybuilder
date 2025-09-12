@@ -73,6 +73,21 @@ Welcome, Copilot! As you assist with the Query4j dynamic query builder, embody t
 - Ensure all code and tests pass CI/CD and meet code quality gates before merging.
 - Do not introduce breaking changes or deprecated patterns without full documentation and migration guidance.
 
+### CodeRabbit-Copilot Integration Workflow
+
+- **Automated Feedback Detection**: The repository includes automated detection of CodeRabbit review feedback through GitHub workflows.
+- **Copilot Response System**: When CodeRabbit provides actionable feedback, Copilot automatically:
+  - Parses suggestions and identifies actionable items
+  - Posts summary comments with next steps
+  - Labels PRs for tracking (`coderabbit-feedback-detected`, `copilot-actionable`)
+  - Can create follow-up issues for complex changes
+- **Auto-Fix Integration**: CodeRabbit-generated PRs are automatically monitored and labeled with:
+  - `coderabbit-generated` for automated fixes
+  - `auto-fix` for safe modifications
+  - `review-suggestions` for review-based changes
+- **Human Review Gates**: All automated changes require human approval before merging to maintain code quality.
+- **Feedback Tracking**: Use commands like `@copilot implement coderabbit suggestions` to apply safe changes or `@copilot create issue` for complex modifications.
+
 ---
 
 ### Predicate & Builder Compliance
