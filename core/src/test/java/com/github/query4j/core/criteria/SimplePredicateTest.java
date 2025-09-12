@@ -295,7 +295,12 @@ class SimplePredicateTest {
         @Test
         @DisplayName("should handle very long values")
         void shouldHandleVeryLongValues() {
-            String longValue = "A".repeat(10000); // Very long string
+            // Java 8 compatible alternative to String.repeat()
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 10000; i++) {
+                sb.append("A");
+            }
+            String longValue = sb.toString(); // Very long string
             SimplePredicate predicate = new SimplePredicate("description", "=", longValue, "p1");
             
             assertEquals("description = :p1", predicate.toSQL());
