@@ -11,6 +11,11 @@ A high-performance, thread-safe Java library for building dynamic SQL queries wi
 - **Comprehensive Testing**: 95%+ test coverage with unit and property-based tests
 - **Type Safety**: Strong typing with compile-time validation
 
+## Requirements
+
+- **Java 17** or higher
+- **Maven 3.6+** for building from source
+
 ## Quick Start
 
 ### Basic Query Construction

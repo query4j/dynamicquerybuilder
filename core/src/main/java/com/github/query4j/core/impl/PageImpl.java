@@ -1,33 +1,71 @@
 package com.github.query4j.core.impl;
 
 import com.github.query4j.core.Page;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Immutable implementation of Page interface.
+ * Immutable implementation of Page interface using Java 17 record.
  * Represents a paginated set of results with metadata.
  *
  * @param <T> the entity type
+ * @param content the list of entities in this page
+ * @param number the page number (zero-based)
+ * @param size the size of the page
+ * @param totalElements the total number of elements across all pages
  * @since 1.0.0
  */
-@RequiredArgsConstructor
-public final class PageImpl<T> implements Page<T> {
+public record PageImpl<T>(
+    List<T> content,
+    int number,
+    int size,
+    long totalElements
+) implements Page<T> {
 
-    @Getter
-    private final List<T> content;
+    /**
+     * Constructs a PageImpl with validation.
+     * 
+     * @param content the list of entities in this page
+     * @param number the page number (zero-based)
+     * @param size the size of the page
+     * @param totalElements the total number of elements across all pages
+     */
+    public PageImpl {
+        // Defensive copy to ensure immutability
+        content = content == null ? Collections.emptyList() : List.copyOf(content);
+        
+        // Basic validation
+        if (number < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size < 0) {
+            throw new IllegalArgumentException("Page size cannot be negative");
+        }
+        if (totalElements < 0) {
+            throw new IllegalArgumentException("Total elements cannot be negative");
+        }
+    }
 
-    @Getter
-    private final int number;
+    @Override
+    public List<T> getContent() {
+        return content;
+    }
 
-    @Getter
-    private final int size;
+    @Override
+    public int getNumber() {
+        return number;
+    }
 
-    @Getter
-    private final long totalElements;
+    @Override
+    public int getSize() {
+        return size;
+    }
+
+    @Override
+    public long getTotalElements() {
+        return totalElements;
+    }
 
     @Override
     public int getTotalPages() {

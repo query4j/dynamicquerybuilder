@@ -206,7 +206,7 @@ For each API documentation update:
     <artifactId>maven-javadoc-plugin</artifactId>
     <version>3.4.1</version>
     <configuration>
-        <source>11</source>
+        <source>17</source>
         <doclint>all,-missing</doclint>
         <quiet>true</quiet>
     </configuration>
