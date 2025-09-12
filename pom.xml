@@ -106,9 +106,6 @@
     <!-- Benchmark profile for running JMH performance tests -->
     <profile>
       <id>benchmark</id>
-      <modules>
-        <module>benchmark</module>
-      </modules>
       <build>
         <plugins>
           <plugin>

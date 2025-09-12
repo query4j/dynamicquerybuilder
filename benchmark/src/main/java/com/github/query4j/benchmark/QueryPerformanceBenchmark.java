@@ -64,9 +64,7 @@ public class QueryPerformanceBenchmark {
         if (builder instanceof DynamicQueryBuilder) {
             DynamicQueryBuilder<TestEntity> dynBuilder = (DynamicQueryBuilder<TestEntity>) builder;
             // Extract parameters from all predicates
-            dynBuilder.getPredicates().forEach(predicate -> {
-                allParams.putAll(predicate.getParameters());
-            });
+            dynBuilder.getPredicates().forEach(predicate -> allParams.putAll(predicate.getParameters()));
         }
         
         return allParams;

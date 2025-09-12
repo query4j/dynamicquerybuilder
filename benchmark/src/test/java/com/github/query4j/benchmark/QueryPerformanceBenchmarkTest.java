@@ -14,13 +14,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("QueryPerformanceBenchmark Tests")
 class QueryPerformanceBenchmarkTest {
 
+    private static final String BLACKHOLE_MAGIC_STRING = "Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.";
+
     @Test
     @DisplayName("should execute basic query benchmark without errors")
     void shouldExecuteBasicQueryBenchmark() {
         QueryPerformanceBenchmark benchmark = new QueryPerformanceBenchmark();
         benchmark.setup();
         
-        Blackhole blackhole = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
+        Blackhole blackhole = new Blackhole(BLACKHOLE_MAGIC_STRING);
         
         assertDoesNotThrow(() -> benchmark.basicQuery(blackhole));
     }
@@ -31,7 +33,7 @@ class QueryPerformanceBenchmarkTest {
         QueryPerformanceBenchmark benchmark = new QueryPerformanceBenchmark();
         benchmark.setup();
         
-        Blackhole blackhole = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
+        Blackhole blackhole = new Blackhole(BLACKHOLE_MAGIC_STRING);
         
         assertDoesNotThrow(() -> benchmark.moderateQuery(blackhole));
     }
@@ -42,7 +44,7 @@ class QueryPerformanceBenchmarkTest {
         QueryPerformanceBenchmark benchmark = new QueryPerformanceBenchmark();
         benchmark.setup();
         
-        Blackhole blackhole = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
+        Blackhole blackhole = new Blackhole(BLACKHOLE_MAGIC_STRING);
         
         assertDoesNotThrow(() -> benchmark.complexQuery(blackhole));
     }
@@ -53,7 +55,7 @@ class QueryPerformanceBenchmarkTest {
         QueryPerformanceBenchmark benchmark = new QueryPerformanceBenchmark();
         benchmark.setup();
         
-        Blackhole blackhole = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
+        Blackhole blackhole = new Blackhole(BLACKHOLE_MAGIC_STRING);
         
         assertDoesNotThrow(() -> benchmark.builderConstructionBasic(blackhole));
         assertDoesNotThrow(() -> benchmark.sqlGenerationBasic(blackhole));
