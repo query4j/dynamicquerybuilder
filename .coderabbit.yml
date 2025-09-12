@@ -1,20 +1,113 @@
+# CodeRabbit AI Configuration for Query4j Dynamic Query Builder
+# This configuration enables automated code review, feedback processing, and Copilot integration
+
+# General review settings
+reviews:
+  # Enable inline comments for detailed feedback
+  inline_comments: true
+  # Provide summary comments on PRs
+  summary_comments: true
+  # Request changes when significant issues are found
+  request_changes: true
+  # Auto-approve minor fixes and improvements
+  auto_approve_minor: true
+
+# Branch and PR filters
+filters:
+  # Enable for all branches by default
+  branches:
+    - "*"
+  # Exclude dependency update branches from full review
+  exclude_branches:
+    - "dependabot/**"
+    - "renovate/**"
+  # Focus on key file types
+  file_types:
+    - "*.java"
+    - "*.xml" 
+    - "*.yml"
+    - "*.yaml"
+    - "*.md"
+
+# Post-review automation for Copilot integration
 post_review:
-  create_branch: "fix/{{ branch }}-review"
-
+  # Create fix branches with consistent naming
+  create_branch: "fix/coderabbit-{{ branch }}-{{ timestamp }}"
+  
+  # Apply safe suggestions automatically
   apply_suggestions: true
-
+  
+  # Create pull requests for automated fixes
   create_pull_request:
     target: "{{ branch }}"
-    title: "chore: fixes from coderabbitai review on {{ branch }}"
+    title: "chore: CodeRabbit automated fixes for {{ branch }}"
     description: |
-      This MR includes all automated fixes and suggestions from the last CodeRabbit review.
-      - Applied code style and linting fixes
-      - Minor improvements based on review feedback
+      ## CodeRabbit Automated Fixes
+      
+      This PR contains automated fixes and suggestions from CodeRabbit review.
+      
+      ### Changes Applied:
+      - Code style and formatting improvements
+      - Minor bug fixes and optimizations
+      - Documentation updates
+      - Performance improvements
+      
+      ### Review Summary:
+      {{ review_summary }}
+      
+      ### Original Review Context:
+      - Source Branch: `{{ branch }}`
+      - Review ID: `{{ review_id }}`
+      - Timestamp: `{{ timestamp }}`
+      
+      **Note**: This PR was created automatically by CodeRabbit. Please review changes before merging.
 
     labels:
       - auto-fix
       - review-suggestions
+      - coderabbit-generated
+      - quality-automation
 
     reviewers:
       - "@query4j"
       - "@sandeep-jaiswar"
+
+# Notification settings for Copilot integration
+notifications:
+  # Enable status comments on original PRs
+  status_comments: true
+  # Tag feedback for easier parsing
+  tag_feedback: true
+  # Create issues for significant findings
+  create_issues:
+    enabled: true
+    labels:
+      - coderabbit-feedback
+      - needs-attention
+      - quality-improvement
+    assignees:
+      - "@query4j"
+      - "@sandeep-jaiswar"
+
+# Quality gates and thresholds
+quality:
+  # Minimum code quality score to auto-approve
+  min_score: 8.0
+  # Flag security vulnerabilities immediately
+  security_scan: true
+  # Performance regression detection
+  performance_check: true
+
+# Integration settings for automated tools
+integrations:
+  # Enable GitHub Actions integration
+  github_actions: true
+  # Allow external tool access to review data
+  api_access: true
+  # Support for Copilot workflow detection
+  copilot_integration:
+    enabled: true
+    # Tag comments for Copilot parsing
+    tag_comments: "copilot-actionable"
+    # Enable summary export for automation
+    export_summary: true

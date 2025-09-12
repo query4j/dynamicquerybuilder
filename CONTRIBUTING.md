@@ -57,6 +57,17 @@ Welcome! Thank you for your interest in contributing to the **dynamicquerybuilde
 - Provide meaningful PR descriptions explaining rationale and impact.
 - Collaborate and respond to review feedback promptly.
 
+### Automated Code Review Integration
+
+The repository includes automated integration between CodeRabbit AI and GitHub Copilot:
+
+- **CodeRabbit Reviews**: Automatically analyzes PRs and provides feedback
+- **Copilot Detection**: Monitors for CodeRabbit feedback and responds with actionable insights
+- **Automated Fixes**: Safe suggestions are applied automatically via separate PRs
+- **Feedback Tracking**: Uses labels (`coderabbit-feedback-detected`, `copilot-actionable`) for workflow management
+
+See [CodeRabbit-Copilot Integration Guide](docs/CODERABBIT_COPILOT_INTEGRATION.md) for detailed workflow information.
+
 ---
 
 ## Testing Requirements
