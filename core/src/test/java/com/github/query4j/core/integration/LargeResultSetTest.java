@@ -207,6 +207,38 @@ class LargeResultSetTest {
         System.out.println("Seeded " + LARGE_DATASET_SIZE + " records in " + (endTime - startTime) + "ms");
     }
 
+    /**
+     * Helper method to create a User object from ResultSet
+     */
+    private User createUserFromResultSet(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setFirstName(rs.getString("first_name"));
+        user.setLastName(rs.getString("last_name"));
+        user.setEmail(rs.getString("email"));
+        user.setDepartment(rs.getString("department"));
+        user.setRole(rs.getString("role"));
+        user.setHireDate(rs.getDate("hire_date").toLocalDate());
+        user.setSalary(rs.getDouble("salary"));
+        user.setActive(rs.getBoolean("active"));
+        user.setCity(rs.getString("city"));
+        user.setCountry(rs.getString("country"));
+        return user;
+    }
+
+    /**
+     * Helper method to create a partial User object for pagination tests
+     */
+    private User createPartialUserFromResultSet(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setFirstName(rs.getString("first_name"));
+        user.setLastName(rs.getString("last_name"));
+        user.setEmail(rs.getString("email"));
+        user.setDepartment(rs.getString("department"));
+        return user;
+    }
+
     @Test
     @Order(1)
     @DisplayName("should retrieve all 10,000+ records within performance target")
@@ -240,19 +272,7 @@ class LargeResultSetTest {
              ResultSet rs = stmt.executeQuery(actualSQL)) {
             
             while (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setFirstName(rs.getString("first_name"));
-                user.setLastName(rs.getString("last_name"));
-                user.setEmail(rs.getString("email"));
-                user.setDepartment(rs.getString("department"));
-                user.setRole(rs.getString("role"));
-                user.setHireDate(rs.getDate("hire_date").toLocalDate());
-                user.setSalary(rs.getDouble("salary"));
-                user.setActive(rs.getBoolean("active"));
-                user.setCity(rs.getString("city"));
-                user.setCountry(rs.getString("country"));
-                users.add(user);
+                users.add(createUserFromResultSet(rs));
             }
         }
         
@@ -307,13 +327,7 @@ class LargeResultSetTest {
                 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        User user = new User();
-                        user.setId(rs.getInt("id"));
-                        user.setFirstName(rs.getString("first_name"));
-                        user.setLastName(rs.getString("last_name"));
-                        user.setEmail(rs.getString("email"));
-                        user.setDepartment(rs.getString("department"));
-                        pageUsers.add(user);
+                        pageUsers.add(createPartialUserFromResultSet(rs));
                     }
                 }
             }
