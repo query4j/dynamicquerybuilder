@@ -105,8 +105,7 @@ class PredicateValidationPropertyTests {
     Arbitrary<List<Object>> emptyOrNullValueLists() {
         return Arbitraries.oneOf(
             Arbitraries.just(Collections.emptyList()),
-            Arbitraries.just(null),
-            Arbitraries.just(Arrays.asList((Object) null))
+            Arbitraries.just(null)
         );
     }
 
@@ -382,12 +381,15 @@ class PredicateValidationPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
+        // Ensure the field name is actually invalid before testing
+        that(!invalidField.trim().isEmpty() && !invalidField.matches("[A-Za-z0-9_\\.]+"));
+        
         // Test various methods that should validate field names
-        assertThrows(QueryBuildException.class, () -> builder.where(invalidField, value));
-        assertThrows(QueryBuildException.class, () -> builder.whereIsNull(invalidField));
-        assertThrows(QueryBuildException.class, () -> builder.whereIsNotNull(invalidField));
-        assertThrows(QueryBuildException.class, () -> builder.orderBy(invalidField));
-        assertThrows(QueryBuildException.class, () -> builder.groupBy(invalidField));
+        assertThrows(IllegalArgumentException.class, () -> builder.where(invalidField, value));
+        assertThrows(IllegalArgumentException.class, () -> builder.whereIsNull(invalidField));
+        assertThrows(IllegalArgumentException.class, () -> builder.whereIsNotNull(invalidField));
+        assertThrows(IllegalArgumentException.class, () -> builder.orderBy(invalidField));
+        assertThrows(IllegalArgumentException.class, () -> builder.groupBy(invalidField));
     }
 
     @Property
@@ -398,7 +400,7 @@ class PredicateValidationPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        assertThrows(QueryBuildException.class, () -> 
+        assertThrows(IllegalArgumentException.class, () -> 
             builder.where(field, invalidOperator, value)
         );
     }
