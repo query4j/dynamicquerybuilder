@@ -41,10 +41,26 @@ public final class Main {
         System.out.println("Query4j Cache Module v1.0.0");
         System.out.println("High-performance caching with Caffeine backend");
         System.out.println();
-        System.out.println("Example usage:");
+        
+        // Basic usage example
+        System.out.println("=== Basic Usage ===");
         System.out.println("CacheManager cache = CaffeineCacheManager.create(10_000L, 3600L);");
         System.out.println("cache.put(\"query-key\", resultSet);");
         System.out.println("Object cached = cache.get(\"query-key\");");
+        System.out.println();
+        
+        // Statistics monitoring example
+        System.out.println("=== Statistics Monitoring ===");
         System.out.println("CacheStatistics stats = cache.stats();");
+        System.out.println("System.out.println(\"Hit ratio: \" + stats.getHitRatio());");
+        System.out.println("System.out.println(\"Total requests: \" + stats.getTotalRequests());");
+        System.out.println("System.out.println(\"Current size: \" + stats.getCurrentSize());");
+        System.out.println("System.out.println(\"Evictions: \" + stats.getEvictionCount());");
+        System.out.println();
+        
+        // Named cache regions example
+        System.out.println("=== Named Cache Regions ===");
+        System.out.println("CacheManager userCache = CaffeineCacheManager.forRegion(\"users\");");
+        System.out.println("CacheManager productCache = CaffeineCacheManager.forRegion(\"products\");");
     }
 }

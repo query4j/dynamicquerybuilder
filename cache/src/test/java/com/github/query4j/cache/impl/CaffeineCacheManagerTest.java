@@ -291,6 +291,63 @@ class CaffeineCacheManagerTest {
         assertEquals(0L, stats.getCurrentSize());
     }
 
+    @Test
+    @DisplayName("Statistics should track evictions when cache exceeds capacity")
+    void testEvictionStatisticsIntegration() {
+        // Create a small cache that will trigger evictions
+        CacheManager smallCache = CaffeineCacheManager.create(3L, 60L);
+        CacheStatistics stats = smallCache.stats();
+        
+        // Initial state
+        assertEquals(0L, stats.getEvictionCount());
+        assertEquals(0L, stats.getCurrentSize());
+        
+        // Fill cache to capacity
+        smallCache.put("key1", "value1");
+        smallCache.put("key2", "value2");
+        smallCache.put("key3", "value3");
+        
+        stats = smallCache.stats();
+        assertEquals(0L, stats.getEvictionCount(), "No evictions should occur within capacity");
+        assertEquals(3L, stats.getCurrentSize());
+        
+        // Force evictions by adding many more items than capacity
+        // This ensures evictions happen regardless of LRU timing
+        for (int i = 4; i <= 10; i++) {
+            smallCache.put("key" + i, "value" + i);
+        }
+        
+        // Trigger cache maintenance to ensure eviction listeners are processed
+        smallCache.maintenance();
+        
+        // Allow some time for async eviction processing
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        stats = smallCache.stats();
+        
+        // Verify that evictions were recorded and cache size is at max capacity
+        assertTrue(stats.getEvictionCount() > 0, 
+                  "Evictions should be recorded when cache exceeds capacity. " +
+                  "Got eviction count: " + stats.getEvictionCount());
+        assertEquals(3L, stats.getCurrentSize(), "Size should be at max capacity");
+        
+        // Verify that some original keys have been evicted
+        int originalKeysRemaining = 0;
+        for (int i = 1; i <= 3; i++) {
+            if (smallCache.get("key" + i) != null) {
+                originalKeysRemaining++;
+            }
+        }
+        
+        // At least some of the original keys should have been evicted
+        assertTrue(originalKeysRemaining < 3, 
+                  "Some original keys should have been evicted. Remaining: " + originalKeysRemaining);
+    }
+
     // === Validation Tests ===
 
     @Test
