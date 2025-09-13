@@ -26,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CaffeineCacheManagerTest {
 
+    private static final int OVERFLOW_KEY_COUNT = 10;
+    private static final int POLLING_TIMEOUT_MS = 1000;
+    private static final int POLLING_INTERVAL_MS = 10;
+
     private CacheManager cacheManager;
 
     @BeforeEach
@@ -289,6 +293,90 @@ class CaffeineCacheManagerTest {
         cacheManager.clear();
         stats = cacheManager.stats();
         assertEquals(0L, stats.getCurrentSize());
+    }
+
+    @Test
+    @DisplayName("Statistics should track evictions when cache exceeds capacity")
+    void testEvictionStatisticsIntegration() {
+        // Create a small cache that will trigger evictions
+        CacheManager smallCache = CaffeineCacheManager.create(3L, 60L);
+        CacheStatistics stats = smallCache.stats();
+        
+        // Initial state
+        assertEquals(0L, stats.getEvictionCount());
+        assertEquals(0L, stats.getCurrentSize());
+        
+        // Fill cache to capacity
+        smallCache.put("key1", "value1");
+        smallCache.put("key2", "value2");
+        smallCache.put("key3", "value3");
+        
+        stats = smallCache.stats();
+        assertEquals(0L, stats.getEvictionCount(), "No evictions should occur within capacity");
+        assertEquals(3L, stats.getCurrentSize());
+        
+        // Force evictions by adding many more items than capacity
+        // This ensures evictions happen regardless of LRU timing
+        for (int i = 4; i <= OVERFLOW_KEY_COUNT; i++) {
+            smallCache.put("key" + i, "value" + i);
+        }
+        
+        // Trigger cache maintenance to ensure eviction listeners are processed
+        smallCache.maintenance();
+        
+        // Wait for eviction processing to complete using polling
+        waitForEvictions(smallCache);
+        
+        stats = smallCache.stats();
+        
+        // Verify that evictions were recorded and cache size is at max capacity
+        assertTrue(stats.getEvictionCount() > 0, 
+                  "Evictions should be recorded when cache exceeds capacity. " +
+                  "Got eviction count: " + stats.getEvictionCount());
+        assertEquals(3L, stats.getCurrentSize(), "Size should be at max capacity");
+        
+        // Verify that some original keys have been evicted
+        int originalKeysRemaining = 0;
+        for (int i = 1; i <= 3; i++) {
+            if (smallCache.get("key" + i) != null) {
+                originalKeysRemaining++;
+            }
+        }
+        
+        // At least some of the original keys should have been evicted
+        assertTrue(originalKeysRemaining < 3, 
+                  "Some original keys should have been evicted. Remaining: " + originalKeysRemaining);
+    }
+
+    /**
+     * Waits for eviction processing to complete by polling the eviction count.
+     * Uses a timeout to prevent hanging in case evictions don't occur.
+     * 
+     * @param cache the cache manager to check for evictions
+     */
+    private void waitForEvictions(CacheManager cache) {
+        long startTime = System.currentTimeMillis();
+        long timeout = startTime + POLLING_TIMEOUT_MS;
+        
+        while (System.currentTimeMillis() < timeout) {
+            if (cache.stats().getEvictionCount() > 0) {
+                return; // Evictions detected
+            }
+            
+            // Trigger maintenance to process pending evictions
+            cache.maintenance();
+            
+            try {
+                Thread.sleep(POLLING_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for evictions", e);
+            }
+        }
+        
+        // If we reach here, evictions didn't occur within timeout
+        fail("Evictions were not recorded within timeout period. " +
+             "Expected evictions but got count: " + cache.stats().getEvictionCount());
     }
 
     // === Validation Tests ===
