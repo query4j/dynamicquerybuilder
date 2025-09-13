@@ -392,6 +392,68 @@ Page<User> result = QueryBuilder.forEntity(User.class)
     .findPage();
 ```
 
+## Integration Tests
+
+The core module includes comprehensive integration tests that verify multi-table join behavior and aggregation functionality using an in-memory H2 database.
+
+### Running Integration Tests
+
+```bash
+# Run all integration tests
+./gradlew :core:test --tests "*integration*"
+
+# Run specific integration test
+./gradlew :core:test --tests "*MultiTableJoinAggregationIntegrationTest*"
+```
+
+### Integration Test Scenarios
+
+The integration tests cover the following scenarios:
+
+1. **Simple Join**: Customer → orders with region filtering
+2. **Nested Join**: Customer → orders → orderItems with product filtering  
+3. **Aggregation**: SUM aggregation with GROUP BY
+4. **Join + Aggregation + HAVING**: Complex queries with spending thresholds
+5. **Edge Cases**: Customers with no orders, orders with no items
+
+### Test Schema
+
+The integration tests use the following schema:
+
+```sql
+-- Customer table
+CREATE TABLE Customer (
+    id INT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    region VARCHAR(255) NOT NULL
+);
+
+-- Order table  
+CREATE TABLE "Order" (
+    id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    total DECIMAL(10,2) NOT NULL,
+    placed_at DATE NOT NULL
+);
+
+-- OrderItem table
+CREATE TABLE OrderItem (
+    id INT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL
+);
+```
+
+### What Integration Tests Verify
+
+- **SQL Generation**: That the QueryBuilder generates syntactically correct SQL
+- **API Functionality**: That joins, aggregations, and having clauses work as expected
+- **Parameter Binding**: That parameters are correctly generated and can be used
+- **Database Compatibility**: That generated SQL executes successfully against H2
+- **Result Accuracy**: That actual query results match expected data
+
 ## Next Steps
 
 - See the [main README](../README.md) for complete library overview
