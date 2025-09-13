@@ -10,6 +10,10 @@ dependencies {
     
     // H2 database for integration tests
     testImplementation 'com.h2database:h2:2.2.224'
+    
+    // Mockito for testing defensive code branches
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 // Configure tests to include jqwik
