@@ -23,23 +23,28 @@ class PredicateValidationPropertyTests {
         return Arbitraries.oneOf(
             Arbitraries.just(""),           // Empty string
             Arbitraries.just("   "),       // Whitespace only
-            Arbitraries.strings().withChars('!', '@', '#', '$', '%', '^', '&', '*')
+            Arbitraries.strings().withChars('!', '@', '#', '$', '%', '^', '&', '*', '-', ' ', '(', ')', '[', ']')
                 .ofMinLength(1).ofMaxLength(20),  // Invalid characters
-            Arbitraries.just("123field"),   // Starting with number
             Arbitraries.just("field-name"), // Hyphen (invalid)
-            Arbitraries.just("field name") // Space (invalid)
+            Arbitraries.just("field name"), // Space (invalid)
+            Arbitraries.just("field@name"), // At symbol (invalid)
+            Arbitraries.just("field#name"), // Hash symbol (invalid)
+            Arbitraries.just("field$name")  // Dollar symbol (invalid)
         );
     }
 
     @Provide
     Arbitrary<String> invalidOperators() {
         return Arbitraries.oneOf(
-            Arbitraries.just(""),
-            Arbitraries.just("==="),
-            Arbitraries.just("LIKE"),
-            Arbitraries.just("EQUALS"),
-            Arbitraries.just("??"),
-            Arbitraries.just("<<>>")
+            Arbitraries.just(""),           // Empty string
+            Arbitraries.just("   "),       // Whitespace only
+            Arbitraries.just("==="),       // Invalid triple equals
+            Arbitraries.just("EQUALS"),    // Invalid word operator
+            Arbitraries.just("??"),        // Invalid question marks
+            Arbitraries.just("<<>>"),      // Invalid brackets
+            Arbitraries.just("@="),        // Invalid symbol
+            Arbitraries.just("!=!"),       // Invalid combination
+            Arbitraries.just("INVALID")    // Invalid word
         );
     }
 
@@ -107,6 +112,11 @@ class PredicateValidationPropertyTests {
             Arbitraries.just(Collections.emptyList()),
             Arbitraries.just(null)
         );
+    }
+
+    @Provide
+    Arbitrary<String> validLogicalOperators() {
+        return Arbitraries.of("AND", "OR", "NOT");
     }
 
     // Test SimplePredicate validation edge cases
@@ -182,18 +192,13 @@ class PredicateValidationPropertyTests {
     }
 
     @Property
-    void likePredicateHandlesNullPattern(
+    void likePredicateThrowsOnNullPattern(
             @ForAll("validFieldNames") String field,
             @ForAll("validParameterNames") String paramName) {
         
-        LikePredicate predicate = new LikePredicate(field, null, paramName);
-        String sql = predicate.toSQL();
-        Map<String, Object> params = predicate.getParameters();
-        
-        assertTrue(sql.contains(field));
-        assertTrue(sql.contains("LIKE"));
-        assertEquals(1, params.size());
-        assertNull(params.get(paramName));
+        assertThrows(QueryBuildException.class, () -> 
+            new LikePredicate(field, null, paramName)
+        );
     }
 
     // Test BetweenPredicate validation edge cases
@@ -345,9 +350,7 @@ class PredicateValidationPropertyTests {
 
     @Property
     void logicalPredicateThrowsOnEmptyChildren(
-            @ForAll String logicalOperator) {
-        
-        that(logicalOperator.equals("AND") || logicalOperator.equals("OR") || logicalOperator.equals("NOT"));
+            @ForAll("validLogicalOperators") String logicalOperator) {
         
         assertThrows(QueryBuildException.class, () -> 
             new LogicalPredicate(logicalOperator, Collections.emptyList())

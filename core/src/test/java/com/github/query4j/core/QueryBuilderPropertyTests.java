@@ -263,7 +263,10 @@ class QueryBuilderPropertyTests {
         assertTrue(sql.contains("WHERE"));
         assertTrue(sql.contains("ORDER BY"));
         assertTrue(sql.contains("LIMIT"));
-        assertTrue(sql.contains("OFFSET"));
+        // OFFSET is only added if > 0
+        if (offset > 0) {
+            assertTrue(sql.contains("OFFSET"));
+        }
         assertTrue(sql.contains(field));
         assertTrue(sql.contains("IS NOT NULL"));
     }
