@@ -347,11 +347,11 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> having(@NonNull String aggregatedFieldName, @NonNull String operator, Object value) {
-        validateFieldName(aggregatedFieldName);
+        validateAggregatedFieldName(aggregatedFieldName);
         validateOperator(operator);
 
         String paramName = generateParamName(aggregatedFieldName + "_having");
-        SimplePredicate havingPredicate = new SimplePredicate(aggregatedFieldName, operator, value, paramName);
+        HavingPredicate havingPredicate = new HavingPredicate(aggregatedFieldName, operator, value, paramName);
 
         List<Predicate> newHavingPredicates = new ArrayList<>(havingPredicates);
         newHavingPredicates.add(havingPredicate);
@@ -656,6 +656,16 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         try {
             // Use centralized field validation
             FieldValidator.validateFieldName(fieldName);
+        } catch (QueryBuildException e) {
+            // Convert to IllegalArgumentException for backward compatibility in builder layer
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+    }
+
+    private void validateAggregatedFieldName(String aggregatedFieldName) {
+        try {
+            // Use centralized aggregated field validation for HAVING clauses
+            FieldValidator.validateAggregatedFieldName(aggregatedFieldName);
         } catch (QueryBuildException e) {
             // Convert to IllegalArgumentException for backward compatibility in builder layer
             throw new IllegalArgumentException(e.getMessage(), e);

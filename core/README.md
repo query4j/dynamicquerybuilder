@@ -6,6 +6,7 @@ The core module provides the fundamental query building functionality for the Qu
 
 - **Fluent Builder API**: Chainable methods for constructing complex queries
 - **Multi-table JOIN Support**: INNER, LEFT, RIGHT, and FETCH joins
+- **Aggregation Functions**: COUNT, SUM, AVG, MIN, MAX with GROUP BY and HAVING support
 - **Thread-Safe**: Immutable builder pattern with copy-on-write semantics
 - **Comprehensive Predicates**: Support for all common SQL conditions
 - **Parameter Safety**: Automatic parameter binding to prevent SQL injection
@@ -119,6 +120,144 @@ QueryBuilder.forEntity(User.class)
 // Result: SELECT * FROM User LEFT JOIN profile RIGHT JOIN permissions LEFT JOIN FETCH orders
 ```
 
+## Aggregation Functions
+
+The core module provides comprehensive support for SQL aggregation functions with a fluent API:
+
+### Basic Aggregation Functions
+
+```java
+// COUNT(*) - count all rows
+Long totalUsers = QueryBuilder.forEntity(User.class)
+    .countAll()
+    .count(); // Returns the count result
+
+// COUNT(field) - count non-null values
+List<Object[]> results = QueryBuilder.forEntity(User.class)
+    .count("email")
+    .findAll();
+
+// SUM - calculate sum of numeric field
+List<Object[]> totalSalary = QueryBuilder.forEntity(Employee.class)
+    .sum("salary")
+    .findAll();
+
+// AVG - calculate average of numeric field
+List<Object[]> avgPrice = QueryBuilder.forEntity(Product.class)
+    .avg("price")
+    .where("category", "Electronics")
+    .findAll();
+
+// MIN - find minimum value
+List<Object[]> earliestDate = QueryBuilder.forEntity(Order.class)
+    .min("order_date")
+    .findAll();
+
+// MAX - find maximum value  
+List<Object[]> latestUpdate = QueryBuilder.forEntity(User.class)
+    .max("last_login")
+    .where("active", true)
+    .findAll();
+```
+
+### Aggregation with GROUP BY
+
+```java
+// Count users by department
+List<Object[]> usersByDept = QueryBuilder.forEntity(User.class)
+    .select("department", "COUNT(*)")
+    .groupBy("department")
+    .findAll();
+
+// Sum sales by region and month
+List<Object[]> salesSummary = QueryBuilder.forEntity(Sale.class)
+    .select("region", "MONTH(sale_date)", "SUM(amount)")
+    .groupBy("region", "MONTH(sale_date)")
+    .orderBy("region")
+    .findAll();
+
+// Average salary by department, only for active employees
+List<Object[]> avgSalaryByDept = QueryBuilder.forEntity(Employee.class)
+    .select("department", "AVG(salary)")
+    .where("status", "ACTIVE")
+    .groupBy("department")
+    .orderBy("AVG(salary)", false) // DESC order
+    .findAll();
+```
+
+### Aggregation with HAVING Clause
+
+The HAVING clause filters results after grouping and aggregation:
+
+```java
+// Departments with more than 10 employees
+List<Object[]> largeDepartments = QueryBuilder.forEntity(Employee.class)
+    .select("department", "COUNT(*)")
+    .groupBy("department")
+    .having("COUNT(*)", ">", 10)
+    .orderBy("COUNT(*)", false)
+    .findAll();
+
+// Products with average price above $100
+List<Object[]> expensiveProducts = QueryBuilder.forEntity(Product.class)
+    .select("category", "AVG(price)")
+    .groupBy("category")
+    .having("AVG(price)", ">", 100.0)
+    .findAll();
+
+// Regions with total sales exceeding $50,000
+List<Object[]> highSalesRegions = QueryBuilder.forEntity(Sale.class)
+    .select("region", "SUM(amount)")
+    .where("sale_date", ">=", "2023-01-01")
+    .groupBy("region")
+    .having("SUM(amount)", ">", 50000)
+    .orderBy("SUM(amount)", false)
+    .findAll();
+
+// Complex HAVING with multiple conditions
+List<Object[]> qualifiedDepts = QueryBuilder.forEntity(Employee.class)
+    .select("department", "COUNT(*)", "AVG(salary)")
+    .where("hire_date", ">", "2020-01-01")
+    .groupBy("department")
+    .having("COUNT(*)", ">", 5)
+    .and()
+    .having("AVG(salary)", "<", 75000)
+    .findAll();
+```
+
+### Complex Aggregation Scenarios
+
+```java
+// Quarterly sales report with growth analysis
+List<Object[]> quarterlySales = QueryBuilder.forEntity(Sale.class)
+    .select("QUARTER(sale_date)", "SUM(amount)", "COUNT(*)", "AVG(amount)")
+    .where("sale_date", "BETWEEN", "2023-01-01", "2023-12-31")
+    .groupBy("QUARTER(sale_date)")
+    .having("SUM(amount)", ">", 10000)
+    .orderBy("QUARTER(sale_date)")
+    .findAll();
+
+// Top performing categories by multiple metrics
+List<Object[]> topCategories = QueryBuilder.forEntity(Product.class)
+    .select("category", "COUNT(*)", "MIN(price)", "MAX(price)", "AVG(price)")
+    .where("active", true)
+    .groupBy("category")
+    .having("COUNT(*)", ">=", 5)
+    .and()
+    .having("AVG(price)", ">", 50.0)
+    .orderBy("COUNT(*)", false)
+    .limit(10)
+    .findAll();
+```
+
+### Aggregation Best Practices
+
+- **Field Selection**: When using GROUP BY, ensure all non-aggregated fields in SELECT are included in GROUP BY
+- **Performance**: Use appropriate indexes on grouped and aggregated fields
+- **HAVING vs WHERE**: Use WHERE for filtering before grouping, HAVING for filtering after aggregation
+- **Null Handling**: Aggregation functions (except COUNT(*)) ignore NULL values
+- **Type Safety**: Ensure numeric aggregations (SUM, AVG) are used with appropriate data types
+
 ## Field Name Validation
 
 JOIN association names must follow these rules:
@@ -174,13 +313,25 @@ List<User> activeUsersWithRecentOrders = QueryBuilder.forEntity(User.class)
 
 ### JOINs with Aggregations
 
+Combine JOINs with aggregation functions for powerful analytical queries. See the [Aggregation Functions](#aggregation-functions) section for comprehensive examples.
+
 ```java
-// Count orders per user
+// Count orders per user with JOIN
 List<Object[]> userOrderCounts = QueryBuilder.forEntity(User.class)
     .select("id", "name", "COUNT(orders.id)")
     .leftJoin("orders")
     .groupBy("id", "name")
     .having("COUNT(orders.id)", ">", 5)
+    .orderBy("COUNT(orders.id)", false)
+    .findAll();
+
+// Average order value by customer region
+List<Object[]> avgOrderByRegion = QueryBuilder.forEntity(Order.class)
+    .select("user.region", "AVG(total_amount)")
+    .join("user")
+    .where("order_date", ">=", "2023-01-01")
+    .groupBy("user.region")
+    .having("AVG(total_amount)", ">", 100.0)
     .findAll();
 ```
 

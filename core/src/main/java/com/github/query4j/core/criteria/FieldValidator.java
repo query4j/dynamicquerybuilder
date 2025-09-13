@@ -50,6 +50,12 @@ public final class FieldValidator {
     private static final Pattern PARAM_PATTERN = Pattern.compile("^[A-Za-z][A-Za-z0-9_]*$");
     
     /**
+     * Precompiled pattern for valid aggregation expressions in HAVING clauses.
+     * Allows aggregation functions like COUNT(), SUM(), AVG(), MIN(), MAX() with field names.
+     */
+    private static final Pattern AGGREGATION_PATTERN = Pattern.compile("^[A-Za-z]+\\([A-Za-z0-9_\\.\\*]+\\)$");
+    
+    /**
      * Private constructor to prevent instantiation.
      */
     private FieldValidator() {
@@ -127,6 +133,49 @@ public final class FieldValidator {
             throw new QueryBuildException(
                 "Parameter name contains invalid characters: '" + paramName + 
                 "'. Parameter names must start with a letter and contain only letters, numbers, and underscores"
+            );
+        }
+    }
+    
+    /**
+     * Validates that the given aggregated field name is valid for use in HAVING clauses.
+     * 
+     * <p>
+     * A valid aggregated field name can be either:
+     * </p>
+     * <ul>
+     * <li>A regular field name (matching {@code [A-Za-z0-9_\.]+})</li>
+     * <li>An aggregation function expression (e.g., COUNT(id), SUM(amount), AVG(price))</li>
+     * </ul>
+     * 
+     * <p>
+     * This allows HAVING clauses to work with both simple field references and
+     * aggregation function expressions commonly used in SQL.
+     * </p>
+     * 
+     * @param aggregatedFieldName the aggregated field name to validate
+     * @throws QueryBuildException if the field name is null, empty, or contains invalid characters
+     * @since 1.0.0
+     */
+    public static void validateAggregatedFieldName(String aggregatedFieldName) {
+        if (aggregatedFieldName == null) {
+            throw new QueryBuildException("Aggregated field name must not be null");
+        }
+        
+        // Normalize by trimming leading/trailing whitespace
+        String trimmed = aggregatedFieldName.trim();
+        if (trimmed.isEmpty()) {
+            throw new QueryBuildException("Aggregated field name must not be empty");
+        }
+        
+        // Check if it's a regular field name or an aggregation function
+        boolean isValidFieldName = FIELD_PATTERN.matcher(trimmed).matches();
+        boolean isValidAggregation = AGGREGATION_PATTERN.matcher(trimmed).matches();
+        
+        if (!isValidFieldName && !isValidAggregation) {
+            throw new QueryBuildException(
+                "Aggregated field name contains invalid characters: '" + aggregatedFieldName + 
+                "'. Must be either a valid field name [A-Za-z0-9_\\.]+, or an aggregation function like COUNT(field)"
             );
         }
     }
