@@ -54,6 +54,7 @@ public class PaginationBenchmark {
     private static final int MEDIUM_DATASET_SIZE = 10000;
     private static final int LARGE_DATASET_SIZE = 100000;
     private static final int PAGE_SIZE = 50;
+    private static final long FIVE_YEARS_IN_DAYS = 5 * 365 + 1; // ~5 years accounting for leap year
     
     // Filter criteria for consistent benchmarking
     private final String department = "Engineering";
@@ -160,7 +161,7 @@ public class PaginationBenchmark {
                     
                     // Random hire dates in the last 5 years
                     LocalDate startDate = LocalDate.of(2019, 1, 1);
-                    long days = random.nextLong(0, 1826); // ~5 years worth of days
+                    long days = random.nextLong(0, FIVE_YEARS_IN_DAYS);
                     stmt.setObject(6, startDate.plusDays(days));
                     
                     // Salary between 30,000 and 200,000
@@ -401,11 +402,13 @@ public class PaginationBenchmark {
         String jdbcSql = sql;
         List<Object> orderedParams = new ArrayList<>();
         
-        // Simple parameter replacement - in order of appearance
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
+        // Sort parameter names by length descending to avoid substring replacement issues
+        List<Map.Entry<String, Object>> paramEntries = new ArrayList<>(params.entrySet());
+        paramEntries.sort((e1, e2) -> Integer.compare(e2.getKey().length(), e1.getKey().length()));
+        for (Map.Entry<String, Object> entry : paramEntries) {
             String paramName = ":" + entry.getKey();
             if (jdbcSql.contains(paramName)) {
-                jdbcSql = jdbcSql.replaceFirst(paramName, "?");
+                jdbcSql = jdbcSql.replaceFirst(java.util.regex.Pattern.quote(paramName), "?");
                 orderedParams.add(entry.getValue());
             }
         }
