@@ -435,4 +435,163 @@ class PropertyBasedTests {
         assertTrue(sql.contains("FROM"));
         assertTrue(sql.contains("WHERE"));
     }
+
+    // Test advanced builder configuration methods
+    @Property
+    void builderConfigurationMethodsPreserveImmutability(
+            @ForAll("validFieldNames") String field,
+            @ForAll("validValues") Object value,
+            @ForAll @IntRange(min = 1, max = 100) int limit,
+            @ForAll @IntRange(min = 0, max = 50) int offset) {
+        
+        DynamicQueryBuilder<Object> original = new DynamicQueryBuilder<>(Object.class);
+        String originalSQL = original.toSQL();
+        
+        // Test withLimit
+        DynamicQueryBuilder<Object> withLimit = (DynamicQueryBuilder<Object>) original.withLimit(limit);
+        assertNotSame(original, withLimit);
+        assertEquals(originalSQL, original.toSQL()); // Original unchanged
+        
+        // Test withOffset  
+        DynamicQueryBuilder<Object> withOffset = (DynamicQueryBuilder<Object>) original.withOffset(offset);
+        assertNotSame(original, withOffset);
+        assertEquals(originalSQL, original.toSQL()); // Original unchanged
+        
+        // Test withCacheEnabled
+        DynamicQueryBuilder<Object> withCache = (DynamicQueryBuilder<Object>) original.withCacheEnabled(true);
+        assertNotSame(original, withCache);
+        assertEquals(originalSQL, original.toSQL()); // Original unchanged
+        
+        // Test withNextLogicalOperator
+        DynamicQueryBuilder<Object> withLogical = (DynamicQueryBuilder<Object>) original.withNextLogicalOperator("AND");
+        assertNotSame(original, withLogical);
+        assertEquals(originalSQL, original.toSQL()); // Original unchanged
+        
+        // Test withGroupDepth
+        DynamicQueryBuilder<Object> withDepth = (DynamicQueryBuilder<Object>) original.withGroupDepth(2);
+        assertNotSame(original, withDepth);
+        assertEquals(originalSQL, original.toSQL()); // Original unchanged
+    }
+
+    // Test complex aggregation scenarios
+    @Property
+    void complexAggregationScenariosGenerateValidSQL(
+            @ForAll("validFieldNames") String field1,
+            @ForAll("validFieldNames") String field2,
+            @ForAll("validFieldNames") String field3,
+            @ForAll("validValues") Object havingValue) {
+        
+        DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
+        
+        // Create complex aggregation query
+        DynamicQueryBuilder<Object> complexQuery = (DynamicQueryBuilder<Object>) builder
+            .sum(field1)
+            .avg(field2)
+            .count(field3)
+            .groupBy(field1, field2)
+            .having("SUM(" + field1 + ")", ">", havingValue)
+            .orderBy("SUM(" + field1 + ")", false);
+        
+        String sql = complexQuery.toSQL();
+        
+        // Verify aggregation structure
+        assertTrue(sql.contains("SELECT"));
+        assertTrue(sql.contains("SUM("));
+        assertTrue(sql.contains("AVG("));
+        assertTrue(sql.contains("COUNT("));
+        assertTrue(sql.contains("GROUP BY"));
+        assertTrue(sql.contains("HAVING"));
+        assertTrue(sql.contains("ORDER BY"));
+        
+        // Verify fields are present
+        assertTrue(sql.contains(field1));
+        assertTrue(sql.contains(field2));
+        assertTrue(sql.contains(field3));
+    }
+
+    // Test join operations with different types
+    @Property
+    void joinOperationsGenerateCorrectSQL(
+            @ForAll("validFieldNames") String table1,
+            @ForAll("validFieldNames") String table2) {
+        
+        String joinCondition = table1 + ".id = " + table2 + ".parent_id";
+        
+        DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
+        
+        // Test different join types
+        DynamicQueryBuilder<Object> innerJoin = (DynamicQueryBuilder<Object>) 
+            builder.innerJoin(joinCondition);
+        assertTrue(innerJoin.toSQL().length() > builder.toSQL().length());
+        
+        DynamicQueryBuilder<Object> leftJoin = (DynamicQueryBuilder<Object>) 
+            builder.leftJoin(joinCondition);
+        assertTrue(leftJoin.toSQL().length() > builder.toSQL().length());
+        
+        DynamicQueryBuilder<Object> rightJoin = (DynamicQueryBuilder<Object>) 
+            builder.rightJoin(joinCondition);
+        assertTrue(rightJoin.toSQL().length() > builder.toSQL().length());
+        
+        // Test generic join
+        DynamicQueryBuilder<Object> genericJoin = (DynamicQueryBuilder<Object>) 
+            builder.join(joinCondition);
+        assertTrue(genericJoin.toSQL().length() > builder.toSQL().length());
+        
+        // Test fetch join
+        DynamicQueryBuilder<Object> fetchJoin = (DynamicQueryBuilder<Object>) 
+            builder.fetch(table2);
+        assertTrue(fetchJoin.toSQL().length() > builder.toSQL().length());
+    }
+
+    // Test pagination scenarios
+    @Property
+    void paginationScenariosGenerateValidSQL(
+            @ForAll("validFieldNames") String field,
+            @ForAll("validValues") Object value,
+            @ForAll @IntRange(min = 1, max = 100) int pageNumber,
+            @ForAll @IntRange(min = 5, max = 50) int pageSize) {
+        
+        DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
+        
+        // Test page method
+        DynamicQueryBuilder<Object> pagedQuery = (DynamicQueryBuilder<Object>) builder
+            .where(field, value)
+            .orderBy(field)
+            .page(pageNumber, pageSize);
+        
+        String sql = pagedQuery.toSQL();
+        
+        assertTrue(sql.contains("LIMIT"));
+        assertTrue(sql.contains("OFFSET"));
+        assertTrue(sql.contains("ORDER BY"));
+        assertTrue(sql.contains(String.valueOf(pageSize)));
+        
+        // Verify offset calculation
+        long expectedOffset = (long) (pageNumber - 1) * pageSize;
+        if (expectedOffset <= Integer.MAX_VALUE) {
+            assertTrue(sql.contains(String.valueOf(expectedOffset)));
+        }
+    }
+
+    // Test execution methods exist and are callable
+    @Property
+    void executionMethodsAreCallable(
+            @ForAll("validFieldNames") String field,
+            @ForAll("validValues") Object value) {
+        
+        DynamicQueryBuilder<Object> builder = (DynamicQueryBuilder<Object>) new DynamicQueryBuilder<>(Object.class)
+            .where(field, value);
+        
+        // These methods should return non-null objects (even though they don't execute)
+        assertNotNull(builder.count());
+        assertNotNull(builder.findAll());
+        assertNotNull(builder.findOne());
+        assertNotNull(builder.exists());
+        assertNotNull(builder.findPage());
+        assertNotNull(builder.countAsync());
+        assertNotNull(builder.findAllAsync());
+        assertNotNull(builder.findOneAsync());
+        assertNotNull(builder.build());
+        assertNotNull(builder.getExecutionStats());
+    }
 }
