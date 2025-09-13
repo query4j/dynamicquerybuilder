@@ -55,6 +55,20 @@ class BetweenPredicateTest {
         }
 
         @Test
+        @DisplayName("should throw QueryBuildException for duplicate parameter names")
+        void shouldThrowForDuplicateParameterNames() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "sameName", "sameName"));
+        }
+
+        @Test
+        @DisplayName("should throw QueryBuildException for trimmed duplicate parameter names")
+        void shouldThrowForTrimmedDuplicateParameterNames() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, " sameName ", "sameName "));
+        }
+
+        @Test
         @DisplayName("should accept null start and end values")
         void shouldAcceptNullValues() {
             BetweenPredicate predicate = new BetweenPredicate("field", null, null, "p1_start", "p1_end");
