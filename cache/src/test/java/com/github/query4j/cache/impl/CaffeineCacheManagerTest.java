@@ -26,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CaffeineCacheManagerTest {
 
+    private static final int OVERFLOW_KEY_COUNT = 10;
+    private static final int POLLING_TIMEOUT_MS = 1000;
+    private static final int POLLING_INTERVAL_MS = 10;
+
     private CacheManager cacheManager;
 
     @BeforeEach
@@ -313,19 +317,15 @@ class CaffeineCacheManagerTest {
         
         // Force evictions by adding many more items than capacity
         // This ensures evictions happen regardless of LRU timing
-        for (int i = 4; i <= 10; i++) {
+        for (int i = 4; i <= OVERFLOW_KEY_COUNT; i++) {
             smallCache.put("key" + i, "value" + i);
         }
         
         // Trigger cache maintenance to ensure eviction listeners are processed
         smallCache.maintenance();
         
-        // Allow some time for async eviction processing
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Wait for eviction processing to complete using polling
+        waitForEvictions(smallCache);
         
         stats = smallCache.stats();
         
@@ -346,6 +346,37 @@ class CaffeineCacheManagerTest {
         // At least some of the original keys should have been evicted
         assertTrue(originalKeysRemaining < 3, 
                   "Some original keys should have been evicted. Remaining: " + originalKeysRemaining);
+    }
+
+    /**
+     * Waits for eviction processing to complete by polling the eviction count.
+     * Uses a timeout to prevent hanging in case evictions don't occur.
+     * 
+     * @param cache the cache manager to check for evictions
+     */
+    private void waitForEvictions(CacheManager cache) {
+        long startTime = System.currentTimeMillis();
+        long timeout = startTime + POLLING_TIMEOUT_MS;
+        
+        while (System.currentTimeMillis() < timeout) {
+            if (cache.stats().getEvictionCount() > 0) {
+                return; // Evictions detected
+            }
+            
+            // Trigger maintenance to process pending evictions
+            cache.maintenance();
+            
+            try {
+                Thread.sleep(POLLING_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for evictions", e);
+            }
+        }
+        
+        // If we reach here, evictions didn't occur within timeout
+        fail("Evictions were not recorded within timeout period. " +
+             "Expected evictions but got count: " + cache.stats().getEvictionCount());
     }
 
     // === Validation Tests ===
