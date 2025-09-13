@@ -79,6 +79,22 @@ class PropertyBasedTests {
             .ofMaxLength(100);
     }
 
+    @Provide
+    Arbitrary<String> validAggregationFunctions() {
+        return Arbitraries.oneOf(
+            // Simple aggregation functions
+            validFieldNames().map(field -> "COUNT(" + field + ")"),
+            validFieldNames().map(field -> "SUM(" + field + ")"),
+            validFieldNames().map(field -> "AVG(" + field + ")"),
+            validFieldNames().map(field -> "MIN(" + field + ")"),
+            validFieldNames().map(field -> "MAX(" + field + ")"),
+            // COUNT(*) is a special case
+            Arbitraries.just("COUNT(*)"),
+            // Regular field names (also valid for HAVING)
+            validFieldNames()
+        );
+    }
+
     @Property
     void simplePredicateGeneratesValidSQL(@ForAll("validFieldNames") String field,
                                         @ForAll("validOperators") String operator,
@@ -97,6 +113,69 @@ class PropertyBasedTests {
         Map<String, Object> params = predicate.getParameters();
         assertEquals(1, params.size());
         assertEquals(value, params.get(paramName));
+    }
+
+    @Property
+    void havingPredicateGeneratesValidSQL(@ForAll("validAggregationFunctions") String aggregatedField,
+                                        @ForAll("validOperators") String operator,
+                                        @ForAll("validValues") Object value,
+                                        @ForAll("validParameterNames") String paramName) {
+        
+        HavingPredicate predicate = new HavingPredicate(aggregatedField, operator, value, paramName);
+        String sql = predicate.toSQL();
+        
+        // SQL should contain aggregated field, operator, and parameter placeholder
+        assertTrue(sql.contains(aggregatedField));
+        assertTrue(sql.contains(operator));
+        assertTrue(sql.contains(":" + paramName));
+        
+        // Parameters should contain exactly one entry
+        Map<String, Object> params = predicate.getParameters();
+        assertEquals(1, params.size());
+        assertEquals(value, params.get(paramName));
+    }
+
+    @Property
+    void havingPredicateIsImmutable(@ForAll("validAggregationFunctions") String aggregatedField,
+                                  @ForAll("validOperators") String operator,
+                                  @ForAll("validValues") Object value,
+                                  @ForAll("validParameterNames") String paramName) {
+        
+        HavingPredicate predicate = new HavingPredicate(aggregatedField, operator, value, paramName);
+        
+        // Multiple calls should return the same results
+        String sql1 = predicate.toSQL();
+        String sql2 = predicate.toSQL();
+        Map<String, Object> params1 = predicate.getParameters();
+        Map<String, Object> params2 = predicate.getParameters();
+        
+        assertEquals(sql1, sql2);
+        assertEquals(params1, params2);
+        
+        // Verify immutability of parameters map
+        assertThrows(UnsupportedOperationException.class, () -> {
+            params1.put("test", "value");
+        });
+    }
+
+    @Property
+    void havingPredicateEqualsAndHashCodeConsistency(@ForAll("validAggregationFunctions") String aggregatedField,
+                                                    @ForAll("validOperators") String operator,
+                                                    @ForAll("validValues") Object value,
+                                                    @ForAll("validParameterNames") String paramName) {
+        
+        HavingPredicate predicate1 = new HavingPredicate(aggregatedField, operator, value, paramName);
+        HavingPredicate predicate2 = new HavingPredicate(aggregatedField, operator, value, paramName);
+        
+        // Equal objects should have same hash code
+        assertEquals(predicate1, predicate2);
+        assertEquals(predicate1.hashCode(), predicate2.hashCode());
+        
+        // Object should be equal to itself
+        assertEquals(predicate1, predicate1);
+        
+        // toString should be consistent
+        assertEquals(predicate1.toString(), predicate2.toString());
     }
 
     @Property

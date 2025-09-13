@@ -372,6 +372,54 @@ class BetweenPredicateTest {
         }
 
         @Test
+        @DisplayName("should not be equal to null object")
+        void shouldNotBeEqualToNullObject() {
+            BetweenPredicate predicate = new BetweenPredicate("field", 1, 10, "p1_start", "p1_end");
+            
+            assertNotEquals(predicate, null);
+        }
+
+        @Test
+        @DisplayName("should not be equal to different object type")
+        void shouldNotBeEqualToDifferentObjectType() {
+            BetweenPredicate predicate = new BetweenPredicate("field", 1, 10, "p1_start", "p1_end");
+            String different = "different type";
+            
+            assertNotEquals(predicate, different);
+        }
+
+        @Test
+        @DisplayName("should be equal to itself always")
+        void shouldBeEqualToItselfAlways() {
+            BetweenPredicate predicate = new BetweenPredicate("field", 1, 10, "p1_start", "p1_end");
+            
+            assertEquals(predicate, predicate);
+        }
+
+        @Test
+        @DisplayName("should have consistent hashCode for equal objects")
+        void shouldHaveConsistentHashCodeForEqualObjects() {
+            BetweenPredicate predicate1 = new BetweenPredicate("field", 1, 10, "p1_start", "p1_end");
+            BetweenPredicate predicate2 = new BetweenPredicate("field", 1, 10, "p1_start", "p1_end");
+            
+            assertEquals(predicate1.hashCode(), predicate2.hashCode());
+            
+            // Multiple calls should return same hash code
+            int hash1 = predicate1.hashCode();
+            int hash2 = predicate1.hashCode();
+            assertEquals(hash1, hash2);
+        }
+
+        @Test
+        @DisplayName("should have different hashCode for different objects")
+        void shouldHaveDifferentHashCodeForDifferentObjects() {
+            BetweenPredicate predicate1 = new BetweenPredicate("field1", 1, 10, "p1_start", "p1_end");
+            BetweenPredicate predicate2 = new BetweenPredicate("field2", 1, 10, "p1_start", "p1_end");
+            
+            assertNotEquals(predicate1.hashCode(), predicate2.hashCode());
+        }
+
+        @Test
         @DisplayName("should provide meaningful toString representation")
         void shouldProvideMeaningfulToString() {
             BetweenPredicate predicate = new BetweenPredicate("age", 18, 65, "p1_start", "p1_end");
