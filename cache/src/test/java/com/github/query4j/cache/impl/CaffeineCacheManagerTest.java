@@ -106,6 +106,51 @@ class CaffeineCacheManagerTest {
             CaffeineCacheManager.forRegion("  "));
     }
 
+    @Test
+    @DisplayName("Named region factory with custom settings should work correctly")
+    void testNamedRegionWithCustomSettings() {
+        String regionName = "custom-region";
+        long customMaxSize = 500L;
+        long customTtl = 120L;
+        
+        CacheManager cache1 = CaffeineCacheManager.forRegion(regionName, customMaxSize, customTtl);
+        CacheManager cache2 = CaffeineCacheManager.forRegion(regionName, customMaxSize, customTtl);
+        
+        // Should return the same instance (singleton behavior)
+        assertSame(cache1, cache2, "Same region should return same instance even with custom settings");
+        assertEquals(regionName, cache1.getCacheRegion());
+        assertEquals(customMaxSize, cache1.getMaxSize());
+        assertEquals(customTtl, cache1.getDefaultTtlSeconds());
+    }
+
+    @Test
+    @DisplayName("Named region factory with custom settings should validate parameters")
+    void testNamedRegionCustomSettingsValidation() {
+        // Test null region name
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion(null, 100L, 60L));
+        
+        // Test empty region name
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("", 100L, 60L));
+        
+        // Test whitespace region name
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("  ", 100L, 60L));
+        
+        // Test invalid max size
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("test", 0L, 60L));
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("test", -1L, 60L));
+        
+        // Test invalid TTL
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("test", 100L, 0L));
+        assertThrows(IllegalArgumentException.class, () -> 
+            CaffeineCacheManager.forRegion("test", 100L, -1L));
+    }
+
     // === Basic Cache Operations ===
 
     @Test
@@ -429,6 +474,220 @@ class CaffeineCacheManagerTest {
         // Cache should still be functional after maintenance
         assertEquals("value1", cacheManager.get("key1"));
         assertEquals("value2", cacheManager.get("key2"));
+    }
+
+    // === Edge Cases and Exception Coverage Tests ===
+
+    @Test
+    @DisplayName("Cache operations should handle edge cases gracefully")
+    void testEdgeCasesAndExceptionPaths() {
+        // Test with negative TTL values (should validate)
+        assertThrows(IllegalArgumentException.class, () -> 
+            cacheManager.put("key", "value", -1));
+        assertThrows(IllegalArgumentException.class, () -> 
+            cacheManager.put("key", "value", -100));
+        
+        // Test with zero TTL (should validate)
+        assertDoesNotThrow(() -> cacheManager.put("key-zero-ttl", "value", 0));
+        
+        // Test operations after clearing
+        cacheManager.put("test-key", "test-value");
+        assertTrue(cacheManager.containsKey("test-key"));
+        cacheManager.clear();
+        assertFalse(cacheManager.containsKey("test-key"));
+        
+        // Operations should still work normally after clear
+        assertDoesNotThrow(() -> cacheManager.put("post-clear", "value"));
+        assertDoesNotThrow(() -> cacheManager.get("post-clear"));
+        assertDoesNotThrow(() -> cacheManager.containsKey("post-clear"));
+        assertDoesNotThrow(() -> cacheManager.invalidate("post-clear"));
+    }
+
+    @Test
+    @DisplayName("Large key operations should work correctly")
+    void testLargeKeyOperations() {
+        // Test with very long keys that might stress the cache
+        StringBuilder largeKeyBuilder = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            largeKeyBuilder.append("very-long-cache-key-segment-").append(i).append("-");
+        }
+        String largeKey = largeKeyBuilder.toString();
+        
+        // Should handle large keys without exceptions
+        assertDoesNotThrow(() -> cacheManager.put(largeKey, "large-key-value"));
+        assertDoesNotThrow(() -> cacheManager.get(largeKey));
+        assertDoesNotThrow(() -> cacheManager.containsKey(largeKey));
+        assertEquals("large-key-value", cacheManager.get(largeKey));
+        assertTrue(cacheManager.containsKey(largeKey));
+        
+        // Clean up
+        assertDoesNotThrow(() -> cacheManager.invalidate(largeKey));
+        assertFalse(cacheManager.containsKey(largeKey));
+    }
+
+    @Test
+    @DisplayName("Bulk operations stress test for exception handling")
+    void testBulkOperationsStressTest() {
+        // Perform many operations in sequence to potentially trigger edge cases
+        for (int i = 0; i < 100; i++) {
+            String key = "bulk-key-" + i;
+            String value = "bulk-value-" + i;
+            
+            assertDoesNotThrow(() -> cacheManager.put(key, value));
+            assertDoesNotThrow(() -> cacheManager.get(key));
+            assertDoesNotThrow(() -> cacheManager.containsKey(key));
+            
+            if (i % 10 == 0) {
+                // Periodically clear some entries
+                assertDoesNotThrow(() -> cacheManager.invalidate(key));
+            }
+            
+            if (i % 25 == 0) {
+                // Periodically run maintenance
+                assertDoesNotThrow(() -> cacheManager.maintenance());
+            }
+        }
+        
+        // Final cleanup should not throw
+        assertDoesNotThrow(() -> cacheManager.clear());
+    }
+
+    @Test
+    @DisplayName("Comprehensive exception path coverage through intensive operations")
+    void testComprehensiveExceptionCoverage() {
+        // Create a stress scenario with multiple cache instances and intensive operations
+        CacheManager stressCache = CaffeineCacheManager.create(10L, 1L); // Small cache, short TTL
+        
+        // Rapid-fire operations to stress the cache
+        for (int cycle = 0; cycle < 5; cycle++) {
+            // Fill cache beyond capacity
+            for (int i = 0; i < 20; i++) {
+                String key = "stress-key-" + cycle + "-" + i;
+                String value = "stress-value-" + System.nanoTime();
+                
+                // All operations should not throw exceptions
+                assertDoesNotThrow(() -> stressCache.put(key, value));
+                assertDoesNotThrow(() -> stressCache.get(key));
+                assertDoesNotThrow(() -> stressCache.containsKey(key));
+                
+                // Interleave with other operations
+                if (i % 3 == 0) {
+                    assertDoesNotThrow(() -> stressCache.invalidate(key));
+                }
+                if (i % 5 == 0) {
+                    assertDoesNotThrow(() -> stressCache.maintenance());
+                }
+            }
+            
+            // Clear the cache periodically
+            assertDoesNotThrow(() -> stressCache.clear());
+        }
+        
+        // Verify final state
+        assertNotNull(stressCache.stats());
+        assertEquals(0L, stressCache.stats().getCurrentSize());
+    }
+
+    @Test 
+    @DisplayName("Extreme key and value scenarios for complete coverage")
+    void testExtremeScenarios() {
+        // Test with various extreme but valid scenarios
+        
+        // Empty string values (not null, but empty)
+        assertDoesNotThrow(() -> cacheManager.put("empty-value-key", ""));
+        assertEquals("", cacheManager.get("empty-value-key"));
+        
+        // Very large values
+        StringBuilder largeValue = new StringBuilder();
+        for (int i = 0; i < 10000; i++) {
+            largeValue.append("Large data segment ").append(i).append(" ");
+        }
+        String largeValueStr = largeValue.toString();
+        
+        assertDoesNotThrow(() -> cacheManager.put("large-value-key", largeValueStr));
+        assertEquals(largeValueStr, cacheManager.get("large-value-key"));
+        
+        // Rapid put/get/invalidate cycles
+        for (int i = 0; i < 50; i++) {
+            final int index = i; // Make it effectively final
+            String key = "rapid-cycle-key";
+            assertDoesNotThrow(() -> cacheManager.put(key, "value-" + index));
+            assertDoesNotThrow(() -> cacheManager.get(key));
+            assertDoesNotThrow(() -> cacheManager.containsKey(key));
+            assertDoesNotThrow(() -> cacheManager.invalidate(key));
+            assertDoesNotThrow(() -> cacheManager.maintenance());
+        }
+        
+        // Test operations on keys with special characters
+        String[] specialKeys = {
+            "key with spaces", 
+            "key\twith\ttabs", 
+            "key.with.dots",
+            "key_with_underscores",
+            "key-with-dashes",
+            "key123with456numbers",
+            "UPPER_CASE_KEY"
+        };
+        
+        for (String specialKey : specialKeys) {
+            assertDoesNotThrow(() -> cacheManager.put(specialKey, "special-value"));
+            assertDoesNotThrow(() -> cacheManager.get(specialKey));
+            assertDoesNotThrow(() -> cacheManager.containsKey(specialKey));
+            assertDoesNotThrow(() -> cacheManager.invalidate(specialKey));
+        }
+        
+        // Final comprehensive cleanup
+        assertDoesNotThrow(() -> cacheManager.clear());
+        assertDoesNotThrow(() -> cacheManager.maintenance());
+    }
+
+    @Test
+    @DisplayName("Maximum stress test with concurrent operations and memory pressure")
+    void testMaximumStressForExceptionCoverage() {
+        // Create multiple cache instances with varying configurations
+        CacheManager[] caches = {
+            CaffeineCacheManager.create(1L, 1L),      // Minimal cache
+            CaffeineCacheManager.create(5L, 2L),      // Small cache  
+            CaffeineCacheManager.forRegion("stress-region", 10L, 1L),
+            CaffeineCacheManager.forRegion("pressure-region", 2L, 3L)
+        };
+        
+        // Intensive operations across all cache instances
+        for (int round = 0; round < 20; round++) {
+            for (int cacheIdx = 0; cacheIdx < caches.length; cacheIdx++) {
+                CacheManager cache = caches[cacheIdx];
+                
+                // Rapid operations that might trigger edge cases
+                for (int op = 0; op < 100; op++) {
+                    String key = "stress-" + round + "-" + cacheIdx + "-" + op;
+                    String value = "data-" + System.nanoTime() + "-" + Math.random();
+                    
+                    try {
+                        // All operations should complete without throwing
+                        cache.put(key, value);
+                        cache.get(key);
+                        cache.containsKey(key);
+                        
+                        if (op % 7 == 0) cache.invalidate(key);
+                        if (op % 13 == 0) cache.maintenance();
+                        if (op % 19 == 0) cache.clear();
+                        
+                        // Verify stats access doesn't throw
+                        assertNotNull(cache.stats());
+                    } catch (Exception e) {
+                        fail("Unexpected exception during stress test: " + e.getMessage());
+                    }
+                }
+            }
+        }
+        
+        // Final verification - all caches should be functional
+        for (CacheManager cache : caches) {
+            assertDoesNotThrow(() -> cache.put("final-test", "final-value"));
+            assertDoesNotThrow(() -> cache.get("final-test"));
+            assertDoesNotThrow(() -> cache.clear());
+            assertNotNull(cache.stats());
+        }
     }
 
     // === toString Test ===
