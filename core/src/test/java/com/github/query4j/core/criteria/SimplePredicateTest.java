@@ -269,6 +269,54 @@ class SimplePredicateTest {
         }
 
         @Test
+        @DisplayName("should not be equal to null object")
+        void shouldNotBeEqualToNullObject() {
+            SimplePredicate predicate = new SimplePredicate("field", "=", "value", "p1");
+            
+            assertNotEquals(predicate, null);
+        }
+
+        @Test
+        @DisplayName("should not be equal to different object type")
+        void shouldNotBeEqualToDifferentObjectType() {
+            SimplePredicate predicate = new SimplePredicate("field", "=", "value", "p1");
+            String different = "different type";
+            
+            assertNotEquals(predicate, different);
+        }
+
+        @Test
+        @DisplayName("should be equal to itself always")
+        void shouldBeEqualToItselfAlways() {
+            SimplePredicate predicate = new SimplePredicate("field", "=", "value", "p1");
+            
+            assertEquals(predicate, predicate);
+        }
+
+        @Test
+        @DisplayName("should have consistent hashCode for equal objects")
+        void shouldHaveConsistentHashCodeForEqualObjects() {
+            SimplePredicate predicate1 = new SimplePredicate("field", "=", "value", "p1");
+            SimplePredicate predicate2 = new SimplePredicate("field", "=", "value", "p1");
+            
+            assertEquals(predicate1.hashCode(), predicate2.hashCode());
+            
+            // Multiple calls should return same hash code
+            int hash1 = predicate1.hashCode();
+            int hash2 = predicate1.hashCode();
+            assertEquals(hash1, hash2);
+        }
+
+        @Test
+        @DisplayName("should have different hashCode for different objects")
+        void shouldHaveDifferentHashCodeForDifferentObjects() {
+            SimplePredicate predicate1 = new SimplePredicate("field1", "=", "value", "p1");
+            SimplePredicate predicate2 = new SimplePredicate("field2", "=", "value", "p1");
+            
+            assertNotEquals(predicate1.hashCode(), predicate2.hashCode());
+        }
+
+        @Test
         @DisplayName("should provide meaningful toString representation")
         void shouldProvideMeaningfulToString() {
             SimplePredicate predicate = new SimplePredicate("name", "=", "John", "p1");

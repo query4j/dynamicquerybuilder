@@ -79,6 +79,98 @@ class DynamicQueryBuilderAdditionalTest {
             assertThrows(NullPointerException.class, () -> builder.min(null));
             assertThrows(NullPointerException.class, () -> builder.max(null));
         }
+
+        @Test
+        @DisplayName("should handle aggregation with groupBy and having")
+        void shouldHandleAggregationWithGroupByAndHaving() {
+            String sql = builder
+                .sum("amount")
+                .where("active", true)
+                .groupBy("department")
+                .having("SUM(amount)", ">", 1000)
+                .orderBy("department")
+                .toSQL();
+            
+            assertTrue(sql.contains("SELECT SUM(amount)"));
+            assertTrue(sql.contains("WHERE active"));
+            assertTrue(sql.contains("GROUP BY department"));
+            assertTrue(sql.contains("HAVING SUM(amount) >"));
+            assertTrue(sql.contains("ORDER BY department"));
+        }
+
+        @Test
+        @DisplayName("should handle having with regular field names")
+        void shouldHandleHavingWithRegularFieldNames() {
+            String sql = builder
+                .select("department", "count")
+                .groupBy("department")
+                .having("department", "=", "Engineering")
+                .toSQL();
+            
+            assertTrue(sql.contains("HAVING department ="));
+        }
+
+        @Test
+        @DisplayName("should handle having with various aggregation functions")
+        void shouldHandleHavingWithVariousAggregationFunctions() {
+            // Test COUNT
+            String countSql = builder.groupBy("dept").having("COUNT(id)", ">", 5).toSQL();
+            assertTrue(countSql.contains("HAVING COUNT(id) >"));
+            
+            // Test SUM
+            String sumSql = builder.groupBy("dept").having("SUM(amount)", ">=", 1000).toSQL();
+            assertTrue(sumSql.contains("HAVING SUM(amount) >="));
+            
+            // Test AVG
+            String avgSql = builder.groupBy("dept").having("AVG(salary)", "<", 50000).toSQL();
+            assertTrue(avgSql.contains("HAVING AVG(salary) <"));
+            
+            // Test MIN
+            String minSql = builder.groupBy("dept").having("MIN(hire_date)", "=", "2020-01-01").toSQL();
+            assertTrue(minSql.contains("HAVING MIN(hire_date) ="));
+            
+            // Test MAX
+            String maxSql = builder.groupBy("dept").having("MAX(update_date)", "!=", "2023-12-31").toSQL();
+            assertTrue(maxSql.contains("HAVING MAX(update_date) !="));
+            
+            // Test COUNT(*)
+            String countAllSql = builder.groupBy("dept").having("COUNT(*)", ">", 0).toSQL();
+            assertTrue(countAllSql.contains("HAVING COUNT(*) >"));
+        }
+
+        @Test
+        @DisplayName("should throw for invalid aggregation expressions in having")
+        void shouldThrowForInvalidAggregationExpressionsInHaving() {
+            assertThrows(IllegalArgumentException.class, 
+                () -> builder.having("COUNT(", ">", 5));
+            assertThrows(IllegalArgumentException.class, 
+                () -> builder.having("COUNT)", ">", 5));
+            assertThrows(IllegalArgumentException.class, 
+                () -> builder.having("INVALID@FUNC(field)", ">", 5));
+        }
+
+        @Test
+        @DisplayName("should maintain immutability with aggregation operations")
+        void shouldMaintainImmutabilityWithAggregationOperations() {
+            DynamicQueryBuilder<TestEntity> original = builder;
+            
+            DynamicQueryBuilder<TestEntity> withCount = (DynamicQueryBuilder<TestEntity>) original.countAll();
+            DynamicQueryBuilder<TestEntity> withSum = (DynamicQueryBuilder<TestEntity>) original.sum("amount");
+            DynamicQueryBuilder<TestEntity> withAvg = (DynamicQueryBuilder<TestEntity>) original.avg("price");
+            
+            // Original should be unchanged
+            assertEquals("SELECT * FROM TestEntity", original.toSQL());
+            
+            // Each operation should create different instances
+            assertNotSame(original, withCount);
+            assertNotSame(original, withSum);
+            assertNotSame(original, withAvg);
+            
+            // Each should have different SQL
+            assertTrue(withCount.toSQL().contains("COUNT(*)"));
+            assertTrue(withSum.toSQL().contains("SUM(amount)"));
+            assertTrue(withAvg.toSQL().contains("AVG(price)"));
+        }
     }
 
     @Nested
