@@ -62,9 +62,16 @@ public class BetweenPredicate implements Predicate {
         FieldValidator.validateParameterName(startParamName);
         FieldValidator.validateParameterName(endParamName);
         
+        // Validate that parameter names are different to avoid conflicts
+        // Check for parameter collision after validation ensures both parameters are non-null
+        if (startParamName.trim().equals(endParamName.trim())) {
+            throw new QueryBuildException("Start and end parameter names must be different to avoid conflicts");
+        }
+        
         this.field = field.trim();
         this.startValue = startValue;
         this.endValue = endValue;
+        // These trim() calls are safe because validateParameterName ensures non-null
         this.startParamName = startParamName.trim();
         this.endParamName = endParamName.trim();
     }

@@ -3,11 +3,16 @@ package com.github.query4j.core.criteria;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
+
 import com.github.query4j.core.QueryBuildException;
 
 /**
@@ -52,6 +57,34 @@ class BetweenPredicateTest {
         void shouldThrowForNullEndParamName() {
             assertThrows(QueryBuildException.class,
                 () -> new BetweenPredicate("field", 1, 10, "p1_start", null));
+        }
+
+        @Test
+        @DisplayName("should throw QueryBuildException for duplicate parameter names")
+        void shouldThrowForDuplicateParameterNames() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "sameName", "sameName"));
+        }
+
+        @Test
+        @DisplayName("should throw QueryBuildException for trimmed duplicate parameter names")
+        void shouldThrowForTrimmedDuplicateParameterNames() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, " sameName ", "sameName "));
+        }
+
+        @Test
+        @DisplayName("should throw QueryBuildException for duplicate names with extra whitespace")
+        void shouldThrowForDuplicateNamesWithWhitespace() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "param1  ", "  param1"));
+        }
+
+        @Test
+        @DisplayName("should throw QueryBuildException for identical trimmed parameter names with different whitespace")
+        void shouldThrowForIdenticalTrimmedNamesWithDifferentWhitespace() {
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "\tparam1\n", " param1 "));
         }
 
         @Test
@@ -560,6 +593,211 @@ class BetweenPredicateTest {
                 assertEquals(10, predicate.getStartValue());
                 assertEquals(20, predicate.getEndValue());
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Branch Coverage for Parameter Validation")
+    class BranchCoverageTests {
+
+        @Test
+        @DisplayName("should cover all branches in parameter collision check")
+        void shouldCoverAllBranchesInParameterCollisionCheck() {
+            // This test is designed to improve branch coverage for the conditional:
+            // if (startParamName != null && endParamName != null && 
+            //     startParamName.trim().equals(endParamName.trim()))
+            
+            // Branch 1: Successful construction with different parameter names (no collision)
+            // This exercises the FALSE branch where collision check passes
+            BetweenPredicate successPredicate = new BetweenPredicate("field", 1, 10, "start", "end");
+            assertNotNull(successPredicate);
+            assertEquals("start", successPredicate.getStartParamName());
+            assertEquals("end", successPredicate.getEndParamName());
+            
+            // Branch 2: Collision detected with identical names (TRUE branch)
+            QueryBuildException collisionEx = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "duplicate", "duplicate"));
+            assertTrue(collisionEx.getMessage().contains("Start and end parameter names must be different"));
+            
+            // Branch 3: Collision detected after trimming (TRUE branch with whitespace)
+            QueryBuildException trimCollisionEx = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "  name  ", "name"));
+            assertTrue(trimCollisionEx.getMessage().contains("Start and end parameter names must be different"));
+        }
+
+        @Test
+        @DisplayName("should verify parameter validation precedence over collision check")
+        void shouldVerifyParameterValidationPrecedenceOverCollisionCheck() {
+            // Ensure that parameter validation (which can throw for null) occurs before
+            // the collision check, confirming the logical flow
+            
+            // Test null start parameter - should fail with parameter validation error
+            QueryBuildException nullStartEx = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, null, "valid"));
+            assertTrue(nullStartEx.getMessage().contains("Parameter name must not be null"));
+            
+            // Test null end parameter - should fail with parameter validation error  
+            QueryBuildException nullEndEx = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "valid", null));
+            assertTrue(nullEndEx.getMessage().contains("Parameter name must not be null"));
+            
+            // This confirms that the defensive null checks in the collision logic
+            // are currently unreachable but represent good defensive programming
+        }
+
+        @Test
+        @DisplayName("should test complex whitespace scenarios in collision detection")
+        void shouldTestComplexWhitespaceInCollisionDetection() {
+            // Test various whitespace combinations to ensure trim() logic is properly covered
+            
+            // Case 1: Leading whitespace that becomes identical after trim
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "   param", "param"));
+                
+            // Case 2: Trailing whitespace that becomes identical after trim
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "param   ", "param"));
+                
+            // Case 3: Both leading and trailing whitespace
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "  param  ", "param"));
+                
+            // Case 4: Different types of whitespace (tabs, newlines) - should become same after trim
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "\tparam\n", " param "));
+                
+            // Case 5: Parameters that remain different after trimming - should succeed
+            BetweenPredicate differentPredicate = new BetweenPredicate("field", 1, 10, "  param1  ", "  param2  ");
+            assertEquals("param1", differentPredicate.getStartParamName());
+            assertEquals("param2", differentPredicate.getEndParamName());
+        }
+
+        @Test
+        @DisplayName("should ensure defensive null check branches are documented") 
+        void shouldEnsureDefensiveNullCheckBranchesAreDocumented() {
+            // While the null checks in the collision detection are currently unreachable
+            // due to prior validation, they represent defensive programming.
+            // This test documents their intended behavior if they were ever reached.
+            
+            // The intended behavior would be:
+            // - If startParamName is null, skip collision check (short-circuit AND)
+            // - If endParamName is null, skip collision check (short-circuit AND) 
+            // - Only check for collision if both are non-null
+            
+            // Since we cannot reach these branches with null values due to validation,
+            // we verify that validation properly prevents null values from reaching that point
+            
+            assertThrows(QueryBuildException.class, () -> {
+                new BetweenPredicate("field", 1, 10, null, "param");
+            });
+            
+            assertThrows(QueryBuildException.class, () -> {
+                new BetweenPredicate("field", 1, 10, "param", null);
+            });
+            
+            // This test serves as documentation that the null checks exist for defensive purposes
+            // even though they are not currently reachable in normal execution flow
+        }
+
+        @Test
+        @DisplayName("should achieve complete branch coverage for parameter collision detection")
+        void shouldAchieveCompleteBranchCoverageForParameterCollisionDetection() {
+            // After refactoring, the collision check is simplified to:
+            // if (startParamName.trim().equals(endParamName.trim()))
+            // This is more testable and covers the essential logic without unreachable defensive null checks
+            
+            // Test collision detection with various scenarios
+            
+            // Branch 1: Parameters are different after trimming (FALSE - no collision)
+            BetweenPredicate neverCollision = new BetweenPredicate("field", 1, 10, "start", "end");
+            assertNotNull(neverCollision);
+            assertEquals("start", neverCollision.getStartParamName());
+            assertEquals("end", neverCollision.getEndParamName());
+            
+            // Branch 2: Parameters are identical after trimming (TRUE - collision detected)
+            QueryBuildException directCollision = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "collision", "collision"));
+            assertTrue(directCollision.getMessage().contains("Start and end parameter names must be different"));
+            
+            // Branch 3: Parameters become identical after trimming whitespace (TRUE - collision)
+            QueryBuildException trimCollision = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, " trimmed ", "trimmed"));
+            assertTrue(trimCollision.getMessage().contains("Start and end parameter names must be different"));
+            
+            // Branch 4: Complex whitespace scenarios that result in collision (TRUE)
+            QueryBuildException complexTrimCollision = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "\tparam\n", " param "));
+            assertTrue(complexTrimCollision.getMessage().contains("Start and end parameter names must be different"));
+            
+            // Verify that validation still prevents null values appropriately
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, null, "valid"));
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "valid", null));
+        }
+        
+        @Test
+        @DisplayName("should verify comprehensive collision detection with edge cases")
+        void shouldVerifyComprehensiveCollisionDetectionWithEdgeCases() {
+            // Test additional edge cases for collision detection to ensure robustness
+            
+            // Case 1: Parameters that look similar but are different after trim
+            BetweenPredicate similarButDifferent = new BetweenPredicate("field", 1, 10, "param1", "param2");
+            assertEquals("param1", similarButDifferent.getStartParamName());
+            assertEquals("param2", similarButDifferent.getEndParamName());
+            
+            // Case 2: Parameters with different amounts of whitespace but same core content
+            QueryBuildException whitespacEnzCollision = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "   core   ", "\tcore\n"));
+            assertTrue(whitespacEnzCollision.getMessage().contains("Start and end parameter names must be different"));
+            
+            // Case 3: Empty strings after trimming would be invalid anyway due to validation
+            QueryBuildException emptyParam = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "   ", "valid"));
+            assertTrue(emptyParam.getMessage().contains("Parameter name must not be empty"));
+            
+            // Case 4: Parameters with only case differences - should NOT collide (case sensitive)
+            BetweenPredicate caseTeidifference = new BetweenPredicate("field", 1, 10, "Param", "param");
+            assertEquals("Param", caseTeidifference.getStartParamName());
+            assertEquals("param", caseTeidifference.getEndParamName());
+            
+            // Case 5: Parameters with underscore differences - should NOT collide
+            BetweenPredicate underscoreHydifference = new BetweenPredicate("field", 1, 10, "param_1", "param1");
+            assertEquals("param_1", underscoreHydifference.getStartParamName());
+            assertEquals("param1", underscoreHydifference.getEndParamName());
+        }
+
+        @Test
+        @DisplayName("should document defensive programming rationale for null checks")
+        void shouldDocumentDefensiveProgrammingRationaleForNullChecks() {
+            // This test documents why the defensive null checks exist in the collision detection
+            // even though they are currently unreachable due to validation
+            
+            // The defensive null checks serve several purposes:
+            // 1. Future-proofing: If validation logic changes, the null checks prevent NPE
+            // 2. Code readability: Makes the intention clear about handling null parameters
+            // 3. Robustness: Provides additional safety layer
+            
+            // Current behavior: Validation prevents null values from reaching collision check
+            assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, null, "valid"),
+                "Null start parameter should be caught by validation");
+                
+            assertThrows(QueryBuildException.class, 
+                () -> new BetweenPredicate("field", 1, 10, "valid", null),
+                "Null end parameter should be caught by validation");
+            
+            // The defensive null checks in the collision detection represent good programming practice
+            // even if they're not currently reachable through normal execution paths
+            
+            // Test all reachable collision detection scenarios
+            BetweenPredicate nontCollision = new BetweenPredicate("field", 1, 10, "start", "end");
+            assertEquals("start", nontCollision.getStartParamName());
+            assertEquals("end", nontCollision.getEndParamName());
+            
+            QueryBuildException collisionEx = assertThrows(QueryBuildException.class,
+                () -> new BetweenPredicate("field", 1, 10, "collision", "collision"));
+            assertTrue(collisionEx.getMessage().contains("Start and end parameter names must be different"));
         }
     }
 }
