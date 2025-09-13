@@ -355,6 +355,24 @@ Page<User> usersPage = QueryBuilder.forEntity(User.class)
 - **RIGHT JOINs** preserve all associated entities even without matching main entities
 - Use appropriate join types based on your data requirements and performance needs
 
+### Pagination Performance Benchmarks
+
+DynamicQueryBuilder has been benchmarked against baseline Java libraries for pagination performance:
+
+- **Query Construction**: 7.916 μs/op (only 20% overhead vs JPA Criteria API)
+- **Competitive Performance**: Excellent balance between performance and developer experience
+- **Type Safety**: Compile-time safety without the verbosity of Criteria API
+
+For detailed benchmarking results and comparisons with JPA/Hibernate and raw JDBC, see:
+
+```bash
+# Run pagination benchmarks comparing vs baseline libraries
+./gradlew benchmark:paginationBenchmark
+
+# View detailed analysis
+open benchmark/pagination-benchmark-analysis.md
+```
+
 ## Error Handling
 
 JOIN operations validate association names and throw appropriate exceptions:
