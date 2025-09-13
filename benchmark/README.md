@@ -1,24 +1,42 @@
 # Query4j Performance Benchmarks
 
-This module contains JMH (Java Microbenchmark Harness) benchmarks for measuring the performance of Query4j Dynamic Query Builder across different complexity levels.
+This module contains JMH (Java Microbenchmark Harness) benchmarks for measuring the performance of Query4j Dynamic Query Builder across different complexity levels and comparing against baseline Java libraries.
 
 ## Overview
 
-The benchmark suite measures query builder performance across three primary scenarios:
+The benchmark suite includes two main categories:
 
-1. **Basic Query**: Single WHERE predicate with LIMIT/OFFSET
-2. **Moderate Query**: Multiple WHERE predicates with AND, IN predicate, ORDER BY
-3. **Complex Query**: Multiple WHERE predicates with AND/OR, BETWEEN, LIKE, GROUP BY, HAVING, aggregation, pagination
+### 1. Core Query Builder Benchmarks
+Measures query builder performance across three primary scenarios:
+- **Basic Query**: Single WHERE predicate with LIMIT/OFFSET
+- **Moderate Query**: Multiple WHERE predicates with AND, IN predicate, ORDER BY
+- **Complex Query**: Multiple WHERE predicates with AND/OR, BETWEEN, LIKE, GROUP BY, HAVING, aggregation, pagination
+
+### 2. Pagination Benchmarks (Issue #18)
+Compares pagination performance between DynamicQueryBuilder and baseline libraries:
+- **DynamicQueryBuilder**: Query4j's fluent pagination API
+- **JPA/Hibernate Criteria API**: Standard JPA query building
+- **Raw JDBC**: Direct SQL with parameterized queries
 
 ## Performance Targets
 
+### Core Benchmarks
 | Scenario | Target | Actual Performance |
 |----------|--------|-------------------|
 | Basic Query | < 1 ms | ~1.7 μs ✅ |
 | Moderate Query | < 2 ms | ~6.7 μs ✅ |
 | Complex Query | < 5 ms | ~17.1 μs ✅ |
 
-**Note**: All targets exceeded expectations by significant margins (microseconds vs milliseconds)
+### Pagination Benchmarks
+| Library/Operation | Performance | Relative |
+|-------------------|-------------|----------|
+| Raw JDBC Construction | 0.260 μs | **Baseline** |
+| JPA Criteria Construction | 6.593 μs | 25.4× |
+| DynamicQueryBuilder Construction | 7.916 μs | 30.4× |
+| Raw JDBC Execution | 15.492 μs | **Baseline** |
+| JPA Criteria Execution | 99.925 μs | 6.5× |
+
+**Key Finding**: DynamicQueryBuilder provides competitive performance with only 20% overhead compared to JPA Criteria API while offering superior developer experience.
 
 ## Benchmark Results
 
@@ -43,6 +61,28 @@ The benchmark suite measures query builder performance across three primary scen
 - **Parameter extraction** has consistent overhead regardless of query complexity
 - **Builder construction** scales linearly with query complexity
 
+### Pagination Benchmark Results
+
+The pagination benchmarks compare DynamicQueryBuilder against baseline Java libraries:
+
+```bash
+# Latest Pagination Benchmark Results
+Benchmark                                            Mode  Cnt   Score    Error  Units
+PaginationBenchmark.dynamicQueryBuilderConstruction  avgt   10   7.916 ±  0.023  us/op
+PaginationBenchmark.jpaCriteriaConstruction          avgt   10   6.593 ±  0.017  us/op
+PaginationBenchmark.jpaCriteriaExecution             avgt   10  99.925 ±  4.800  us/op
+PaginationBenchmark.rawJdbcConstruction              avgt   10   0.260 ±  0.001  us/op
+PaginationBenchmark.rawJdbcExecution                 avgt   10  15.492 ±  0.027  us/op
+```
+
+**Key Findings:**
+- DynamicQueryBuilder construction overhead is only 20% more than JPA Criteria API
+- Raw JDBC is fastest for construction but offers no type safety or developer productivity benefits
+- JPA execution has 6.5× overhead compared to raw JDBC due to ORM features
+- DynamicQueryBuilder provides excellent balance of performance and developer experience
+
+For detailed analysis, see [pagination-benchmark-analysis.md](pagination-benchmark-analysis.md).
+
 ## Running Benchmarks
 
 ### Prerequisites
@@ -53,12 +93,21 @@ The benchmark suite measures query builder performance across three primary scen
 ### Quick Run
 
 ```bash
+# Run all core benchmarks
+./gradlew benchmark:benchmark
+
+# Run only pagination benchmarks (comparing vs baseline libraries)
+./gradlew benchmark:paginationBenchmark
+
 # Build the benchmark JAR
 ./gradlew benchmark:benchmarkJar
 
 # Run all benchmarks with default settings
 cd benchmark
 java -jar build/libs/benchmarks-*.jar
+
+# Run specific benchmark class
+java -jar build/libs/benchmarks-*.jar PaginationBenchmark
 
 # Run specific benchmark
 java -jar build/libs/benchmarks-*.jar QueryPerformanceBenchmark.basicQuery
