@@ -40,8 +40,9 @@ subprojects {
 
     dependencies {
         // Apply common test dependencies to all modules
-        testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation platform("org.junit:junit-bom:${junitVersion}")
+        testImplementation "org.junit.jupiter:junit-jupiter"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
         
         // Lombok for all modules
         compileOnly "org.projectlombok:lombok:${lombokVersion}"
@@ -80,7 +81,6 @@ task jacocoRootReport(type: JacocoReport) {
         it.name in ['core', 'cache', 'optimizer'] 
     }
     
-    dependsOn(coveredProjects*.test)
     dependsOn(coveredProjects*.jacocoTestReport)
 
     additionalSourceDirs.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
@@ -98,7 +98,7 @@ task jacocoRootReport(type: JacocoReport) {
         exclude '**/*_jmhTest*'
     })
     
-    executionData.from(files(coveredProjects.jacocoTestReport.executionData))
+    executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
 
     reports {
         html.required = true
@@ -133,7 +133,7 @@ task jacocoRootCoverageVerification(type: JacocoCoverageVerification) {
         exclude '**/*_jmhTest*'
     })
     
-    executionData.from(files(coveredProjects.jacocoTestReport.executionData))
+    executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
 
     violationRules {
         rule {

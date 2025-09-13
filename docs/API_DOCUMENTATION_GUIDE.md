@@ -155,7 +155,7 @@ The build process includes automated checks:
 ./gradlew javadoc
 
 # Run documentation tests
-./gradlew test -Ptest.single="*DocumentationTest"
+./gradlew test --tests '*DocumentationTest'
 ```
 
 #### Manual Validation

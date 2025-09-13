@@ -61,7 +61,7 @@ public class QueryPerformanceBenchmark {
         Map<String, Object> allParams = new HashMap<>();
         
         // Cast to DynamicQueryBuilder to access getPredicates method
-        if (builder instanceof DynamicQueryBuilder<TestEntity> dynBuilder) {
+        if (builder instanceof DynamicQueryBuilder<?> dynBuilder) {
             // Extract parameters from all predicates
             dynBuilder.getPredicates().forEach(predicate -> allParams.putAll(predicate.getParameters()));
         }

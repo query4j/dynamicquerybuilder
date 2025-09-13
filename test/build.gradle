@@ -4,19 +4,27 @@ plugins {
 
 description = 'Integration tests and benchmarks'
 
-// Configure test JAR creation (equivalent to Maven test-jar goal)
-jar {
-    from sourceSets.test.output
-    archiveClassifier = 'tests'
-}
-
 task testJar(type: Jar) {
     from sourceSets.test.output
     archiveClassifier = 'tests'
+    dependsOn testClasses
+}
+
+configurations {
+    tests {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+        }
+    }
 }
 
 artifacts {
-    archives testJar
+    add('tests', testJar)
 }
 
 dependencies {

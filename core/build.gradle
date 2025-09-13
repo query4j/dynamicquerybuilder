@@ -11,9 +11,8 @@ dependencies {
 
 // Configure tests to include jqwik
 test {
-    useJUnitPlatform {
-        includeEngines 'jqwik'
-    }
+    // run all JUnit Platform engines (jqwik + junit-jupiter)
+    useJUnitPlatform()
 }
 
 // JaCoCo configuration for this module
