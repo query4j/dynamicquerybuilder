@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+description = 'JMH Performance Benchmarks for Query4j Dynamic Query Builder'
+
+dependencies {
+    // Core module for benchmarking
+    implementation project(':core')
+    
+    // JMH dependencies
+    implementation "org.openjdk.jmh:jmh-core:${jmhVersion}"
+    annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:${jmhVersion}"
+}
+
+// Configure the main class for JMH
+application {
+    mainClass = 'org.openjdk.jmh.Main'
+}
+
+// Create fat JAR for benchmarks - equivalent to Maven's shade plugin
+task benchmarkJar(type: Jar) {
+    archiveBaseName = 'benchmarks'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'classes'
+    
+    manifest {
+        attributes 'Main-Class': 'org.openjdk.jmh.Main'
+    }
+    
+    from sourceSets.main.output
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA' 
+    exclude 'META-INF/*.RSA'
+}
+
+// Task for running benchmarks - equivalent to Maven benchmark profile
+task benchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run JMH benchmarks'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '-rf', 'json',
+        '-rff', "${buildDir}/jmh-result.json",
+        '-f', '1',
+        '-wi', '5', 
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/jmh-report.txt"
+    ]
+}
+
+// Additional benchmark tasks for convenience
+task benchmarkHelp(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Show JMH help'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args = ['-h']
+}

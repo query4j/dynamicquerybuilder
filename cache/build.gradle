@@ -1,0 +1,10 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Query result caching and management'
+
+dependencies {
+    // Add cache-specific dependencies as needed
+    // Example: implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+}

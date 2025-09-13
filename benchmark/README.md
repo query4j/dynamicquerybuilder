@@ -48,33 +48,36 @@ The benchmark suite measures query builder performance across three primary scen
 ### Prerequisites
 
 - JDK 17 or higher
-- Maven 3.6+
+- Gradle 8.5+ (or use the included wrapper)
 
 ### Quick Run
 
 ```bash
 # Build the benchmark JAR
-mvn clean package -pl benchmark
+./gradlew benchmark:benchmarkJar
 
 # Run all benchmarks with default settings
 cd benchmark
-java -jar target/benchmarks.jar
+java -jar build/libs/benchmarks-*.jar
 
 # Run specific benchmark
-java -jar target/benchmarks.jar QueryPerformanceBenchmark.basicQuery
+java -jar build/libs/benchmarks-*.jar QueryPerformanceBenchmark.basicQuery
 
 # Run with custom parameters
-java -jar target/benchmarks.jar -f 1 -wi 5 -i 10 -rf json -rff results.json
+java -jar build/libs/benchmarks-*.jar -f 1 -wi 5 -i 10 -rf json -rff build/jmh-result.json
 ```
 
-### Using Maven Profile
+### Using Gradle Tasks
 
 ```bash
-# Run benchmarks via Maven profile
-mvn clean install -Pbenchmark
+# Run benchmarks via Gradle task
+./gradlew benchmark:benchmark
 
-# Skip other modules and run only benchmark
-mvn clean package -pl benchmark -Pbenchmark
+# Create only the benchmark JAR
+./gradlew benchmark:benchmarkJar
+
+# Show benchmark help
+./gradlew benchmark:benchmarkHelp
 ```
 
 ### Benchmark Configuration
@@ -165,9 +168,9 @@ The benchmark can be integrated into CI pipelines for performance regression det
 
 ```bash
 # Run and save results for comparison
-mvn clean package -pl benchmark
+./gradlew benchmark:benchmarkJar
 cd benchmark
-java -jar target/benchmarks.jar -rf json -rff ci-results.json
+java -jar build/libs/benchmarks-*.jar -rf json -rff build/ci-results.json
 
 # Compare with baseline (implementation-specific)
 ```

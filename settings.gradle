@@ -1,0 +1,9 @@
+rootProject.name = 'dynamicquerybuilder'
+
+// Include all modules from Maven multi-module setup
+include 'core'
+include 'cache'
+include 'optimizer'
+include 'examples'
+include 'test'
+include 'benchmark'

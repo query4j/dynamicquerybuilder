@@ -61,8 +61,7 @@ public class QueryPerformanceBenchmark {
         Map<String, Object> allParams = new HashMap<>();
         
         // Cast to DynamicQueryBuilder to access getPredicates method
-        if (builder instanceof DynamicQueryBuilder) {
-            DynamicQueryBuilder<TestEntity> dynBuilder = (DynamicQueryBuilder<TestEntity>) builder;
+        if (builder instanceof DynamicQueryBuilder<?> dynBuilder) {
             // Extract parameters from all predicates
             dynBuilder.getPredicates().forEach(predicate -> allParams.putAll(predicate.getParameters()));
         }
@@ -76,7 +75,7 @@ public class QueryPerformanceBenchmark {
      * - No joins, no aggregation
      * - LIMIT/OFFSET for pagination
      * 
-     * Target: < 1 ms average
+     * Target: &lt; 1 ms average
      */
     @Benchmark
     public void basicQuery(Blackhole bh) {
@@ -99,7 +98,7 @@ public class QueryPerformanceBenchmark {
      * - One IN predicate
      * - Simple ORDER BY
      * 
-     * Target: < 2 ms average
+     * Target: &lt; 2 ms average
      */
     @Benchmark
     public void moderateQuery(Blackhole bh) {
@@ -130,7 +129,7 @@ public class QueryPerformanceBenchmark {
      * - Aggregation (SUM)
      * - Pagination
      * 
-     * Target: < 5 ms average
+     * Target: &lt; 5 ms average
      */
     @Benchmark
     public void complexQuery(Blackhole bh) {

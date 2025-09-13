@@ -75,7 +75,7 @@ public interface QueryBuilder<T> {
      * Adds a condition with a specific operator.
      * 
      * @param fieldName the field name, must not be null or empty
-     * @param operator  the comparison operator (=, !=, <, <=, >, >=, LIKE), must
+     * @param operator  the comparison operator (=, !=, &lt;, &lt;=, &gt;, &gt;=, LIKE), must not be null
      *                  not be null
      * @param value     the comparison value, may be null for IS NULL/IS NOT NULL
      *                  operators

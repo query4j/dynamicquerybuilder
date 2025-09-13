@@ -21,7 +21,6 @@ public final class DynamicQueryImpl<T> implements DynamicQuery<T> {
     @Getter
     private final List<T> results;
 
-    @Getter
     private final String sql;
 
     @Override

@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Usage examples and tutorials'
+
+dependencies {
+    // Dependencies on other modules
+    implementation project(':core')
+    implementation project(':cache')
+    implementation project(':optimizer')
+}
