@@ -426,10 +426,10 @@ public interface QueryBuilder<T> {
     /**
      * Sets pagination using page number and page size.
      * 
-     * @param pageNumber the page number (0-based), must not be negative
+     * @param pageNumber the page number (1-based), must be positive
      * @param pageSize   the page size, must be positive
      * @return a new QueryBuilder instance
-     * @throws IllegalArgumentException if pageNumber is negative or pageSize is not
+     * @throws IllegalArgumentException if pageNumber is not positive or pageSize is not
      *                                  positive
      * @since 1.0.0
      */
