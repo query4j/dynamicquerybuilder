@@ -5,6 +5,12 @@ plugins {
 description = 'Query result caching and management'
 
 dependencies {
-    // Add cache-specific dependencies as needed
-    // Example: implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+    // Core module dependency for exception hierarchy
+    api project(':core')
+    
+    // Caffeine cache library for high-performance caching
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    
+    // Test dependencies for concurrent testing
+    testImplementation 'net.jqwik:jqwik:1.7.4'
 }
