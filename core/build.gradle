@@ -26,6 +26,14 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+    
+    // Exclude example classes, benchmark entities, and main classes from coverage
+    classDirectories.from(files(sourceSets.main.output).asFileTree.matching {
+        exclude '**/examples/**'
+        exclude '**/benchmark/TestEntity.class'
+        exclude '**/model/**'
+        exclude '**/*Main.class'
+    })
 }
 
 test.finalizedBy jacocoTestReport
