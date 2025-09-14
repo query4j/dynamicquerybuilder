@@ -11,11 +11,6 @@ import com.github.query4j.optimizer.OptimizerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,42 +22,27 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 1.0.0
  * @since 1.0.0
  */
-@DataJpaTest
-@ActiveProfiles("test")
 @DisplayName("Simple Dynamic Query Integration Tests")
 class SimpleDynamicQueryTest {
     
-    @TestConfiguration
-    static class TestConfig {
-        
-        @Bean
-        public CacheManager cacheManager() {
-            return CaffeineCacheManager.create(100L, 300L);
-        }
-        
-        @Bean
-        public QueryOptimizer queryOptimizer() {
-            OptimizerConfig config = OptimizerConfig.builder()
-                .indexSuggestionsEnabled(true)
-                .predicatePushdownEnabled(true)
-                .joinReorderingEnabled(true)
-                .verboseOutput(true)
-                .maxAnalysisTimeMs(5000L)
-                .build();
-            
-            return new QueryOptimizerImpl(config);
-        }
-    }
-    
-    @Autowired
-    private CacheManager cacheManager;
-    
-    @Autowired
-    private QueryOptimizer queryOptimizer;
+    private CacheManager simpleCacheManager;
+    private QueryOptimizer simpleQueryOptimizer;
     
     @BeforeEach
     void setUp() {
-        // Simple setup
+        // Create cache manager
+        simpleCacheManager = CaffeineCacheManager.create(100L, 300L);
+        
+        // Create query optimizer
+        OptimizerConfig config = OptimizerConfig.builder()
+            .indexSuggestionsEnabled(true)
+            .predicatePushdownEnabled(true)
+            .joinReorderingEnabled(true)
+            .verboseOutput(true)
+            .maxAnalysisTimeMs(5000L)
+            .build();
+        
+        simpleQueryOptimizer = new QueryOptimizerImpl(config);
     }
     
     @Test
@@ -92,23 +72,23 @@ class SimpleDynamicQueryTest {
     @Test
     @DisplayName("should have functioning cache manager")
     void shouldHaveFunctioningCacheManager() {
-        assertNotNull(cacheManager);
+        assertNotNull(simpleCacheManager);
         
         // Test basic cache operations
-        cacheManager.put("test-key", "test-value");
-        Object retrieved = cacheManager.get("test-key");
+        simpleCacheManager.put("test-key", "test-value");
+        Object retrieved = simpleCacheManager.get("test-key");
         
         assertEquals("test-value", retrieved);
-        assertTrue(cacheManager.containsKey("test-key"));
+        assertTrue(simpleCacheManager.containsKey("test-key"));
         
         // Test statistics
-        assertNotNull(cacheManager.stats());
+        assertNotNull(simpleCacheManager.stats());
     }
     
     @Test
     @DisplayName("should have functioning query optimizer")
     void shouldHaveFunctioningQueryOptimizer() {
-        assertNotNull(queryOptimizer);
+        assertNotNull(simpleQueryOptimizer);
         
         // Create a simple query to optimize
         DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
@@ -117,7 +97,7 @@ class SimpleDynamicQueryTest {
         
         // Test optimization (this should not throw exceptions)
         assertDoesNotThrow(() -> {
-            var result = queryOptimizer.optimize(finalBuilder);
+            var result = simpleQueryOptimizer.optimize(finalBuilder);
             assertNotNull(result);
         });
     }

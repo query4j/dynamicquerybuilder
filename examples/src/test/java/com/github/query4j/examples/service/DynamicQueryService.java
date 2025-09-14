@@ -88,8 +88,8 @@ public class DynamicQueryService {
         log.info("Executing query: {}", sql);
         log.debug("Query parameters: {}", allParameters);
         
-        // Execute query using named parameters
-        List<Customer> results = executeQueryWithNamedParameters(sql, allParameters);
+        // Execute query using named parameters with pagination
+        List<Customer> results = executeQueryWithNamedParameters(sql, allParameters, page, size);
         
         // Cache the results
         cacheManager.put(cacheKey, results, 600L); // 10 minutes TTL
@@ -99,41 +99,36 @@ public class DynamicQueryService {
     }
     
     /**
-     * Executes a complex aggregation query with joins.
+     * Executes a simplified aggregation query for demonstration.
+     * Note: Complex SQL functions are simplified for demo purposes.
      */
     public List<CustomerSalesData> getCustomerSalesData(String region, BigDecimal minTotal) {
-        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
-        QueryBuilder<Customer> builder = queryBuilder;
+        // For demo purposes, we'll create a simplified query structure
+        // In a real implementation, you'd need to extend DynamicQueryBuilder to support SQL functions
         
-        // Join with orders and aggregate
-        builder = builder
-            .join("orders")
-            .select("customers.name", "customers.region", "SUM(orders.total) as totalSales", "COUNT(orders.id) as orderCount")
-            .groupBy("customers.id", "customers.name", "customers.region");
+        StringBuilder sqlBuilder = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        
+        sqlBuilder.append("SELECT c.name, c.region, SUM(o.total) as totalSales, COUNT(o.id) as orderCount ");
+        sqlBuilder.append("FROM customers c ");
+        sqlBuilder.append("INNER JOIN orders o ON c.id = o.customer_id ");
+        sqlBuilder.append("WHERE 1=1 ");
         
         if (region != null) {
-            builder = builder.where("customers.region", "=", region);
+            sqlBuilder.append("AND c.region = ? ");
+            params.add(region);
         }
+        
+        sqlBuilder.append("GROUP BY c.id, c.name, c.region ");
         
         if (minTotal != null) {
-            builder = builder.having("SUM(orders.total)", ">=", minTotal);
+            sqlBuilder.append("HAVING SUM(o.total) >= ? ");
+            params.add(minTotal);
         }
         
-        // Cast back to access DynamicQueryBuilder-specific methods
-        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        log.info("Executing aggregation query: {}", sqlBuilder.toString());
         
-        String sql = finalBuilder.toSQL();
-        Map<String, Object> allParameters = collectParametersFromPredicates(finalBuilder.getPredicates());
-        
-        // Add HAVING predicate parameters if any
-        allParameters.putAll(collectParametersFromPredicates(finalBuilder.getHavingPredicates()));
-        
-        log.info("Executing aggregation query: {}", sql);
-        
-        // Convert the simple SQL to proper H2 SQL for this demo
-        String actualSql = convertToActualSQL(sql, allParameters);
-        
-        return jdbcTemplate.query(actualSql, new CustomerSalesDataRowMapper());
+        return jdbcTemplate.query(sqlBuilder.toString(), params.toArray(), new CustomerSalesDataRowMapper());
     }
     
     /**
@@ -157,7 +152,8 @@ public class DynamicQueryService {
     /**
      * Executes a query with named parameters by converting to positional parameters.
      */
-    private List<Customer> executeQueryWithNamedParameters(String sql, Map<String, Object> parameters) {
+    private List<Customer> executeQueryWithNamedParameters(String sql, Map<String, Object> parameters, 
+                                                           int page, int size) {
         // Build parameterized SQL for H2 - safe from SQL injection
         StringBuilder sqlBuilder = new StringBuilder(
             "SELECT id, name, region, email, phone_number, credit_limit, active FROM customers WHERE 1=1");
@@ -180,10 +176,16 @@ public class DynamicQueryService {
             }
         }
         
-        // Add LIMIT for pagination (will be enhanced later)
-        sqlBuilder.append(" LIMIT 10");
+        // Add proper pagination with LIMIT and OFFSET
+        int safeSize = Math.max(1, size);
+        int safePage = Math.max(1, page);
+        int offset = (safePage - 1) * safeSize;
         
-        log.debug("Executing parameterized SQL: {}", sqlBuilder.toString());
+        sqlBuilder.append(" LIMIT ? OFFSET ?");
+        args.add(safeSize);
+        args.add(offset);
+        
+        log.debug("Executing parameterized SQL: {} with args: {}", sqlBuilder.toString(), args);
         return jdbcTemplate.query(sqlBuilder.toString(), args.toArray(), new CustomerRowMapper());
     }
     
