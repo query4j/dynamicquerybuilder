@@ -324,6 +324,171 @@ class DynamicQueryBuilderAdditionalTest {
             assertThrows(NullPointerException.class, () -> builder.having(null, ">", 5));
             assertThrows(NullPointerException.class, () -> builder.having("field", null, 5));
         }
+
+        @Test
+        @DisplayName("should return empty list for getHavingPredicates initially")
+        void shouldReturnEmptyListForGetHavingPredicatesInitially() {
+            DynamicQueryBuilder<TestEntity> newBuilder = new DynamicQueryBuilder<>(TestEntity.class);
+            
+            List<com.github.query4j.core.criteria.Predicate> havingPredicates = newBuilder.getHavingPredicates();
+            
+            assertNotNull(havingPredicates);
+            assertTrue(havingPredicates.isEmpty());
+        }
+
+        @Test
+        @DisplayName("should return immutable list from getHavingPredicates")
+        void shouldReturnImmutableListFromGetHavingPredicates() {
+            DynamicQueryBuilder<TestEntity> builderWithHaving = 
+                (DynamicQueryBuilder<TestEntity>) builder.having("COUNT(id)", ">", 5);
+            
+            List<com.github.query4j.core.criteria.Predicate> havingPredicates = builderWithHaving.getHavingPredicates();
+            
+            assertNotNull(havingPredicates);
+            assertEquals(1, havingPredicates.size());
+            
+            // Test immutability - should throw UnsupportedOperationException
+            assertThrows(UnsupportedOperationException.class, () -> {
+                havingPredicates.clear();
+            });
+        }
+
+        @Test
+        @DisplayName("should return correct having predicates after calling having method")
+        void shouldReturnCorrectHavingPredicatesAfterCallingHavingMethod() {
+            DynamicQueryBuilder<TestEntity> builderWithHaving = 
+                (DynamicQueryBuilder<TestEntity>) builder
+                    .groupBy("department")
+                    .having("SUM(amount)", ">=", 1000);
+            
+            List<com.github.query4j.core.criteria.Predicate> havingPredicates = builderWithHaving.getHavingPredicates();
+            
+            assertNotNull(havingPredicates);
+            assertEquals(1, havingPredicates.size());
+            
+            com.github.query4j.core.criteria.Predicate havingPredicate = havingPredicates.get(0);
+            assertNotNull(havingPredicate);
+            assertTrue(havingPredicate.toSQL().contains("SUM(amount)"));
+            assertTrue(havingPredicate.toSQL().contains(">="));
+            
+            // Verify parameters
+            assertFalse(havingPredicate.getParameters().isEmpty());
+            assertTrue(havingPredicate.getParameters().containsValue(1000));
+        }
+
+        @Test
+        @DisplayName("should handle multiple having predicates")
+        void shouldHandleMultipleHavingPredicates() {
+            DynamicQueryBuilder<TestEntity> builderWithMultipleHaving = 
+                (DynamicQueryBuilder<TestEntity>) builder
+                    .groupBy("department", "region")
+                    .having("COUNT(id)", ">", 5)
+                    .having("SUM(amount)", ">=", 1000)
+                    .having("AVG(salary)", "<", 50000);
+            
+            List<com.github.query4j.core.criteria.Predicate> havingPredicates = builderWithMultipleHaving.getHavingPredicates();
+            
+            assertNotNull(havingPredicates);
+            assertEquals(3, havingPredicates.size());
+            
+            // Verify first predicate
+            com.github.query4j.core.criteria.Predicate firstPredicate = havingPredicates.get(0);
+            assertTrue(firstPredicate.toSQL().contains("COUNT(id)"));
+            assertTrue(firstPredicate.getParameters().containsValue(5));
+            
+            // Verify second predicate
+            com.github.query4j.core.criteria.Predicate secondPredicate = havingPredicates.get(1);
+            assertTrue(secondPredicate.toSQL().contains("SUM(amount)"));
+            assertTrue(secondPredicate.getParameters().containsValue(1000));
+            
+            // Verify third predicate
+            com.github.query4j.core.criteria.Predicate thirdPredicate = havingPredicates.get(2);
+            assertTrue(thirdPredicate.toSQL().contains("AVG(salary)"));
+            assertTrue(thirdPredicate.getParameters().containsValue(50000));
+        }
+
+        @Test
+        @DisplayName("should maintain having predicates across query builder operations")
+        void shouldMaintainHavingPredicatesAcrossQueryBuilderOperations() {
+            DynamicQueryBuilder<TestEntity> complexBuilder = 
+                (DynamicQueryBuilder<TestEntity>) builder
+                    .where("status", "active")
+                    .groupBy("department")
+                    .having("COUNT(id)", ">", 10)
+                    .orderBy("department")
+                    .limit(50);
+            
+            List<com.github.query4j.core.criteria.Predicate> havingPredicates = complexBuilder.getHavingPredicates();
+            
+            assertNotNull(havingPredicates);
+            assertEquals(1, havingPredicates.size());
+            
+            com.github.query4j.core.criteria.Predicate havingPredicate = havingPredicates.get(0);
+            assertTrue(havingPredicate.toSQL().contains("COUNT(id)"));
+            assertTrue(havingPredicate.getParameters().containsValue(10));
+            
+            // Verify the complete SQL still works
+            String sql = complexBuilder.toSQL();
+            assertTrue(sql.contains("WHERE status"));
+            assertTrue(sql.contains("GROUP BY department"));
+            assertTrue(sql.contains("HAVING COUNT(id) >"));
+            assertTrue(sql.contains("ORDER BY department"));
+            assertTrue(sql.contains("LIMIT 50"));
+        }
+
+        @Test
+        @DisplayName("should handle having predicates with different aggregation functions")
+        void shouldHandleHavingPredicatesWithDifferentAggregationFunctions() {
+            // Test various aggregation functions in having clauses
+            String[] aggregateFunctions = {"COUNT(id)", "SUM(amount)", "AVG(salary)", "MIN(hire_date)", "MAX(update_date)", "COUNT(*)"};
+            Object[] values = {5, 1000, 50000.0, "2020-01-01", "2023-12-31", 0};
+            String[] operators = {">", ">=", "<", "=", "!=", ">"};
+            
+            for (int i = 0; i < aggregateFunctions.length; i++) {
+                DynamicQueryBuilder<TestEntity> testBuilder = 
+                    (DynamicQueryBuilder<TestEntity>) new DynamicQueryBuilder<>(TestEntity.class)
+                        .groupBy("department")
+                        .having(aggregateFunctions[i], operators[i], values[i]);
+                
+                List<com.github.query4j.core.criteria.Predicate> havingPredicates = testBuilder.getHavingPredicates();
+                
+                assertEquals(1, havingPredicates.size(), 
+                    "Failed for aggregation function: " + aggregateFunctions[i]);
+                
+                com.github.query4j.core.criteria.Predicate predicate = havingPredicates.get(0);
+                assertTrue(predicate.toSQL().contains(aggregateFunctions[i]), 
+                    "SQL should contain: " + aggregateFunctions[i]);
+                assertTrue(predicate.toSQL().contains(operators[i]), 
+                    "SQL should contain operator: " + operators[i]);
+                assertTrue(predicate.getParameters().containsValue(values[i]), 
+                    "Parameters should contain value: " + values[i]);
+            }
+        }
+
+        @Test
+        @DisplayName("should preserve immutability when adding having predicates")
+        void shouldPreserveImmutabilityWhenAddingHavingPredicates() {
+            // Original builder
+            DynamicQueryBuilder<TestEntity> original = new DynamicQueryBuilder<>(TestEntity.class);
+            assertTrue(original.getHavingPredicates().isEmpty());
+            
+            // Add first having predicate - should return new instance
+            DynamicQueryBuilder<TestEntity> withFirstHaving = 
+                (DynamicQueryBuilder<TestEntity>) original.having("COUNT(id)", ">", 5);
+            
+            // Original should still be empty
+            assertTrue(original.getHavingPredicates().isEmpty());
+            assertEquals(1, withFirstHaving.getHavingPredicates().size());
+            
+            // Add second having predicate - should return new instance
+            DynamicQueryBuilder<TestEntity> withSecondHaving = 
+                (DynamicQueryBuilder<TestEntity>) withFirstHaving.having("SUM(amount)", ">=", 1000);
+            
+            // Previous instances should be unchanged
+            assertTrue(original.getHavingPredicates().isEmpty());
+            assertEquals(1, withFirstHaving.getHavingPredicates().size());
+            assertEquals(2, withSecondHaving.getHavingPredicates().size());
+        }
     }
 
     @Nested

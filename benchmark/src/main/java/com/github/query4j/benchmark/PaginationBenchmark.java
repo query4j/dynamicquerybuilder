@@ -195,7 +195,7 @@ public class PaginationBenchmark {
      */
     @Benchmark
     public void dynamicQueryBuilderConstruction(Blackhole bh) {
-        QueryBuilder<employees> query = QueryBuilder.forEntity(employees.class)
+        QueryBuilder<Employee> query = QueryBuilder.forEntity(Employee.class)
             .where("department", department)
             .and()
             .where("salary", ">=", minSalary)
@@ -281,7 +281,7 @@ public class PaginationBenchmark {
      */
     @Benchmark
     public void dynamicQueryBuilderExecution(Blackhole bh) throws SQLException {
-        QueryBuilder<employees> queryBuilder = QueryBuilder.forEntity(employees.class)
+        QueryBuilder<Employee> queryBuilder = QueryBuilder.forEntity(Employee.class)
             .where("department", department)
             .and()
             .where("salary", ">=", minSalary)
@@ -382,7 +382,7 @@ public class PaginationBenchmark {
     /**
      * Helper method to extract parameters from DynamicQueryBuilder.
      */
-    private Map<String, Object> extractParameters(QueryBuilder<employees> builder) {
+    private Map<String, Object> extractParameters(QueryBuilder<Employee> builder) {
         Map<String, Object> allParams = new HashMap<>();
         
         if (builder instanceof com.github.query4j.core.impl.DynamicQueryBuilder<?> dynBuilder) {

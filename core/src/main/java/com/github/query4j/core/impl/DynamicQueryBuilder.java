@@ -107,6 +107,16 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         return Collections.unmodifiableList(predicates);
     }
 
+    /**
+     * Returns the immutable list of having predicates in this builder.
+     * Primarily for testing or advanced use cases.
+     *
+     * @return list of having predicates
+     */
+    public List<Predicate> getHavingPredicates() {
+        return Collections.unmodifiableList(havingPredicates);
+    }
+
 
     // ==================== WHERE CLAUSE METHODS ====================
 
