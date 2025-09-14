@@ -9,6 +9,9 @@ dependencies {
     // Core module for benchmarking
     implementation project(':core')
     
+    // Optimizer module for performance impact benchmarking
+    implementation project(':optimizer')
+    
     // JMH dependencies
     implementation "org.openjdk.jmh:jmh-core:${jmhVersion}"
     annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:${jmhVersion}"
@@ -18,11 +21,19 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-hikaricp:6.2.7.Final'
     implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     
+    // MyBatis for comparison
+    implementation 'org.mybatis:mybatis:3.5.13'
+    implementation 'org.mybatis:mybatis-spring:3.0.2'
+    
     // H2 Database for benchmarking
     implementation 'com.h2database:h2:2.2.220'
     
     // HikariCP connection pooling
     implementation 'com.zaxxer:HikariCP:5.0.1'
+    
+    // SLF4J for logging
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'org.slf4j:slf4j-simple:2.0.7'
 }
 
 // Configure the main class for JMH
@@ -90,6 +101,72 @@ task paginationBenchmark(type: JavaExec) {
         '-tu', 'us',
         '-bm', 'avgt',
         '-o', "${buildDir}/pagination-benchmark-report.txt"
+    ]
+}
+
+// Task for running optimizer benchmarks specifically (Issue #24)
+task optimizerBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run optimizer performance benchmarks measuring analysis overhead vs baseline libraries'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'Optimizer.*',  // Only run optimizer benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/optimizer-benchmark-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10', 
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/optimizer-benchmark-report.txt"
+    ]
+}
+
+// Task for running baseline comparison benchmarks  
+task baselineComparisonBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run baseline library comparison benchmarks (Hibernate, JDBC vs Query4j+Optimizer)'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'OptimizerVsBaseline.*',  // Only run baseline comparison benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/baseline-comparison-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10', 
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/baseline-comparison-report.txt"
+    ]
+}
+
+// Task for running complete optimizer profiling study (Issue #24)
+task optimizerProfilingStudy(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run complete optimizer profiling study including all optimization and baseline benchmarks'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '(Optimizer|OptimizerVsBaseline).*',  // Run all optimizer-related benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/optimizer-profiling-study-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '15',  // More iterations for comprehensive study
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/optimizer-profiling-study-report.txt"
     ]
 }
 
