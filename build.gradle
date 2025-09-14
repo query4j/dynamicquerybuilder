@@ -66,7 +66,7 @@ subprojects {
         inputs.files sourceSets.main.java.srcDirs
         
         classpath = configurations.compileClasspath + configurations.annotationProcessor
-        main = 'lombok.launch.Main'
+        mainClass = 'lombok.launch.Main'
         args 'delombok'
         args '-d'
         args "$buildDir/delombok"

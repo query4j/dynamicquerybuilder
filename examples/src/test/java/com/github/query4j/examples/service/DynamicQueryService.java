@@ -128,7 +128,7 @@ public class DynamicQueryService {
         
         log.info("Executing aggregation query: {}", sqlBuilder.toString());
         
-        return jdbcTemplate.query(sqlBuilder.toString(), params.toArray(), new CustomerSalesDataRowMapper());
+        return jdbcTemplate.query(sqlBuilder.toString(), new CustomerSalesDataRowMapper(), params.toArray());
     }
     
     /**
@@ -186,7 +186,7 @@ public class DynamicQueryService {
         args.add(offset);
         
         log.debug("Executing parameterized SQL: {} with args: {}", sqlBuilder.toString(), args);
-        return jdbcTemplate.query(sqlBuilder.toString(), args.toArray(), new CustomerRowMapper());
+        return jdbcTemplate.query(sqlBuilder.toString(), new CustomerRowMapper(), args.toArray());
     }
     
     /**

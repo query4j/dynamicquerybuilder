@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
  * <li>System properties</li>
  * <li>Environment variables</li>
  * </ul>
- * </p>
  * 
  * <p>
  * Configuration priority (highest to lowest):
@@ -32,11 +31,9 @@ import java.util.regex.Pattern;
  * <li>Properties files</li>
  * <li>Default values</li>
  * </ol>
- * </p>
  * 
  * <p>
  * Note: Optimizer configuration is handled separately to avoid circular dependencies.
- * </p>
  * 
  * @author query4j team
  * @version 1.0.0
