@@ -127,20 +127,23 @@ class CacheFailureTest {
         @Test
         @DisplayName("should handle concurrent evictions without errors")
         void shouldHandleConcurrentEvictionsWithoutErrors() throws InterruptedException {
-            ExecutorService executor = Executors.newFixedThreadPool(5);
-            CountDownLatch latch = new CountDownLatch(5);
+            // Use a very small cache to guarantee evictions
+            CacheManager smallCache = CaffeineCacheManager.create(3L, 60L);  // Only 3 items, long TTL
+            
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            CountDownLatch latch = new CountDownLatch(10);
             AtomicReference<Exception> exception = new AtomicReference<>();
 
             // Launch concurrent operations that will trigger evictions
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 10; i++) {
                 final int threadId = i;
                 executor.submit(() -> {
                     try {
                         // Each thread adds many items to force evictions
-                        for (int j = 0; j < 20; j++) {
-                            cacheManager.put("thread-" + threadId + "-key-" + j, "value-" + j);
-                            // Also do some gets
-                            cacheManager.get("thread-" + threadId + "-key-" + (j / 2));
+                        for (int j = 0; j < 50; j++) {
+                            smallCache.put("thread-" + threadId + "-key-" + j, "value-" + j);
+                            // Also do some gets to generate hit/miss stats
+                            smallCache.get("thread-" + threadId + "-key-" + (j / 2));
                         }
                     } catch (Exception e) {
                         exception.set(e);
@@ -155,9 +158,10 @@ class CacheFailureTest {
 
             assertNull(exception.get(), "Concurrent evictions should not cause exceptions");
             
-            // Verify cache is still functional
-            CacheStatistics stats = cacheManager.stats();
-            assertTrue(stats.getEvictionCount() > 0, "Evictions should have occurred");
+            // Verify cache is still functional and evictions occurred
+            CacheStatistics stats = smallCache.stats();
+            // With 10 threads * 50 operations = 500 puts into a size-3 cache, evictions are guaranteed
+            assertTrue(stats.getEvictionCount() > 0, "Evictions should have occurred with 500 puts into size-3 cache");
             assertTrue(stats.getHitCount() + stats.getMissCount() > 0, "Cache should have processed requests");
         }
     }

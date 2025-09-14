@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentMap;
  *     .verboseOutput(true)
  *     .build();
  * </pre>
- * </p>
  * 
  * @author query4j team
  * @version 1.0.0
