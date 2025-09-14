@@ -29,6 +29,9 @@ artifacts {
 
 dependencies {
     // Add integration test dependencies as needed
+    implementation project(':core')
+    implementation project(':cache')
+    implementation project(':optimizer')
     testImplementation project(':core')
     testImplementation project(':cache')
     testImplementation project(':optimizer')
