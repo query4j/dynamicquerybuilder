@@ -39,8 +39,8 @@ class JoinOptimizerPropertyTest {
         JoinReorderOptimizerImpl optimizer = new JoinReorderOptimizerImpl(OptimizerConfig.defaultConfig());
         
         double reduction = optimizer.estimateCardinalityReduction(joinSequence, stats);
-        
-        assertThat(reduction).isBetween(0.0, 1.0);
+
+        assertThat(reduction).isGreaterThanOrEqualTo(0.0).isLessThanOrEqualTo(1.0);
     }
     
     @Property
