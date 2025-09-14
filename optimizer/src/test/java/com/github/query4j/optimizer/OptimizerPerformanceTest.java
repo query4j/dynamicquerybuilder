@@ -249,7 +249,9 @@ class OptimizerPerformanceTest {
             double standardDeviation = Math.sqrt(variance);
             
             LOGGER.info(String.format("Performance standard deviation: %.2f ms", standardDeviation));
-            assertThat(standardDeviation).isLessThan(averageDuration * 0.5); // Less than 50% of average
+            // Allow for more variance when optimization times are very low (< 1ms)
+            double allowableDeviation = Math.max(averageDuration * 0.5, 1.0); // At least 1ms tolerance
+            assertThat(standardDeviation).isLessThan(allowableDeviation);
         }
         
         @Test
