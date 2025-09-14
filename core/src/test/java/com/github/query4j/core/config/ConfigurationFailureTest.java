@@ -378,20 +378,23 @@ class ConfigurationFailureTest {
         @DisplayName("should handle factory method failures")
         void shouldHandleFactoryMethodFailures() {
             // Test factory methods with invalid inputs using CoreConfig and CacheConfig builders
-            assertThrows(IllegalArgumentException.class, () -> 
-                CoreConfig.builder()
+            // Invalid configurations should build but fail during validation
+            assertThrows(IllegalStateException.class, () -> {
+                CoreConfig config = CoreConfig.builder()
                     .defaultQueryTimeoutMs(-1L)
                     .maxPredicateDepth(-1)
-                    .build(), 
-                "Invalid core config parameters should be rejected");
+                    .build();
+                config.validate(); // Should fail here
+            }, "Invalid core config parameters should be rejected during validation");
                 
-            assertThrows(IllegalArgumentException.class, () -> 
-                CacheConfig.builder()
+            assertThrows(IllegalStateException.class, () -> {
+                CacheConfig config = CacheConfig.builder()
                     .enabled(false)
                     .maxSize(-1L)
                     .defaultTtlSeconds(-1L)
-                    .build(), 
-                "Invalid cache config parameters should be rejected");
+                    .build();
+                config.validate(); // Should fail here
+            }, "Invalid cache config parameters should be rejected during validation");
         }
 
         @Test

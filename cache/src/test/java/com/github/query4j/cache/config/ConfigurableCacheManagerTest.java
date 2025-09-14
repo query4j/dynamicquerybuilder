@@ -246,12 +246,15 @@ public class ConfigurableCacheManagerTest {
 
     @Test
     void testCreateWithInvalidConfigurationThrowsException() {
-        // Building config with invalid settings should cause validation failure
-        assertThrows(IllegalStateException.class, () -> {
-            CacheConfig.builder()
+        // Building config with invalid settings should build but fail during validation
+        assertDoesNotThrow(() -> {
+            CacheConfig config = CacheConfig.builder()
                 .enabled(true)
                 .maxSize(0L) // Invalid: zero size
-                .build(); // Should throw exception here due to validation
+                .build(); // Should build successfully
+            
+            // Should fail during validation
+            assertThrows(IllegalStateException.class, config::validate);
         });
     }
 

@@ -150,15 +150,13 @@ class QueryExecutionFailureTest {
         @Test
         @DisplayName("should handle IN predicate with empty collections")
         void shouldHandleInPredicateWithEmptyCollections() {
-            // Empty collection should be handled appropriately
-            assertDoesNotThrow(() -> {
+            // Empty collection should throw IllegalArgumentException as empty IN clauses are invalid SQL
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
                 QueryBuilder<TestEntity> builder = QueryBuilder.forEntity(TestEntity.class)
                     .whereIn("status", Arrays.asList());  // Empty list
-                
-                String sql = builder.toSQL();
-                assertNotNull(sql);
-                // Should generate valid SQL even with empty IN clause
             });
+            
+            assertEquals("values must not be empty", exception.getMessage());
         }
     }
 

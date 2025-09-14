@@ -157,7 +157,7 @@ public class CacheConfig {
         }
         
         public CacheConfig build() {
-            CacheConfig config = new CacheConfig(
+            return new CacheConfig(
                 enabled, 
                 defaultTtlSeconds, 
                 maxSize, 
@@ -170,8 +170,6 @@ public class CacheConfig {
                 autoWarmupEnabled, 
                 warmupSize
             );
-            config.validate(); // Validate on build
-            return config;
         }
         
         @Override
