@@ -4,6 +4,9 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.3'
 }
 
+tasks.named('bootJar').configure { enabled = false }
+tasks.named('jar').configure { enabled = true }
+
 description = 'Usage examples and tutorials'
 
 dependencies {

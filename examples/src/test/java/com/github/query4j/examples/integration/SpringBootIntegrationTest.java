@@ -4,6 +4,7 @@ import com.github.query4j.cache.CacheStatistics;
 import com.github.query4j.examples.config.Query4jTestConfiguration;
 import com.github.query4j.examples.config.TestApplication;
 import com.github.query4j.examples.entity.Customer;
+import com.github.query4j.examples.entity.Order;
 import com.github.query4j.examples.repository.CustomerRepository;
 import com.github.query4j.examples.repository.OrderRepository;
 import com.github.query4j.examples.service.DynamicQueryService;
@@ -80,7 +81,20 @@ class SpringBootIntegrationTest {
                     .phoneNumber("555-0108").creditLimit(8000.0).active(true).build()
             );
             
-            customerRepository.saveAll(customers);
+            var saved = customerRepository.saveAll(customers);
+
+            // Seed a few orders to support aggregation/optimization tests
+            Customer alice = saved.stream().filter(c -> "Alice Johnson".equals(c.getName())).findFirst().orElseThrow();
+            Customer eve   = saved.stream().filter(c -> "Eve Adams".equals(c.getName())).findFirst().orElseThrow();
+
+            orderRepository.saveAll(List.of(
+                Order.builder().customer(alice).total(new BigDecimal("250.00"))
+                    .placedAt(java.time.LocalDateTime.now().minusDays(2)).status("PAID").build(),
+                Order.builder().customer(alice).total(new BigDecimal("150.00"))
+                    .placedAt(java.time.LocalDateTime.now().minusDays(1)).status("PAID").build(),
+                Order.builder().customer(eve).total(new BigDecimal("50.00"))
+                    .placedAt(java.time.LocalDateTime.now().minusDays(3)).status("PENDING").build()
+            ));
         }
     }
     
@@ -94,7 +108,7 @@ class SpringBootIntegrationTest {
         void shouldExecuteDynamicQueryWithSingleFilter() {
             // Execute dynamic query for North region customers
             List<Customer> northCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-                "North", null, null, 0, 10
+                "North", null, null, 1, 10
             );
             
             // Verify results
@@ -115,7 +129,7 @@ class SpringBootIntegrationTest {
         void shouldExecuteDynamicQueryWithMultipleFilters() {
             // Execute dynamic query for active North region customers with credit limit >= 3000
             List<Customer> filteredCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-                "North", true, 3000.0, 0, 10
+                "North", true, 3000.0, 1, 10
             );
             
             // Verify results
@@ -135,7 +149,7 @@ class SpringBootIntegrationTest {
         void shouldHandlePaginationCorrectly() {
             // Get first page of all customers (page size = 3)
             List<Customer> firstPage = dynamicQueryService.findCustomersWithDynamicQuery(
-                null, null, null, 0, 3
+                null, null, null, 1, 3
             );
             
             // Get second page
@@ -171,11 +185,11 @@ class SpringBootIntegrationTest {
             
             // Execute the same query twice
             List<Customer> firstResult = dynamicQueryService.findCustomersWithDynamicQuery(
-                "South", true, null, 0, 10
+                "South", true, null, 1, 10
             );
             
             List<Customer> secondResult = dynamicQueryService.findCustomersWithDynamicQuery(
-                "South", true, null, 0, 10
+                "South", true, null, 1, 10
             );
             
             // Verify results are identical
@@ -201,9 +215,9 @@ class SpringBootIntegrationTest {
             initialStats.reset();
             
             // Execute different queries
-            dynamicQueryService.findCustomersWithDynamicQuery("North", null, null, 0, 10);
-            dynamicQueryService.findCustomersWithDynamicQuery("South", null, null, 0, 10);
-            dynamicQueryService.findCustomersWithDynamicQuery("East", null, null, 0, 10);
+            dynamicQueryService.findCustomersWithDynamicQuery("North", null, null, 1, 10);
+            dynamicQueryService.findCustomersWithDynamicQuery("South", null, null, 1, 10);
+            dynamicQueryService.findCustomersWithDynamicQuery("East", null, null, 1, 10);
             
             // Verify cache statistics
             CacheStatistics stats = dynamicQueryService.getCacheStatistics();
@@ -272,7 +286,7 @@ class SpringBootIntegrationTest {
             
             // Execute dynamic queries within transaction
             List<Customer> customers = dynamicQueryService.findCustomersWithDynamicQuery(
-                null, true, null, 0, 10
+                null, true, null, 1, 10
             );
             
             assertNotNull(customers);
@@ -290,7 +304,7 @@ class SpringBootIntegrationTest {
         void shouldMaintainDataConsistencyAcrossServiceCalls() {
             // Get customers using dynamic query service
             List<Customer> dynamicQueryCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-                "East", null, null, 0, 10
+                "East", null, null, 1, 10
             );
             
             // Get same customers using standard repository
@@ -318,7 +332,7 @@ class SpringBootIntegrationTest {
         void shouldHandleEmptyResultSetsGracefully() {
             // Query for non-existent region
             List<Customer> emptyResults = dynamicQueryService.findCustomersWithDynamicQuery(
-                "NonExistentRegion", null, null, 0, 10
+                "NonExistentRegion", null, null, 1, 10
             );
             
             assertNotNull(emptyResults);
@@ -331,7 +345,7 @@ class SpringBootIntegrationTest {
         void shouldHandleHighCreditLimitFiltersCorrectly() {
             // Query for customers with very high credit limit
             List<Customer> highCreditCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-                null, null, 15000.0, 0, 10
+                null, null, 15000.0, 1, 10
             );
             
             assertNotNull(highCreditCustomers);
@@ -344,7 +358,7 @@ class SpringBootIntegrationTest {
         void shouldHandleNullParametersGracefully() {
             // All null parameters should return all customers
             List<Customer> allCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-                null, null, null, 0, 20
+                null, null, null, 1, 20
             );
             
             assertNotNull(allCustomers);

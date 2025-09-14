@@ -191,7 +191,7 @@ class SpringBootIntegrationTest {
     @Transactional(readOnly = true)
     void shouldExecuteDynamicQueryWithSingleFilter() {
         List<Customer> northCustomers = dynamicQueryService.findCustomersWithDynamicQuery(
-            "North", null, null, 0, 10
+            "North", null, null, 1, 10
         );
         
         assertNotNull(northCustomers);
@@ -203,8 +203,8 @@ class SpringBootIntegrationTest {
     @Transactional(readOnly = true)
     void shouldCacheQueryResultsAndShowCacheHits() {
         // Execute the same query twice
-        dynamicQueryService.findCustomersWithDynamicQuery("South", true, null, 0, 10);
-        dynamicQueryService.findCustomersWithDynamicQuery("South", true, null, 0, 10);
+        dynamicQueryService.findCustomersWithDynamicQuery("South", true, null, 1, 10);
+        dynamicQueryService.findCustomersWithDynamicQuery("South", true, null, 1, 10);
         
         // Verify cache statistics show at least one hit
         CacheStatistics stats = dynamicQueryService.getCacheStatistics();

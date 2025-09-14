@@ -2,6 +2,7 @@ package com.github.query4j.examples.integration;
 
 import com.github.query4j.cache.CacheManager;
 import com.github.query4j.cache.impl.CaffeineCacheManager;
+import com.github.query4j.core.QueryBuilder;
 import com.github.query4j.core.impl.DynamicQueryBuilder;
 import com.github.query4j.examples.entity.Customer;
 import com.github.query4j.optimizer.QueryOptimizer;
@@ -11,10 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Simple Dynamic Query Integration Tests")
 class SimpleDynamicQueryTest {
     
-    @Configuration
+    @TestConfiguration
     static class TestConfig {
         
         @Bean
@@ -69,14 +69,15 @@ class SimpleDynamicQueryTest {
     @DisplayName("should create dynamic query builder successfully")
     void shouldCreateDynamicQueryBuilderSuccessfully() {
         // Test basic DynamicQueryBuilder creation and SQL generation
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
-        builder = (DynamicQueryBuilder<Customer>) builder
+        builder = builder
             .where("region", "=", "North")
-            .and()
             .where("active", "=", true);
         
-        String sql = builder.toSQL();
+        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        String sql = finalBuilder.toSQL();
         
         assertNotNull(sql);
         assertTrue(sql.contains("SELECT"));
@@ -84,8 +85,8 @@ class SimpleDynamicQueryTest {
         assertTrue(sql.contains("WHERE"));
         
         // Test that we have predicates
-        assertFalse(builder.getPredicates().isEmpty());
-        assertEquals(2, builder.getPredicates().size());
+        assertFalse(finalBuilder.getPredicates().isEmpty());
+        assertEquals(2, finalBuilder.getPredicates().size());
     }
     
     @Test
@@ -110,8 +111,9 @@ class SimpleDynamicQueryTest {
         assertNotNull(queryOptimizer);
         
         // Create a simple query to optimize
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
-        final DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder.where("region", "=", "North");
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder.where("region", "=", "North");
+        final DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
         
         // Test optimization (this should not throw exceptions)
         assertDoesNotThrow(() -> {

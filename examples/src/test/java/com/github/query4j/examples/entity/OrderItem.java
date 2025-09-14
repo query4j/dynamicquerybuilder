@@ -1,10 +1,7 @@
 package com.github.query4j.examples.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -18,14 +15,18 @@ import java.math.BigDecimal;
  */
 @Entity
 @Table(name = "order_items")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "order")
 public class OrderItem {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -49,4 +50,12 @@ public class OrderItem {
     
     @Column(length = 100)
     private String category;
+    
+    @PrePersist
+    @PreUpdate
+    void calcLineTotal() {
+        if (unitPrice != null && quantity != null) {
+            this.lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
 }

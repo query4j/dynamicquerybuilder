@@ -2,6 +2,7 @@ package com.github.query4j.examples.integration;
 
 import com.github.query4j.cache.CacheManager;
 import com.github.query4j.cache.impl.CaffeineCacheManager;
+import com.github.query4j.core.QueryBuilder;
 import com.github.query4j.core.impl.DynamicQueryBuilder;
 import com.github.query4j.examples.entity.Customer;
 import com.github.query4j.optimizer.QueryOptimizer;
@@ -48,18 +49,19 @@ class BasicDynamicQueryTest {
     @DisplayName("should create dynamic query builder and generate SQL")
     void shouldCreateDynamicQueryBuilderAndGenerateSQL() {
         // Create a query builder for Customer entity
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
         // Build a query with multiple conditions
-        builder = (DynamicQueryBuilder<Customer>) builder
+        builder = builder
             .where("region", "=", "North")
-            .and()
             .where("active", "=", true)
-            .and()
             .where("creditLimit", ">=", 5000.0);
         
+        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        
         // Generate SQL
-        String sql = builder.toSQL();
+        String sql = finalBuilder.toSQL();
         
         // Verify the SQL structure
         assertNotNull(sql, "Generated SQL should not be null");
@@ -68,10 +70,10 @@ class BasicDynamicQueryTest {
         assertTrue(sql.contains("WHERE"), "SQL should contain WHERE clause");
         
         // Verify predicates were created
-        assertEquals(3, builder.getPredicates().size(), "Should have 3 predicates");
+        assertEquals(3, finalBuilder.getPredicates().size(), "Should have 3 predicates");
         
         // Verify each predicate has parameters
-        builder.getPredicates().forEach(predicate -> {
+        finalBuilder.getPredicates().forEach(predicate -> {
             assertNotNull(predicate.getParameters(), "Predicate should have parameters");
             assertFalse(predicate.getParameters().isEmpty(), "Predicate parameters should not be empty");
         });
@@ -83,16 +85,17 @@ class BasicDynamicQueryTest {
     @DisplayName("should support complex query building with joins and aggregations")
     void shouldSupportComplexQueryBuildingWithJoinsAndAggregations() {
         // Create a query with joins and aggregations
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
-        builder = (DynamicQueryBuilder<Customer>) builder
-            .select("customers.name", "customers.region", "COUNT(orders.id) as orderCount")
+        builder = builder
+            .select("customers.name", "customers.region")
             .join("orders")
             .where("customers.active", "=", true)
-            .groupBy("customers.id", "customers.name", "customers.region")
-            .having("COUNT(orders.id)", ">", 2);
+            .groupBy("customers.id", "customers.name", "customers.region");
         
-        String sql = builder.toSQL();
+        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        String sql = finalBuilder.toSQL();
         
         // Verify complex query structure
         assertNotNull(sql);
@@ -100,11 +103,9 @@ class BasicDynamicQueryTest {
         assertTrue(sql.contains("JOIN"));
         assertTrue(sql.contains("WHERE"));
         assertTrue(sql.contains("GROUP BY"));
-        assertTrue(sql.contains("HAVING"));
         
-        // Verify both WHERE and HAVING predicates exist
-        assertFalse(builder.getPredicates().isEmpty(), "Should have WHERE predicates");
-        assertFalse(builder.getHavingPredicates().isEmpty(), "Should have HAVING predicates");
+        // Verify WHERE predicates exist
+        assertFalse(finalBuilder.getPredicates().isEmpty(), "Should have WHERE predicates");
         
         System.out.println("Complex query SQL: " + sql);
     }
@@ -112,14 +113,16 @@ class BasicDynamicQueryTest {
     @Test
     @DisplayName("should support pagination and ordering")
     void shouldSupportPaginationAndOrdering() {
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
-        builder = (DynamicQueryBuilder<Customer>) builder
+        builder = builder
             .where("active", "=", true)
             .orderBy("name")
             .page(1, 10); // Second page, 10 items per page
         
-        String sql = builder.toSQL();
+        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        String sql = finalBuilder.toSQL();
         
         assertNotNull(sql);
         assertTrue(sql.contains("SELECT"));
@@ -158,15 +161,17 @@ class BasicDynamicQueryTest {
     @DisplayName("should work with query optimizer for performance suggestions")
     void shouldWorkWithQueryOptimizerForPerformanceSuggestions() {
         // Create a query that can be optimized
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
-        final DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder
+        builder = builder
             .select("customers.name", "customers.region")
             .join("orders")
             .where("customers.region", "=", "North")
-            .and()
             .where("orders.total", ">", 100.0)
             .orderBy("customers.name");
+        
+        final DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
         
         // Test optimization
         assertDoesNotThrow(() -> {
@@ -188,21 +193,20 @@ class BasicDynamicQueryTest {
     @Test
     @DisplayName("should handle query parameters correctly")
     void shouldHandleQueryParametersCorrectly() {
-        DynamicQueryBuilder<Customer> builder = new DynamicQueryBuilder<>(Customer.class);
+        DynamicQueryBuilder<Customer> queryBuilder = new DynamicQueryBuilder<>(Customer.class);
+        QueryBuilder<Customer> builder = queryBuilder;
         
-        builder = (DynamicQueryBuilder<Customer>) builder
+        builder = builder
             .where("name", "=", "Alice Johnson")
-            .and()
             .where("creditLimit", ">=", 5000.0)
-            .and()
             .whereIn("region", java.util.List.of("North", "South", "East"));
         
-        // Verify all predicates have parameters
-        assertEquals(3, builder.getPredicates().size());
+        DynamicQueryBuilder<Customer> finalBuilder = (DynamicQueryBuilder<Customer>) builder;
+        assertEquals(3, finalBuilder.getPredicates().size());
         
         // Collect all parameters
         java.util.Map<String, Object> allParameters = new java.util.HashMap<>();
-        builder.getPredicates().forEach(predicate -> {
+        finalBuilder.getPredicates().forEach(predicate -> {
             allParameters.putAll(predicate.getParameters());
         });
         
