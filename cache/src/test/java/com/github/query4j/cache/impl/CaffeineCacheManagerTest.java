@@ -113,7 +113,7 @@ class CaffeineCacheManagerTest {
     @Test
     @DisplayName("Named region factory with custom settings should work correctly")
     void testNamedRegionWithCustomSettings() {
-        String regionName = "custom-region";
+        String regionName = "unique-custom-region-" + System.currentTimeMillis();
         long customMaxSize = 500L;
         long customTtl = 120L;
         

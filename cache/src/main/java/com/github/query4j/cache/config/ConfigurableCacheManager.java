@@ -27,7 +27,6 @@ import com.github.query4j.core.config.Query4jConfigurationFactory;
  * // Create named cache manager with auto-configuration
  * CacheManager cacheManager = ConfigurableCacheManager.forRegion("myregion");
  * </pre>
- * </p>
  * 
  * @author query4j team
  * @version 1.0.0

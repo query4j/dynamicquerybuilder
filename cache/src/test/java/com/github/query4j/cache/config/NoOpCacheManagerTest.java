@@ -99,7 +99,7 @@ public class NoOpCacheManagerTest {
         assertNotNull(stats);
         assertEquals(0L, stats.getHitCount());
         assertEquals(0L, stats.getMissCount());
-        assertEquals(0L, stats.getPutCount());
+        assertEquals(0L, stats.getCurrentSize());
         assertEquals(0L, stats.getEvictionCount());
         
         // Statistics should still be zero after operations
@@ -111,7 +111,7 @@ public class NoOpCacheManagerTest {
         assertNotNull(afterStats);
         assertEquals(0L, afterStats.getHitCount());
         assertEquals(0L, afterStats.getMissCount());
-        assertEquals(0L, afterStats.getPutCount());
+        assertEquals(0L, afterStats.getCurrentSize());
         assertEquals(0L, afterStats.getEvictionCount());
     }
 
@@ -234,6 +234,6 @@ public class NoOpCacheManagerTest {
         // Statistics should still be zero
         CacheStatistics stats = cacheManager.stats();
         assertEquals(0L, stats.getHitCount());
-        assertEquals(0L, stats.getPutCount());
+        assertEquals(0L, stats.getCurrentSize());
     }
 }
