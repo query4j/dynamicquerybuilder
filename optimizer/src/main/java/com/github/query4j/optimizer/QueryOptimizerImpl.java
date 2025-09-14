@@ -134,7 +134,9 @@ public final class QueryOptimizerImpl implements QueryOptimizer {
     
     /**
      * Generates a human-readable summary of optimization results.
+     * @hidden
      */
+    @SuppressWarnings("javadoc")
     private String generateSummary(OptimizationResult.OptimizationResultBuilder resultBuilder) {
         // This is a simplified implementation - in reality we'd build from the actual suggestions
         var sb = new StringBuilder();

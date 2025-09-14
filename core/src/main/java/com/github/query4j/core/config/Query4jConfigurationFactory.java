@@ -136,7 +136,9 @@ public final class Query4jConfigurationFactory {
      * </p>
      * 
      * @return a new configuration builder
+     * @hidden
      */
+    @SuppressWarnings("javadoc")
     public static Query4jConfig.Query4jConfigBuilder builder() {
         return Query4jConfig.builder();
     }
@@ -150,7 +152,9 @@ public final class Query4jConfigurationFactory {
      * </p>
      * 
      * @return a builder with default configuration values
+     * @hidden
      */
+    @SuppressWarnings("javadoc")
     public static Query4jConfig.Query4jConfigBuilder builderWithDefaults() {
         return getDefault().toBuilder();
     }

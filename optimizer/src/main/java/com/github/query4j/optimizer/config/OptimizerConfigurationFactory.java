@@ -130,7 +130,9 @@ public final class OptimizerConfigurationFactory {
      * </p>
      * 
      * @return a new optimizer configuration builder
+     * @hidden
      */
+    @SuppressWarnings("javadoc")
     public static OptimizerConfig.OptimizerConfigBuilder builder() {
         return OptimizerConfig.builder();
     }
@@ -144,7 +146,9 @@ public final class OptimizerConfigurationFactory {
      * </p>
      * 
      * @return a builder with default optimizer configuration values
+     * @hidden
      */
+    @SuppressWarnings("javadoc")
     public static OptimizerConfig.OptimizerConfigBuilder builderWithDefaults() {
         OptimizerConfig defaultConfig = getDefault();
         return OptimizerConfig.builder()

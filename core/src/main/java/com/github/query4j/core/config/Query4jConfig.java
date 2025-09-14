@@ -165,8 +165,10 @@ public class Query4jConfig {
      * Useful for creating modified copies.
      *
      * @return a builder with current values
+     * @hidden
      */
-    public Query4jConfigBuilder toBuilder() {
+    @SuppressWarnings("javadoc")
+    public Query4jConfig.Query4jConfigBuilder toBuilder() {
         return Query4jConfig.builder()
                 .core(this.core)
                 .cache(this.cache)

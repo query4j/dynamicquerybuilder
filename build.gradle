@@ -60,10 +60,29 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
+    // Add delombok task for JavaDoc generation
+    task delombok(type: JavaExec) {
+        outputs.dir "$buildDir/delombok"
+        inputs.files sourceSets.main.java.srcDirs
+        
+        classpath = configurations.compileClasspath + configurations.annotationProcessor
+        main = 'lombok.launch.Main'
+        args 'delombok'
+        args '-d'
+        args "$buildDir/delombok"
+        args sourceSets.main.java.srcDirs
+    }
+
     tasks.withType(Javadoc) {
+        dependsOn delombok
+        source = fileTree("$buildDir/delombok")
         options.encoding = 'UTF-8'
         options.addStringOption('Xdoclint:all,-missing', '-quiet')
         failOnError = false
+        doFirst {
+            // Add the classpath including compiled classes
+            options.classpath = (configurations.compileClasspath + sourceSets.main.output.classesDirs).collect { it }
+        }
     }
 }
 
