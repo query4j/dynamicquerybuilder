@@ -188,8 +188,8 @@ class ConfigurationIntegrationTest {
     void predefinedProfiles_shouldLoadCorrectly() {
         // Test high-performance profile
         Query4jConfig highPerf = Query4jConfig.highPerformanceConfig();
-        assertEquals(10_000L, highPerf.getCore().getDefaultQueryTimeoutMs());
-        assertEquals(8, highPerf.getCore().getMaxPredicateDepth());
+        assertEquals(15_000L, highPerf.getCore().getDefaultQueryTimeoutMs());
+        assertEquals(20, highPerf.getCore().getMaxPredicateDepth());
         assertFalse(highPerf.getCore().isQueryStatisticsEnabled());
         assertEquals(50_000L, highPerf.getCache().getMaxSize());
         

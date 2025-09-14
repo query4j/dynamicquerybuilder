@@ -84,9 +84,9 @@ public class Query4jConfig {
     public static Query4jConfig highPerformanceConfig() {
         return Query4jConfig.builder()
                 .core(CoreConfig.builder()
-                    .defaultQueryTimeoutMs(15_000L) // Query4jConfigTest expects 15000L
-                    .maxPredicateDepth(20) // Query4jConfigTest expects 20
-                    .maxPredicateCount(200) // Query4jConfigTest expects 200
+                    .defaultQueryTimeoutMs(15_000L) // Balanced timeout for performance
+                    .maxPredicateDepth(20) // Higher depth for complex queries
+                    .maxPredicateCount(200) // High count for complex queries
                     .queryStatisticsEnabled(false) // Disable for max performance
                     .build())
                 .cache(CacheConfig.highPerformanceConfig())

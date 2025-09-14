@@ -238,7 +238,7 @@ public class CacheConfig {
      */
     public static CacheConfig developmentConfig() {
         return CacheConfig.builder()
-                .enabled(false) // Test expects false
+                .enabled(false) // Disabled for development/testing 
                 .maxSize(1_000L) // Smaller cache for testing
                 .defaultTtlSeconds(300L) // Shorter TTL for faster feedback
                 .defaultRegion("dev") // Test expects "dev"

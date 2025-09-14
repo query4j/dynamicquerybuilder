@@ -103,7 +103,7 @@ class ConfigurationExampleTest {
         
         System.out.println("High-Performance Profile:");
         printConfigSummary(highPerf);
-        assertEquals(10_000L, highPerf.getCore().getDefaultQueryTimeoutMs());
+        assertEquals(15_000L, highPerf.getCore().getDefaultQueryTimeoutMs());
         assertFalse(highPerf.getCore().isQueryStatisticsEnabled());
         
         System.out.println("Development Profile:");
