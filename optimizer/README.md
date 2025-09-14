@@ -361,7 +361,50 @@ public class OptimizationMetrics {
 
 ## Testing
 
-The optimizer includes comprehensive test coverage:
+The optimizer includes comprehensive test coverage across multiple layers:
+
+```bash
+# Run all optimizer tests
+../gradlew :optimizer:test
+
+# Run specific test categories
+../gradlew :optimizer:test --tests "*CorrectnessTest"
+../gradlew :optimizer:test --tests "*IntegrationTest" 
+../gradlew :optimizer:test --tests "*PerformanceTest"
+
+# Run with coverage report
+../gradlew :optimizer:jacocoTestReport
+
+# View coverage report
+open optimizer/build/reports/jacoco/test/html/index.html
+```
+
+### Test Architecture and Approach
+
+The optimizer test suite is organized into four main categories for comprehensive correctness validation:
+
+#### 1. **Unit Tests for Correctness** (`*CorrectnessTest`)
+- **IndexAdvisorCorrectnessTest**: Validates index suggestion accuracy for various predicate patterns
+- **PredicatePushdownOptimizerCorrectnessTest**: Tests predicate reordering logic and semantic preservation  
+- **JoinReorderOptimizerCorrectnessTest**: Verifies join optimization correctness for inner/outer joins
+
+These tests ensure that each optimizer component behaves correctly across edge cases, error conditions, and maintains query semantics.
+
+#### 2. **Integration Tests** (`*IntegrationCorrectnessTest`)
+- End-to-end optimizer functionality with complex multi-table queries
+- Verification that index suggestions correlate to predicates and join keys
+- Testing that predicate pushdown moves filtering closer to scan sources
+- Validation that join orders reduce estimated intermediate result sizes
+- Query semantic equivalence preservation after optimization
+
+#### 3. **Performance Tests** (`*PerformanceTest`)
+- Scalability testing with large queries (up to 20 tables)
+- Concurrent optimization request handling and thread safety
+- Memory usage and leak detection over repeated optimizations
+- Performance threshold validation and benchmark logging
+
+#### 4. **Property-Based Testing** (using jqwik)
+Comprehensive randomized testing ensures robustness across wide input ranges.
 
 ```bash
 # Run optimizer tests
