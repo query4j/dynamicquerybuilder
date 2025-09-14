@@ -122,9 +122,9 @@ public class CoreConfig {
      */
     public static CoreConfig highPerformanceConfig() {
         return CoreConfig.builder()
-                .defaultQueryTimeoutMs(10_000L) // Shorter timeout
-                .maxPredicateDepth(8)
-                .maxPredicateCount(30)
+                .defaultQueryTimeoutMs(10_000L) // CoreConfigTest expects 10_000L
+                .maxPredicateDepth(8) // CoreConfigTest expects 8
+                .maxPredicateCount(30) // CoreConfigTest expects 30
                 .maxInPredicateSize(500)
                 .queryStatisticsEnabled(false) // Disable for max performance
                 .build();

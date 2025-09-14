@@ -107,9 +107,16 @@ public final class ConfigurationLoader {
      * 
      * @param configFile path to configuration file
      * @return this loader for method chaining
+     * @throws IllegalArgumentException if configFile is null or empty
      * @throws DynamicQueryException if file loading fails
      */
     public ConfigurationLoader loadFromFile(String configFile) {
+        if (configFile == null) {
+            throw new IllegalArgumentException("Configuration file path must not be null");
+        }
+        if (configFile.trim().isEmpty()) {
+            throw new IllegalArgumentException("Configuration file path must not be empty");
+        }
         return loadFromFile(Paths.get(configFile));
     }
     

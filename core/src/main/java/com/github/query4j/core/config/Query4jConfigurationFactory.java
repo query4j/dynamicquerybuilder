@@ -110,9 +110,16 @@ public final class Query4jConfigurationFactory {
      * 
      * @param configFile path to configuration file
      * @return loaded configuration instance
+     * @throws IllegalArgumentException if configFile is null or empty
      * @throws DynamicQueryException if file loading fails
      */
     public static Query4jConfig loadFromFile(String configFile) {
+        if (configFile == null) {
+            throw new IllegalArgumentException("Configuration file path must not be null");
+        }
+        if (configFile.trim().isEmpty()) {
+            throw new IllegalArgumentException("Configuration file path must not be empty");
+        }
         return configCache.computeIfAbsent(configFile, file -> {
             return new ConfigurationLoader()
                     .loadFromFile(file)
@@ -186,9 +193,14 @@ public final class Query4jConfigurationFactory {
      * 
      * @param properties configuration properties map
      * @return configuration instance created from properties
+     * @throws IllegalArgumentException if properties map is null
      * @throws DynamicQueryException if properties are invalid
      */
     public static Query4jConfig fromProperties(java.util.Map<String, String> properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("Properties map must not be null");
+        }
+        
         ConfigurationLoader loader = new ConfigurationLoader();
         
         // Manually populate the loader's properties
