@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class Query4jConfigurationFactoryTest {
     @Test
     void testConstructorThrowsException() {
         // Test that constructor is private and throws exception
-        assertThrows(UnsupportedOperationException.class, () -> {
+        assertThrows(InvocationTargetException.class, () -> {
             java.lang.reflect.Constructor<Query4jConfigurationFactory> constructor = 
                 Query4jConfigurationFactory.class.getDeclaredConstructor();
             constructor.setAccessible(true);
