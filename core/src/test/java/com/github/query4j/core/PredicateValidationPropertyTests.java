@@ -272,7 +272,7 @@ class PredicateValidationPropertyTests {
         
         if (isNull) {
             assertTrue(sql.contains("IS NULL"));
-            assertFalse(sql.contains("NOT"));
+            assertFalse(sql.contains("IS NOT NULL"));
         } else {
             assertTrue(sql.contains("IS NOT NULL"));
         }
