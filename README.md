@@ -112,6 +112,7 @@ futureUsers.thenAccept(users -> {
 
 ## Documentation
 
+- **[Configuration Guide](docs/Configuration.md)** - Comprehensive configuration options and examples
 - **[API Reference Guide](docs/API_GUIDE.md)** - Comprehensive API documentation with examples
 - **[JavaDoc API](https://query4j.github.io/dynamicquerybuilder/)** - Generated API documentation
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project  
