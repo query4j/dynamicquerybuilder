@@ -1,0 +1,43 @@
+# Query4j YAML Configuration
+# This file demonstrates the YAML configuration format for Query4j
+
+query4j:
+  core:
+    defaultQueryTimeoutMs: 30000
+    maxPredicateDepth: 10
+    maxPredicateCount: 50
+    likePredicatesEnabled: true
+    inPredicatesEnabled: true
+    betweenPredicatesEnabled: true
+    nullPredicatesEnabled: true
+    maxInPredicateSize: 1000
+    strictFieldValidation: true
+    parameterCollisionDetection: true
+    defaultPageSize: 20
+    maxPageSize: 1000
+    queryStatisticsEnabled: true
+  
+  cache:
+    enabled: true
+    defaultTtlSeconds: 3600
+    maxSize: 10000
+    defaultRegion: "default"
+    statisticsEnabled: true
+    maintenanceIntervalSeconds: 300
+    keyValidationEnabled: true
+    maxKeyLength: 512
+    concurrencyLevel: 16
+    autoWarmupEnabled: false
+    warmupSize: 100
+  
+  optimizer:
+    indexSuggestionsEnabled: true
+    predicatePushdownEnabled: true
+    joinReorderingEnabled: true
+    indexSelectivityThreshold: 0.1
+    predicateReorderingThreshold: 0.05
+    joinReorderingThreshold: 0.1
+    maxAnalysisTimeMs: 5000
+    verboseOutput: false
+    maxCompositeIndexColumns: 3
+    targetDatabase: "GENERIC"

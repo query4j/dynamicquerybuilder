@@ -30,6 +30,8 @@ artifacts {
 dependencies {
     // Add integration test dependencies as needed
     testImplementation project(':core')
+    testImplementation project(':cache')
+    testImplementation project(':optimizer')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
 }
