@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentMap;
  *     .core(CoreConfig.highPerformanceConfig())
  *     .build();
  * </pre>
- * </p>
  * 
  * @author query4j team
  * @version 1.0.0
