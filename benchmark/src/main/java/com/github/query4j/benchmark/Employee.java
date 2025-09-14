@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -43,15 +42,13 @@ public class Employee {
     private Long id;
     
     /**
-     * Employee's first name.
+     * Employee's first name (maps to database column first_name).
      */
-    @Column(name = "first_name")
     private String firstName;
     
     /**
-     * Employee's last name.
+     * Employee's last name (maps to database column last_name).
      */
-    @Column(name = "last_name") 
     private String lastName;
     
     /**
@@ -70,9 +67,8 @@ public class Employee {
     private String role;
     
     /**
-     * Date when the employee was hired.
+     * Date when the employee was hired (maps to database column hire_date).
      */
-    @Column(name = "hire_date")
     private LocalDate hireDate;
     
     /**
