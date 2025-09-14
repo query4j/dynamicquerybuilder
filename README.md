@@ -66,17 +66,33 @@ Query4j includes comprehensive JMH performance benchmarks to validate performanc
 | Basic Query | < 1 ms | ~1.7 μs ✅ |
 | Moderate Query | < 2 ms | ~6.7 μs ✅ |
 | Complex Query | < 5 ms | ~17.1 μs ✅ |
+| **Optimizer Analysis** | **< 10 ms** | **~0.4 μs ✅** |
+
+### Optimizer Profiling (Issue #24)
+
+The repository includes specialized benchmarks to measure query optimizer performance impact:
+
+```bash
+# Run optimizer analysis benchmarks  
+./gradlew benchmark:optimizerBenchmark
+
+# Compare vs baseline libraries (Hibernate, JDBC)
+./gradlew benchmark:baselineComparisonBenchmark
+
+# Complete optimizer profiling study
+./gradlew benchmark:optimizerProfilingStudy
+```
 
 ### Running Benchmarks
 
 ```bash
 # Build and run all benchmarks
-mvn clean install -Pbenchmark
+./gradlew benchmark:benchmark
 
 # Or run specific benchmarks manually
 cd benchmark
-mvn clean package
-java -jar target/benchmarks.jar
+./gradlew benchmarkJar
+java -jar build/libs/benchmarks-*.jar
 ```
 
 See [benchmark/README.md](benchmark/README.md) for detailed benchmark results and analysis.

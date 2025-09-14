@@ -12,6 +12,12 @@ Measures query builder performance across three primary scenarios:
 - **Moderate Query**: Multiple WHERE predicates with AND, IN predicate, ORDER BY
 - **Complex Query**: Multiple WHERE predicates with AND/OR, BETWEEN, LIKE, GROUP BY, HAVING, aggregation, pagination
 
+### 3. Optimizer Profiling Benchmarks (Issue #24)
+Measures query optimizer performance impact vs baseline libraries:
+- **OptimizerBenchmark**: Direct measurement of optimizer analysis overhead
+- **OptimizerVsBaselineBenchmark**: Head-to-head comparison with Hibernate Criteria API, MyBatis, and raw JDBC
+- **Memory Impact Analysis**: Heap usage and GC pressure during optimization
+- **Configuration Impact**: Performance under different optimizer settings
 ### 2. Pagination Benchmarks (Issue #18)
 Compares pagination performance between DynamicQueryBuilder and baseline libraries:
 - **DynamicQueryBuilder**: Query4j's fluent pagination API
@@ -99,6 +105,15 @@ For detailed analysis, see [pagination-benchmark-analysis.md](pagination-benchma
 # Run only pagination benchmarks (comparing vs baseline libraries)
 ./gradlew benchmark:paginationBenchmark
 
+# Run optimizer profiling benchmarks (Issue #24)
+./gradlew benchmark:optimizerBenchmark
+
+# Run baseline comparison benchmarks (Hibernate, JDBC vs Query4j+Optimizer)
+./gradlew benchmark:baselineComparisonBenchmark
+
+# Run complete optimizer profiling study
+./gradlew benchmark:optimizerProfilingStudy
+
 # Build the benchmark JAR
 ./gradlew benchmark:benchmarkJar
 
@@ -108,6 +123,12 @@ java -jar build/libs/benchmarks-*.jar
 
 # Run specific benchmark class
 java -jar build/libs/benchmarks-*.jar PaginationBenchmark
+
+# Run optimizer benchmarks only
+java -jar build/libs/benchmarks-*.jar OptimizerBenchmark
+
+# Run baseline comparison benchmarks only
+java -jar build/libs/benchmarks-*.jar OptimizerVsBaselineBenchmark
 
 # Run specific benchmark
 java -jar build/libs/benchmarks-*.jar QueryPerformanceBenchmark.basicQuery
@@ -121,6 +142,9 @@ java -jar build/libs/benchmarks-*.jar -f 1 -wi 5 -i 10 -rf json -rff build/jmh-r
 ```bash
 # Run benchmarks via Gradle task
 ./gradlew benchmark:benchmark
+
+# Run optimizer profiling study (Issue #24)
+./gradlew benchmark:optimizerProfilingStudy
 
 # Create only the benchmark JAR
 ./gradlew benchmark:benchmarkJar
