@@ -170,9 +170,12 @@ class QueryBuilderPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        // Test customFunction throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test customFunction works and generates SQL
+        QueryBuilder<Object> funcBuilder = assertDoesNotThrow(() ->
             builder.customFunction(functionName, sqlExpression, paramArray));
+        assertNotNull(funcBuilder);
+        String sql = funcBuilder.toSQL();
+        assertTrue(sql.contains(functionName.toUpperCase()));
     }
 
     // Test builder methods with collections (82% coverage - improve)
@@ -374,13 +377,19 @@ class QueryBuilderPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        // Test IN with subquery throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test IN with subquery works
+        QueryBuilder<Object> inBuilder = assertDoesNotThrow(() ->
             builder.in(mainField, subQuery));
+        assertNotNull(inBuilder);
+        String inSQL = inBuilder.toSQL();
+        assertTrue(inSQL.contains(mainField + " IN"));
         
-        // Test NOT IN with subquery throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test NOT IN with subquery works
+        QueryBuilder<Object> notInBuilder = assertDoesNotThrow(() ->
             builder.notIn(mainField, subQuery));
+        assertNotNull(notInBuilder);
+        String notInSQL = notInBuilder.toSQL();
+        assertTrue(notInSQL.contains(mainField + " NOT IN"));
     }
 
     // Test advanced query configuration methods (58% coverage - improve)
@@ -394,27 +403,37 @@ class QueryBuilderPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        // Test parameter method throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test parameter method works and preserves immutability
+        QueryBuilder<Object> paramBuilder = assertDoesNotThrow(() ->
             builder.parameter(paramName, paramValue));
+        assertNotNull(paramBuilder);
+        assertNotSame(builder, paramBuilder);
         
-        // Test parameters method throws UnsupportedOperationException
+        // Test parameters method works and preserves immutability
         Map<String, Object> params = new HashMap<>(); 
         params.put(paramName, paramValue);
-        assertThrows(UnsupportedOperationException.class, () -> 
+        QueryBuilder<Object> paramsBuilder = assertDoesNotThrow(() ->
             builder.parameters(params));
+        assertNotNull(paramsBuilder);
+        assertNotSame(builder, paramsBuilder);
         
-        // Test hint method throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test hint method works and preserves immutability
+        QueryBuilder<Object> hintBuilder = assertDoesNotThrow(() ->
             builder.hint(hintName, paramValue));
+        assertNotNull(hintBuilder);
+        assertNotSame(builder, hintBuilder);
         
-        // Test fetchSize method throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test fetchSize method works and preserves immutability
+        QueryBuilder<Object> fetchBuilder = assertDoesNotThrow(() ->
             builder.fetchSize(fetchSize));
+        assertNotNull(fetchBuilder);
+        assertNotSame(builder, fetchBuilder);
         
-        // Test timeout method throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test timeout method works and preserves immutability
+        QueryBuilder<Object> timeoutBuilder = assertDoesNotThrow(() ->
             builder.timeout(timeout));
+        assertNotNull(timeoutBuilder);
+        assertNotSame(builder, timeoutBuilder);
     }
 
     // Test native query method (58% coverage - improve)
@@ -427,9 +446,12 @@ class QueryBuilderPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        // Test nativeQuery throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test nativeQuery works and preserves immutability
+        QueryBuilder<Object> nativeBuilder = assertDoesNotThrow(() ->
             builder.nativeQuery(nativeSQL));
+        assertNotNull(nativeBuilder);
+        assertNotSame(builder, nativeBuilder);
+        assertEquals(nativeSQL, nativeBuilder.toSQL());
     }
 
     // Test thread safety with concurrent access
@@ -477,7 +499,7 @@ class QueryBuilderPropertyTests {
         }
     }
 
-    // Test exists and notExists methods (verify they throw UnsupportedOperationException)
+    // Test exists and notExists methods (verify they work properly)
     @Property
     void existsAndNotExistsGenerateValidSQL(
             @ForAll("validFieldNames") String mainField,
@@ -491,13 +513,19 @@ class QueryBuilderPropertyTests {
         
         DynamicQueryBuilder<Object> builder = new DynamicQueryBuilder<>(Object.class);
         
-        // Test EXISTS throws UnsupportedOperationException
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test EXISTS works and generates valid SQL
+        QueryBuilder<Object> existsBuilder = assertDoesNotThrow(() ->
             builder.exists(subQuery));
+        assertNotNull(existsBuilder);
+        String existsSQL = existsBuilder.toSQL();
+        assertTrue(existsSQL.contains("EXISTS"));
         
-        // Test NOT EXISTS throws UnsupportedOperationException  
-        assertThrows(UnsupportedOperationException.class, () -> 
+        // Test NOT EXISTS works and generates valid SQL  
+        QueryBuilder<Object> notExistsBuilder = assertDoesNotThrow(() ->
             builder.notExists(subQuery));
+        assertNotNull(notExistsBuilder);
+        String notExistsSQL = notExistsBuilder.toSQL();
+        assertTrue(notExistsSQL.contains("NOT EXISTS"));
     }
 
     // Test caching methods
