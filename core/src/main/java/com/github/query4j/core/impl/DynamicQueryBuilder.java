@@ -11,6 +11,7 @@ import lombok.With;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,11 +74,33 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     @NonNull
     private final List<Predicate> havingPredicates;
 
+    @With
+    private final String nativeSQL;
+
+    @With
+    @NonNull
+    private final Map<String, Object> namedParameters;
+
+    @With
+    private final int fetchSize;
+
+    @With
+    private final int timeoutSeconds;
+
+    @With
+    @NonNull
+    private final Map<String, Object> queryHints;
+
+    @With
+    @NonNull
+    private final QueryStatsImpl queryStats;
+
     // Default constructor for factory method
     public DynamicQueryBuilder(@NonNull Class<T> entityClass) {
         this(entityClass, Collections.emptyList(), null, 0, 0, -1, false,
                 Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList());
+                Collections.emptyList(), Collections.emptyList(), null, Collections.emptyMap(),
+                0, 0, Collections.emptyMap(), new QueryStatsImpl());
     }
 
     private DynamicQueryBuilder<T> newInstance(
@@ -94,7 +117,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
             List<Predicate> havingPredicates) {
         return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
                 groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
-                orderByClauses, groupByClauses, havingPredicates);
+                orderByClauses, groupByClauses, havingPredicates, nativeSQL, namedParameters,
+                fetchSize, timeoutSeconds, queryHints, queryStats);
     }
     
     /**
@@ -426,31 +450,31 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     @Override
     public QueryBuilder<T> exists(QueryBuilder<?> subquery) {
         Objects.requireNonNull(subquery, "subquery must not be null");
-        // TODO: Implement EXISTS subquery support
-        throw new UnsupportedOperationException("EXISTS subqueries not implemented yet");
+        SubqueryPredicate existsPredicate = new SubqueryPredicate("EXISTS", subquery);
+        return addPredicate(existsPredicate);
     }
 
     @Override
     public QueryBuilder<T> notExists(QueryBuilder<?> subquery) {
         Objects.requireNonNull(subquery, "subquery must not be null");
-        // TODO: Implement NOT EXISTS subquery support
-        throw new UnsupportedOperationException("NOT EXISTS subqueries not implemented yet");
+        SubqueryPredicate notExistsPredicate = new SubqueryPredicate("NOT EXISTS", subquery);
+        return addPredicate(notExistsPredicate);
     }
 
     @Override
     public QueryBuilder<T> in(@NonNull String fieldName, QueryBuilder<?> subquery) {
         validateFieldName(fieldName);
         Objects.requireNonNull(subquery, "subquery must not be null");
-        // TODO: Implement IN subquery support
-        throw new UnsupportedOperationException("IN subqueries not implemented yet");
+        SubqueryInPredicate inPredicate = new SubqueryInPredicate(fieldName, "IN", subquery);
+        return addPredicate(inPredicate);
     }
 
     @Override
     public QueryBuilder<T> notIn(@NonNull String fieldName, QueryBuilder<?> subquery) {
         validateFieldName(fieldName);
         Objects.requireNonNull(subquery, "subquery must not be null");
-        // TODO: Implement NOT IN subquery support
-        throw new UnsupportedOperationException("NOT IN subqueries not implemented yet");
+        SubqueryInPredicate notInPredicate = new SubqueryInPredicate(fieldName, "NOT IN", subquery);
+        return addPredicate(notInPredicate);
     }
 
     // ==================== ADVANCED FEATURES (STUBS FOR NOW) ====================
@@ -459,26 +483,42 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     public QueryBuilder<T> customFunction(@NonNull String functionName, @NonNull String fieldName,
             Object... parameters) {
         validateFieldName(fieldName);
-        // TODO: Implement custom function support
-        throw new UnsupportedOperationException("Custom functions not implemented yet");
+        String paramPrefix = generateParamName("func");
+        CustomFunctionPredicate functionPredicate = new CustomFunctionPredicate(
+            functionName, fieldName, parameters, paramPrefix);
+        return addPredicate(functionPredicate);
     }
 
     @Override
     public QueryBuilder<T> nativeQuery(@NonNull String sqlQuery) {
-        // TODO: Implement native query support
-        throw new UnsupportedOperationException("Native queries not implemented yet");
+        if (sqlQuery.trim().isEmpty()) {
+            throw new IllegalArgumentException("sqlQuery must not be empty");
+        }
+        return withNativeSQL(sqlQuery.trim());
     }
 
     @Override
     public QueryBuilder<T> parameter(@NonNull String parameterName, Object parameterValue) {
-        // With predicate-based approach, parameters are handled automatically
-        throw new UnsupportedOperationException("Use predicate-based where methods instead");
+        if (parameterName.trim().isEmpty()) {
+            throw new IllegalArgumentException("parameterName must not be empty");
+        }
+        
+        Map<String, Object> newParams = new HashMap<>(namedParameters);
+        newParams.put(parameterName.trim(), parameterValue);
+        
+        return withNamedParameters(Collections.unmodifiableMap(newParams));
     }
 
     @Override
     public QueryBuilder<T> parameters(@NonNull Map<String, Object> parameterMap) {
-        // With predicate-based approach, parameters are handled automatically
-        throw new UnsupportedOperationException("Use predicate-based where methods instead");
+        if (parameterMap.isEmpty()) {
+            return this; // No change needed
+        }
+        
+        Map<String, Object> newParams = new HashMap<>(namedParameters);
+        newParams.putAll(parameterMap);
+        
+        return withNamedParameters(Collections.unmodifiableMap(newParams));
     }
 
     // ==================== CACHING ====================
@@ -505,8 +545,14 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     @Override
     public QueryBuilder<T> hint(@NonNull String hintName, Object hintValue) {
-        // TODO: Implement query hints
-        throw new UnsupportedOperationException("Query hints not implemented yet");
+        if (hintName.trim().isEmpty()) {
+            throw new IllegalArgumentException("hintName must not be empty");
+        }
+        
+        Map<String, Object> newHints = new HashMap<>(queryHints);
+        newHints.put(hintName.trim(), hintValue);
+        
+        return withQueryHints(Collections.unmodifiableMap(newHints));
     }
 
     @Override
@@ -514,8 +560,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         if (fetchSize <= 0) {
             throw new IllegalArgumentException("fetchSize must be positive");
         }
-        // TODO: Implement fetch size
-        throw new UnsupportedOperationException("Fetch size not implemented yet");
+        return withFetchSize(fetchSize);
     }
 
     @Override
@@ -523,14 +568,12 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         if (timeoutSeconds <= 0) {
             throw new IllegalArgumentException("timeoutSeconds must be positive");
         }
-        // TODO: Implement query timeout
-        throw new UnsupportedOperationException("Query timeout not implemented yet");
+        return withTimeoutSeconds(timeoutSeconds);
     }
 
     @Override
     public QueryStats getExecutionStats() {
-        // TODO: Implement execution statistics
-        throw new UnsupportedOperationException("Execution stats not implemented yet");
+        return queryStats.sql(toSQL()).hints(getQueryHints());
     }
 
     // ==================== EXECUTION METHODS ====================
@@ -581,10 +624,49 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
         return new DynamicQueryImpl<>(findAll(), toSQL());
     }
 
+    /**
+     * Returns the immutable map of query hints for this builder.
+     *
+     * @return map of hint names to values
+     */
+    public Map<String, Object> getQueryHints() {
+        return Collections.unmodifiableMap(queryHints);
+    }
+
+    /**
+     * Returns the immutable map of all parameters from predicates in this builder.
+     * Used for parameter binding when executing queries.
+     *
+     * @return map of parameter names to values
+     */
+    public Map<String, Object> getParameters() {
+        Map<String, Object> allParameters = new HashMap<>();
+        
+        // Include named parameters for native queries
+        allParameters.putAll(namedParameters);
+        
+        // Collect parameters from WHERE predicates
+        for (Predicate predicate : predicates) {
+            allParameters.putAll(predicate.getParameters());
+        }
+        
+        // Collect parameters from HAVING predicates
+        for (Predicate havingPredicate : havingPredicates) {
+            allParameters.putAll(havingPredicate.getParameters());
+        }
+        
+        return Collections.unmodifiableMap(allParameters);
+    }
+
     // ==================== SQL GENERATION ====================
 
     @Override
     public String toSQL() {
+        // If native SQL is specified, return it directly
+        if (nativeSQL != null && !nativeSQL.trim().isEmpty()) {
+            return nativeSQL;
+        }
+        
         StringBuilder sb = new StringBuilder();
 
         // SELECT clause
