@@ -8,6 +8,7 @@ import com.github.query4j.examples.model.Order;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
@@ -40,29 +41,65 @@ public class BatchProcessingApp {
     private static final int MAX_RETRIES = 3;
     private static final int RETRY_DELAY_MS = 1000;
     
-    private final int batchSize;
+    private final BatchProcessingConfig config;
+    private final BatchMetrics metrics;
+    private final CircuitBreaker circuitBreaker;
     private final AtomicLong processedCount = new AtomicLong(0);
     private final AtomicLong errorCount = new AtomicLong(0);
     private final AtomicInteger currentPage = new AtomicInteger(0);
     
     /**
-     * Constructs a BatchProcessingApp with default batch size.
+     * Constructs a BatchProcessingApp with default configuration.
      */
     public BatchProcessingApp() {
-        this(DEFAULT_BATCH_SIZE);
+        this(new BatchProcessingConfig());
     }
     
     /**
-     * Constructs a BatchProcessingApp with specified batch size.
+     * Constructs a BatchProcessingApp with specified configuration.
+     * 
+     * @param config the batch processing configuration
+     * @throws IllegalArgumentException if config is null
+     */
+    public BatchProcessingApp(BatchProcessingConfig config) {
+        if (config == null) {
+            throw new IllegalArgumentException("Configuration must not be null");
+        }
+        
+        this.config = config;
+        this.metrics = new BatchMetrics();
+        this.circuitBreaker = new CircuitBreaker(
+            "BatchProcessing", 
+            config.getCircuitBreakerFailureThreshold(),
+            config.getCircuitBreakerMinimumThroughput(),
+            config.getCircuitBreakerTimeout()
+        );
+        
+        logger.info("BatchProcessingApp initialized with configuration: " + config);
+    }
+    
+    /**
+     * Legacy constructor for backward compatibility.
      * 
      * @param batchSize the number of records to process in each batch
      * @throws IllegalArgumentException if batchSize is not positive
+     * @deprecated Use {@link #BatchProcessingApp(BatchProcessingConfig)} instead
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public BatchProcessingApp(int batchSize) {
         if (batchSize <= 0) {
             throw new IllegalArgumentException("Batch size must be positive");
         }
-        this.batchSize = batchSize;
+        
+        this.config = new BatchProcessingConfig().setBatchSize(batchSize);
+        this.metrics = new BatchMetrics();
+        this.circuitBreaker = new CircuitBreaker(
+            "BatchProcessing", 
+            config.getCircuitBreakerFailureThreshold(),
+            config.getCircuitBreakerMinimumThroughput(),
+            config.getCircuitBreakerTimeout()
+        );
+        
         logger.info("BatchProcessingApp initialized with batch size: " + batchSize);
     }
     
@@ -116,6 +153,7 @@ public class BatchProcessingApp {
             // Process in batches with pagination
             Page<User> page;
             int pageNumber = 0;
+            int batchSize = config.getBatchSize();
             
             do {
                 page = processUserBatch(baseQuery, pageNumber);
@@ -149,13 +187,21 @@ public class BatchProcessingApp {
     private Page<User> processUserBatch(QueryBuilder<User> baseQuery, int pageNumber) {
         Page<User> page = null;
         int attempt = 0;
+        int maxRetries = config.getMaxRetries();
+        long retryDelayMs = config.getRetryDelay().toMillis();
+        int batchSize = config.getBatchSize();
         
-        while (attempt < MAX_RETRIES) {
+        while (attempt < maxRetries) {
             try {
-                // Fetch the page
-                page = baseQuery
-                    .page(pageNumber, batchSize)
-                    .findPage();
+                // Use circuit breaker pattern for resilience
+                page = circuitBreaker.execute(() -> {
+                    // Fetch the page with timeout configuration
+                    return baseQuery
+                        .timeout((int) config.getQueryTimeout().getSeconds())
+                        .fetchSize(batchSize)
+                        .page(pageNumber, batchSize)
+                        .findPage();
+                });
                 
                 List<User> users = page.getContent();
                 logger.fine("Processing batch " + pageNumber + " with " + users.size() + " users");
@@ -165,21 +211,24 @@ public class BatchProcessingApp {
                     processIndividualUser(user);
                 }
                 
+                // Update counters and metrics
                 processedCount.addAndGet(users.size());
                 currentPage.set(pageNumber);
+                metrics.recordProcessedRecords(users.size(), java.time.Duration.ofMillis(100)); // Estimated processing time
                 break; // Success, exit retry loop
                 
             } catch (Exception e) {
                 attempt++;
                 errorCount.incrementAndGet();
+                metrics.recordFailedRecords(1, e.getMessage());
                 
-                if (attempt >= MAX_RETRIES) {
-                    logger.log(Level.SEVERE, "Failed to process batch " + pageNumber + " after " + MAX_RETRIES + " attempts", e);
+                if (attempt >= maxRetries) {
+                    logger.log(Level.SEVERE, "Failed to process batch " + pageNumber + " after " + maxRetries + " attempts", e);
                     throw e;
                 } else {
-                    logger.log(Level.WARNING, "Batch " + pageNumber + " failed, attempt " + attempt + "/" + MAX_RETRIES, e);
+                    logger.log(Level.WARNING, "Batch " + pageNumber + " failed, attempt " + attempt + "/" + maxRetries, e);
                     try {
-                        Thread.sleep(RETRY_DELAY_MS * attempt); // Exponential backoff
+                        Thread.sleep(retryDelayMs * attempt); // Exponential backoff
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException("Interrupted during retry delay", ie);
@@ -243,7 +292,7 @@ public class BatchProcessingApp {
             
             do {
                 page = allUsersQuery
-                    .page(pageNumber, batchSize)
+                    .page(pageNumber, config.getBatchSize())
                     .findPage();
                 
                 List<User> users = page.getContent();
@@ -310,7 +359,7 @@ public class BatchProcessingApp {
             
             do {
                 page = orderQuery
-                    .page(pageNumber, batchSize)
+                    .page(pageNumber, config.getBatchSize())
                     .findPage();
                 
                 List<Order> orders = page.getContent();
@@ -467,9 +516,99 @@ public class BatchProcessingApp {
         }
     }
     
-    // Getters for testing
+    // Getters for testing and monitoring
     public long getProcessedCount() { return processedCount.get(); }
     public long getErrorCount() { return errorCount.get(); }
     public int getCurrentPage() { return currentPage.get(); }
-    public int getBatchSize() { return batchSize; }
+    public int getBatchSize() { return config.getBatchSize(); }
+    public BatchProcessingConfig getConfig() { return config; }
+    public BatchMetrics getMetrics() { return metrics; }
+    public CircuitBreaker getCircuitBreaker() { return circuitBreaker; }
+    
+    /**
+     * Provides comprehensive health check information.
+     * 
+     * @return health status with detailed metrics
+     */
+    public HealthStatus getHealthStatus() {
+        HealthStatus.HealthStatusBuilder builder = HealthStatus.builder();
+        
+        // Check overall processing health
+        long totalProcessed = processedCount.get();
+        long totalErrors = errorCount.get();
+        double errorRate = totalProcessed > 0 ? (double) totalErrors / totalProcessed : 0.0;
+        
+        if (errorRate > 0.1) { // More than 10% error rate
+            builder.status("UNHEALTHY").detail("error_rate", String.format("%.2f%%", errorRate * 100));
+        } else if (errorRate > 0.05) { // More than 5% error rate
+            builder.status("DEGRADED").detail("error_rate", String.format("%.2f%%", errorRate * 100));
+        } else {
+            builder.status("HEALTHY").detail("error_rate", String.format("%.2f%%", errorRate * 100));
+        }
+        
+        // Add circuit breaker status
+        builder.detail("circuit_breaker_state", circuitBreaker.getState().toString());
+        builder.detail("circuit_breaker_failure_count", String.valueOf(circuitBreaker.getFailureCount()));
+        
+        // Add processing statistics
+        builder.detail("processed_count", String.valueOf(totalProcessed));
+        builder.detail("error_count", String.valueOf(totalErrors));
+        builder.detail("current_page", String.valueOf(currentPage.get()));
+        builder.detail("batch_size", String.valueOf(config.getBatchSize()));
+        
+        // Add metrics if available
+        if (metrics != null) {
+            BatchMetrics.MetricsSnapshot snapshot = metrics.getSnapshot();
+            builder.detail("throughput_per_second", String.valueOf(snapshot.processedRecords));
+            builder.detail("failed_records", String.valueOf(snapshot.failedRecords));
+            builder.detail("error_rate", String.format("%.2f%%", snapshot.getErrorRate() * 100));
+            builder.detail("retry_rate", String.format("%.2f%%", snapshot.getRetryRate() * 100));
+        }
+        
+        return builder.build();
+    }
+    
+    /**
+     * Simple health status representation.
+     */
+    public static class HealthStatus {
+        private final String status;
+        private final Map<String, String> details;
+        
+        private HealthStatus(String status, Map<String, String> details) {
+            this.status = status;
+            this.details = details;
+        }
+        
+        public String getStatus() { return status; }
+        public Map<String, String> getDetails() { return details; }
+        
+        public static HealthStatusBuilder builder() {
+            return new HealthStatusBuilder();
+        }
+        
+        @Override
+        public String toString() {
+            return "HealthStatus{status='" + status + "', details=" + details + "}";
+        }
+        
+        public static class HealthStatusBuilder {
+            private String status = "UNKNOWN";
+            private final Map<String, String> details = new java.util.HashMap<>();
+            
+            public HealthStatusBuilder status(String status) {
+                this.status = status;
+                return this;
+            }
+            
+            public HealthStatusBuilder detail(String key, String value) {
+                this.details.put(key, value);
+                return this;
+            }
+            
+            public HealthStatus build() {
+                return new HealthStatus(status, java.util.Collections.unmodifiableMap(details));
+            }
+        }
+    }
 }
