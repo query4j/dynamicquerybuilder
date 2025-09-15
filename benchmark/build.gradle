@@ -82,6 +82,26 @@ task benchmark(type: JavaExec) {
     ]
 }
 
+// Task for generating CSV reports from all benchmarks
+task benchmarkCsv(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run all benchmarks and generate CSV output'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '-rf', 'csv',
+        '-rff', "${buildDir}/jmh-result.csv",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt'
+    ]
+}
+
 // Task for running pagination benchmarks specifically  
 task paginationBenchmark(type: JavaExec) {
     group = 'benchmark'
@@ -167,6 +187,49 @@ task optimizerProfilingStudy(type: JavaExec) {
         '-tu', 'us',
         '-bm', 'avgt',
         '-o', "${buildDir}/optimizer-profiling-study-report.txt"
+    ]
+}
+
+// Task for running core module benchmarks specifically (Issue #32)
+task coreModuleBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run JMH micro-benchmarks for core module operations (query construction, cloning, parameter extraction)'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'CoreModuleBenchmark.*',  // Only run core module benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/core-module-benchmark-result.json",
+        '-f', '1',
+        '-wi', '5',  // Warm-up iterations as specified in issue
+        '-i', '10',  // Measurement iterations as specified in issue
+        '-tu', 'us', // Microseconds as specified in issue
+        '-bm', 'avgt',
+        '-o', "${buildDir}/core-module-benchmark-report.txt"
+    ]
+}
+
+// Task for generating CSV reports from core module benchmarks
+task coreModuleBenchmarkCsv(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run core module benchmarks and generate CSV output'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'CoreModuleBenchmark.*',
+        '-rf', 'csv',
+        '-rff', "${buildDir}/core-module-benchmark-result.csv",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt'
     ]
 }
 
