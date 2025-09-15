@@ -29,7 +29,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
-    private static final AtomicLong PARAM_COUNTER = new AtomicLong(0);
+    @With 
+    private final AtomicLong paramCounter;
 
     @With
     @NonNull
@@ -97,7 +98,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
 
     // Default constructor for factory method
     public DynamicQueryBuilder(@NonNull Class<T> entityClass) {
-        this(entityClass, Collections.emptyList(), null, 0, 0, -1, false,
+        this(new AtomicLong(0), entityClass, Collections.emptyList(), null, 0, 0, -1, false,
                 Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList(), null, Collections.emptyMap(),
                 0, 0, Collections.emptyMap(), new QueryStatsImpl());
@@ -115,7 +116,7 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
             List<String> orderByClauses,
             List<String> groupByClauses,
             List<Predicate> havingPredicates) {
-        return new DynamicQueryBuilder<>(entityClass, predicates, nextLogicalOperator,
+        return new DynamicQueryBuilder<>(paramCounter, entityClass, predicates, nextLogicalOperator,
                 groupDepth, offset, limit, cacheEnabled, selectFields, joinClauses,
                 orderByClauses, groupByClauses, havingPredicates, nativeSQL, namedParameters,
                 fetchSize, timeoutSeconds, queryHints, queryStats);
@@ -775,27 +776,8 @@ public final class DynamicQueryBuilder<T> implements QueryBuilder<T> {
     }
 
     private String generateParamName(String baseName) {
-        // Generate parameter names that comply with strict validation
-        // Remove non-alphanumeric characters except underscores, ensure it starts with a letter
-        String sanitized = baseName.replaceAll("[^A-Za-z0-9_]", "");
-        
-        // Remove consecutive underscores
-        sanitized = sanitized.replaceAll("_{2,}", "_");
-        
-        // Remove leading and trailing underscores
-        sanitized = sanitized.replaceAll("^_+|_+$", "");
-        
-        // Ensure it starts with a letter
-        if (sanitized.isEmpty() || Character.isDigit(sanitized.charAt(0)) || sanitized.charAt(0) == '_') {
-            sanitized = "p" + sanitized;
-        }
-        
-        // If still empty, use default prefix
-        if (sanitized.isEmpty()) {
-            sanitized = "param";
-        }
-        
-        // Add unique suffix
-        return sanitized + "_" + PARAM_COUNTER.incrementAndGet();
+        // Generate simple parameter names like p1, p2, p3, etc.
+        // This ensures compatibility with tests and provides clean SQL output
+        return "p" + paramCounter.incrementAndGet();
     }
 }

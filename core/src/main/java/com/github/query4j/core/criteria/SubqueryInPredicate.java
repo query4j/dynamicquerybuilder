@@ -66,10 +66,6 @@ public class SubqueryInPredicate implements Predicate {
 
     @Override
     public Map<String, Object> getParameters() {
-        // Get parameters from subquery if it's a DynamicQueryBuilder
-        if (subquery instanceof com.github.query4j.core.impl.DynamicQueryBuilder) {
-            return ((com.github.query4j.core.impl.DynamicQueryBuilder<?>) subquery).getParameters();
-        }
-        return java.util.Collections.emptyMap();
+        return subquery.getParameters();
     }
 }
