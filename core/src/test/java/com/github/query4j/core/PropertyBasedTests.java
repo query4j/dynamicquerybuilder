@@ -600,12 +600,8 @@ class PropertyBasedTests {
         assertNotNull(builder.findOneAsync()); // This wraps findOne() in CompletableFuture so should be non-null
         assertNotNull(builder.build());
         
-        // getExecutionStats() throws UnsupportedOperationException, so test that instead
-        try {
-            builder.getExecutionStats();
-            fail("Expected UnsupportedOperationException");
-        } catch (UnsupportedOperationException e) {
-            // Expected behavior
-        }
+        // getExecutionStats() now works, so test it returns a valid object
+        assertNotNull(builder.getExecutionStats());
+        assertNotNull(builder.getExecutionStats().getGeneratedSQL());
     }
 }
