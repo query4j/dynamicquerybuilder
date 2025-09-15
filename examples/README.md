@@ -1,6 +1,36 @@
-# Query4j Spring Boot Integration Examples
+# Query4j Examples
 
-This module demonstrates how to integrate Query4j dynamic query builder with Spring Boot applications. It provides comprehensive examples of using Query4j's core, cache, and optimizer modules within a Spring Boot test harness.
+This module contains comprehensive examples and tutorials demonstrating the capabilities of the Query4j Dynamic Query Builder library. The examples range from basic usage patterns to advanced production-scale consumer applications.
+
+## 🚀 New: Consumer Applications
+
+**Three comprehensive example applications demonstrating real-world Query4j usage patterns:**
+
+### BatchProcessingApp
+Large-scale data processing with pagination, fault tolerance, and performance monitoring.
+```bash
+./gradlew :examples:run -PmainClass=com.github.query4j.examples.ConsumerAppsDemo -Pargs="batch"
+```
+
+### AsyncQueryApp  
+Concurrent query execution patterns with CompletableFuture and thread-safe operations.
+```bash
+./gradlew :examples:run -PmainClass=com.github.query4j.examples.ConsumerAppsDemo -Pargs="async"
+```
+
+### ComplexJoinsApp
+Advanced multi-table joins, dynamic filtering, and hierarchical data mapping.
+```bash
+./gradlew :examples:run -PmainClass=com.github.query4j.examples.ConsumerAppsDemo -Pargs="joins"
+```
+
+**📖 [Complete Consumer Apps Documentation](README-CONSUMER-APPS.md)**
+
+---
+
+## Spring Boot Integration Examples
+
+This module also demonstrates how to integrate Query4j dynamic query builder with Spring Boot applications. It provides comprehensive examples of using Query4j's core, cache, and optimizer modules within a Spring Boot test harness.
 
 ## Overview
 
