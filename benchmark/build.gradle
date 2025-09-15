@@ -241,3 +241,45 @@ task benchmarkHelp(type: JavaExec) {
     mainClass = 'org.openjdk.jmh.Main'
     args = ['-h']
 }
+
+// Task for generating HTML reports from JSON results
+task generateCoreModuleHtmlReport(type: Exec) {
+    group = 'benchmark'
+    description = 'Generate HTML report from core module benchmark JSON results'
+    
+    commandLine 'python3', 
+        "${projectDir}/src/main/resources/generate-html-report.py",
+        "${buildDir}/core-module-benchmark-result.json",
+        "${buildDir}/core-module-benchmark-report.html"
+    
+    doFirst {
+        if (!file("${buildDir}/core-module-benchmark-result.json").exists()) {
+            throw new GradleException("No JSON results found. Please run coreModuleBenchmark task first.")
+        }
+    }
+    
+    doLast {
+        logger.lifecycle "HTML report generated: ${buildDir}/core-module-benchmark-report.html"
+    }
+}
+
+// Task for generating HTML reports from general benchmark JSON results
+task generateHtmlReport(type: Exec) {
+    group = 'benchmark'
+    description = 'Generate HTML report from benchmark JSON results'
+    
+    commandLine 'python3', 
+        "${projectDir}/src/main/resources/generate-html-report.py",
+        "${buildDir}/jmh-result.json",
+        "${buildDir}/jmh-report.html"
+    
+    doFirst {
+        if (!file("${buildDir}/jmh-result.json").exists()) {
+            throw new GradleException("No JSON results found. Please run benchmark task first.")
+        }
+    }
+    
+    doLast {
+        logger.lifecycle "HTML report generated: ${buildDir}/jmh-report.html"
+    }
+}
