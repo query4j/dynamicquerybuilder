@@ -157,8 +157,8 @@ task jacocoRootCoverageVerification(type: JacocoCoverageVerification) {
     violationRules {
         rule {
             limit {
-                // Temporary target - increase gradually toward 95%
-                minimum = 0.26
+                // Target 85% coverage as requested
+                minimum = 0.85
             }
         }
     }

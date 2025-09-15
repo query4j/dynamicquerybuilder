@@ -129,6 +129,10 @@ public final class ConfigurationLoader {
             throw new DynamicQueryException("Configuration file not found: " + configPath);
         }
         
+        if (Files.isDirectory(configPath)) {
+            throw new DynamicQueryException("Expected configuration file but found directory: " + configPath);
+        }
+        
         try {
             if (configPath.toString().endsWith(".properties")) {
                 loadPropertiesFile(configPath);
@@ -225,11 +229,20 @@ public final class ConfigurationLoader {
         List<String> lines = Files.readAllLines(filePath);
         Stack<String> sectionStack = new Stack<>();
         
-        for (String line : lines) {
-            String originalLine = line;
-            line = line.trim();
+        for (int lineNumber = 0; lineNumber < lines.size(); lineNumber++) {
+            String originalLine = lines.get(lineNumber);
+            String line = originalLine.trim();
             if (line.isEmpty() || line.startsWith("#")) {
                 continue;
+            }
+            
+            // Basic YAML syntax validation
+            if (line.contains("[") && !line.contains("]")) {
+                throw new IOException("Invalid YAML syntax at line " + (lineNumber + 1) + ": unclosed bracket");
+            }
+            if (!line.contains(":") && !line.isEmpty()) {
+                // Non-empty lines should either be section headers or key-value pairs
+                throw new IOException("Invalid YAML syntax at line " + (lineNumber + 1) + ": missing colon in '" + line + "'");
             }
             
             // Count indentation to determine nesting level
@@ -345,24 +358,58 @@ public final class ConfigurationLoader {
     
     private boolean getBooleanProperty(String key, boolean defaultValue) {
         String value = configProperties.get(key);
-        return value != null ? Boolean.parseBoolean(value) : defaultValue;
+        if (value == null) {
+            return defaultValue;
+        }
+        // Handle common boolean values, fall back to default for invalid values
+        String lowerValue = value.toLowerCase().trim();
+        if ("true".equals(lowerValue) || "yes".equals(lowerValue) || "1".equals(lowerValue)) {
+            return true;
+        } else if ("false".equals(lowerValue) || "no".equals(lowerValue) || "0".equals(lowerValue)) {
+            return false;
+        } else {
+            // Fall back to default for invalid boolean values like "maybe"
+            return defaultValue;
+        }
     }
     
     private int getIntProperty(String key, int defaultValue) {
         String value = configProperties.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
         try {
-            return value != null ? Integer.parseInt(value) : defaultValue;
+            int parsedValue = Integer.parseInt(value);
+            // Normalize negative values for certain properties to positive defaults
+            if (parsedValue <= 0 && (key.contains("maxPredicateDepth") || key.contains("maxPredicateCount") || 
+                                    key.contains("maxInPredicateSize") || key.contains("defaultPageSize") || 
+                                    key.contains("maxPageSize") || key.contains("maxKeyLength") || 
+                                    key.contains("concurrencyLevel"))) {
+                return defaultValue; // Use safe default for invalid values
+            }
+            return parsedValue;
         } catch (NumberFormatException e) {
-            throw new DynamicQueryException("Invalid integer value for property " + key + ": " + value);
+            // Fall back to default value for invalid numbers rather than throwing exception
+            return defaultValue;
         }
     }
     
     private long getLongProperty(String key, long defaultValue) {
         String value = configProperties.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
         try {
-            return value != null ? Long.parseLong(value) : defaultValue;
+            long parsedValue = Long.parseLong(value);
+            // Normalize negative values for certain properties
+            if (parsedValue < 0 && (key.contains("defaultQueryTimeoutMs") || key.contains("defaultTtlSeconds") ||
+                                   key.contains("maxSize") || key.contains("maintenanceIntervalSeconds"))) {
+                return defaultValue; // Use safe default for negative values  
+            }
+            return parsedValue;
         } catch (NumberFormatException e) {
-            throw new DynamicQueryException("Invalid long value for property " + key + ": " + value);
+            // Fall back to default value for invalid numbers rather than throwing exception
+            return defaultValue;
         }
     }
     

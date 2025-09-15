@@ -1,6 +1,5 @@
 package com.github.query4j.core.config;
 
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -19,92 +18,207 @@ import lombok.Value;
  * @since 1.0.0
  */
 @Value
-@Builder
 public class CoreConfig {
     
     /**
      * Default query timeout in milliseconds.
      * Zero or negative values disable timeout.
      */
-    @Builder.Default
-    long defaultQueryTimeoutMs = 30_000L; // 30 seconds
+    long defaultQueryTimeoutMs;
     
     /**
      * Maximum allowed predicate depth for nested logical operations.
      * Helps prevent overly complex queries that could impact performance.
      */
-    @Builder.Default
-    int maxPredicateDepth = 10;
+    int maxPredicateDepth;
     
     /**
      * Maximum number of predicates allowed in a single query.
      * Prevents excessive query complexity.
      */
-    @Builder.Default
-    int maxPredicateCount = 50;
+    int maxPredicateCount;
     
     /**
      * Enable or disable LIKE predicate support.
      */
-    @Builder.Default
-    boolean likePredacatesEnabled = true;
+    boolean likePredacatesEnabled;
     
     /**
      * Enable or disable IN predicate support.
      */
-    @Builder.Default
-    boolean inPredicatesEnabled = true;
+    boolean inPredicatesEnabled;
     
     /**
      * Enable or disable BETWEEN predicate support.
      */
-    @Builder.Default
-    boolean betweenPredicatesEnabled = true;
+    boolean betweenPredicatesEnabled;
     
     /**
      * Enable or disable NULL/NOT NULL predicate support.
      */
-    @Builder.Default
-    boolean nullPredicatesEnabled = true;
+    boolean nullPredicatesEnabled;
     
     /**
      * Maximum number of items allowed in IN predicates.
      * Prevents performance issues with excessive IN clause sizes.
      */
-    @Builder.Default
-    int maxInPredicateSize = 1000;
+    int maxInPredicateSize;
     
     /**
      * Enable strict field validation using regex patterns.
      */
-    @Builder.Default
-    boolean strictFieldValidation = true;
+    boolean strictFieldValidation;
     
     /**
      * Enable parameter name collision detection.
      * When enabled, throws exception if parameter names would collide.
      */
-    @Builder.Default
-    boolean parameterCollisionDetection = true;
+    boolean parameterCollisionDetection;
     
     /**
      * Default page size for pagination when not specified.
      */
-    @Builder.Default
-    int defaultPageSize = 20;
+    int defaultPageSize;
     
     /**
      * Maximum allowed page size to prevent memory issues.
      */
-    @Builder.Default
-    int maxPageSize = 1000;
+    int maxPageSize;
     
     /**
      * Enable query statistics collection.
      * When disabled, improves performance but reduces observability.
      */
-    @Builder.Default
-    boolean queryStatisticsEnabled = true;
+    boolean queryStatisticsEnabled;
+    
+    /**
+     * Private constructor for builder use.
+     */
+    private CoreConfig(long defaultQueryTimeoutMs, int maxPredicateDepth, int maxPredicateCount,
+                      boolean likePredacatesEnabled, boolean inPredicatesEnabled, 
+                      boolean betweenPredicatesEnabled, boolean nullPredicatesEnabled,
+                      int maxInPredicateSize, boolean strictFieldValidation,
+                      boolean parameterCollisionDetection, int defaultPageSize, 
+                      int maxPageSize, boolean queryStatisticsEnabled) {
+        this.defaultQueryTimeoutMs = defaultQueryTimeoutMs;
+        this.maxPredicateDepth = maxPredicateDepth;
+        this.maxPredicateCount = maxPredicateCount;
+        this.likePredacatesEnabled = likePredacatesEnabled;
+        this.inPredicatesEnabled = inPredicatesEnabled;
+        this.betweenPredicatesEnabled = betweenPredicatesEnabled;
+        this.nullPredicatesEnabled = nullPredicatesEnabled;
+        this.maxInPredicateSize = maxInPredicateSize;
+        this.strictFieldValidation = strictFieldValidation;
+        this.parameterCollisionDetection = parameterCollisionDetection;
+        this.defaultPageSize = defaultPageSize;
+        this.maxPageSize = maxPageSize;
+        this.queryStatisticsEnabled = queryStatisticsEnabled;
+    }
+    
+    /**
+     * Creates a new builder for CoreConfig.
+     *
+     * @return new CoreConfig builder
+     */
+    public static CoreConfigBuilder builder() {
+        return new CoreConfigBuilder();
+    }
+    
+    /**
+     * Builder class for CoreConfig with validation.
+     */
+    public static class CoreConfigBuilder {
+        private long defaultQueryTimeoutMs = 30_000L; // 30 seconds
+        private int maxPredicateDepth = 10;
+        private int maxPredicateCount = 50;
+        private boolean likePredacatesEnabled = true;
+        private boolean inPredicatesEnabled = true;
+        private boolean betweenPredicatesEnabled = true;
+        private boolean nullPredicatesEnabled = true;
+        private int maxInPredicateSize = 1000;
+        private boolean strictFieldValidation = true;
+        private boolean parameterCollisionDetection = true;
+        private int defaultPageSize = 20;
+        private int maxPageSize = 1000;
+        private boolean queryStatisticsEnabled = true;
+        
+        public CoreConfigBuilder defaultQueryTimeoutMs(long defaultQueryTimeoutMs) {
+            this.defaultQueryTimeoutMs = defaultQueryTimeoutMs;
+            return this;
+        }
+        
+        public CoreConfigBuilder maxPredicateDepth(int maxPredicateDepth) {
+            this.maxPredicateDepth = maxPredicateDepth;
+            return this;
+        }
+        
+        public CoreConfigBuilder maxPredicateCount(int maxPredicateCount) {
+            this.maxPredicateCount = maxPredicateCount;
+            return this;
+        }
+        
+        public CoreConfigBuilder likePredacatesEnabled(boolean likePredacatesEnabled) {
+            this.likePredacatesEnabled = likePredacatesEnabled;
+            return this;
+        }
+        
+        public CoreConfigBuilder inPredicatesEnabled(boolean inPredicatesEnabled) {
+            this.inPredicatesEnabled = inPredicatesEnabled;
+            return this;
+        }
+        
+        public CoreConfigBuilder betweenPredicatesEnabled(boolean betweenPredicatesEnabled) {
+            this.betweenPredicatesEnabled = betweenPredicatesEnabled;
+            return this;
+        }
+        
+        public CoreConfigBuilder nullPredicatesEnabled(boolean nullPredicatesEnabled) {
+            this.nullPredicatesEnabled = nullPredicatesEnabled;
+            return this;
+        }
+        
+        public CoreConfigBuilder maxInPredicateSize(int maxInPredicateSize) {
+            this.maxInPredicateSize = maxInPredicateSize;
+            return this;
+        }
+        
+        public CoreConfigBuilder strictFieldValidation(boolean strictFieldValidation) {
+            this.strictFieldValidation = strictFieldValidation;
+            return this;
+        }
+        
+        public CoreConfigBuilder parameterCollisionDetection(boolean parameterCollisionDetection) {
+            this.parameterCollisionDetection = parameterCollisionDetection;
+            return this;
+        }
+        
+        public CoreConfigBuilder defaultPageSize(int defaultPageSize) {
+            this.defaultPageSize = defaultPageSize;
+            return this;
+        }
+        
+        public CoreConfigBuilder maxPageSize(int maxPageSize) {
+            this.maxPageSize = maxPageSize;
+            return this;
+        }
+        
+        public CoreConfigBuilder queryStatisticsEnabled(boolean queryStatisticsEnabled) {
+            this.queryStatisticsEnabled = queryStatisticsEnabled;
+            return this;
+        }
+        
+        /**
+         * Builds the CoreConfig.
+         *
+         * @return CoreConfig instance
+         */
+        public CoreConfig build() {
+            return new CoreConfig(defaultQueryTimeoutMs, maxPredicateDepth, maxPredicateCount,
+                    likePredacatesEnabled, inPredicatesEnabled, betweenPredicatesEnabled,
+                    nullPredicatesEnabled, maxInPredicateSize, strictFieldValidation,
+                    parameterCollisionDetection, defaultPageSize, maxPageSize, queryStatisticsEnabled);
+        }
+    }
     
     /**
      * Creates a default configuration instance.

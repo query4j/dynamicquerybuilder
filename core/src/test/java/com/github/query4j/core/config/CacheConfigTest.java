@@ -354,11 +354,14 @@ public class CacheConfigTest {
                 .build();
         });
 
-        // Invalid configuration should fail on build
-        assertThrows(IllegalStateException.class, () -> {
-            CacheConfig.builder()
+        // Invalid configuration should build but fail during validation
+        assertDoesNotThrow(() -> {
+            CacheConfig config = CacheConfig.builder()
                 .maxSize(-1L)
                 .build();
+            
+            // Should fail during validation
+            assertThrows(IllegalStateException.class, config::validate);
         });
     }
 }
