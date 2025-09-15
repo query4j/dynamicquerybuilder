@@ -70,15 +70,19 @@ public class BatchProcessingConfig {
     }
     
     private void loadFromProperties(Properties properties) {
-        batchSize = Integer.parseInt(properties.getProperty("batch.size", String.valueOf(batchSize)));
-        maxRetries = Integer.parseInt(properties.getProperty("batch.retries.max", String.valueOf(maxRetries)));
-        retryDelay = Duration.ofMillis(Integer.parseInt(properties.getProperty("batch.retries.delay.ms", String.valueOf(retryDelay.toMillis()))));
-        
-        threadPoolSize = Integer.parseInt(properties.getProperty("thread.pool.size", String.valueOf(threadPoolSize)));
-        connectionPoolSize = Integer.parseInt(properties.getProperty("connection.pool.size", String.valueOf(connectionPoolSize)));
-        
-        metricsEnabled = Boolean.parseBoolean(properties.getProperty("metrics.enabled", String.valueOf(metricsEnabled)));
-        logLevel = properties.getProperty("log.level", logLevel);
+        try {
+            batchSize = Integer.parseInt(properties.getProperty("batch.size", String.valueOf(batchSize)));
+            maxRetries = Integer.parseInt(properties.getProperty("batch.retries.max", String.valueOf(maxRetries)));
+            retryDelay = Duration.ofMillis(Integer.parseInt(properties.getProperty("batch.retries.delay.ms", String.valueOf(retryDelay.toMillis()))));
+            
+            threadPoolSize = Integer.parseInt(properties.getProperty("thread.pool.size", String.valueOf(threadPoolSize)));
+            connectionPoolSize = Integer.parseInt(properties.getProperty("connection.pool.size", String.valueOf(connectionPoolSize)));
+            
+            metricsEnabled = Boolean.parseBoolean(properties.getProperty("metrics.enabled", String.valueOf(metricsEnabled)));
+            logLevel = properties.getProperty("log.level", logLevel);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid configuration property value", e);
+        }
     }
     
     private int getIntEnv(String name, int defaultValue) {
@@ -86,7 +90,14 @@ public class BatchProcessingConfig {
         if (value == null) {
             value = System.getProperty(name.toLowerCase().replace("_", "."));
         }
-        return value != null ? Integer.parseInt(value) : defaultValue;
+        if (value != null) {
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid integer value for " + name + ": " + value, e);
+            }
+        }
+        return defaultValue;
     }
     
     private boolean getBooleanEnv(String name, boolean defaultValue) {

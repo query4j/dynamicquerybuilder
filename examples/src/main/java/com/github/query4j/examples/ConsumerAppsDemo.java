@@ -59,45 +59,45 @@ public class ConsumerAppsDemo {
      * Runs an interactive menu for selecting applications to run.
      */
     public void runInteractiveMenu() {
-        Scanner scanner = new Scanner(System.in);
-        
-        while (true) {
-            printMenu();
-            
-            System.out.print("Enter your choice (1-5): ");
-            String input = scanner.nextLine().trim();
-            
-            try {
-                int choice = Integer.parseInt(input);
+        try (Scanner scanner = new Scanner(System.in)) {
+            while (true) {
+                printMenu();
                 
-                switch (choice) {
-                    case 1:
-                        runBatchProcessingApp();
-                        break;
-                    case 2:
-                        runAsyncQueryApp();
-                        break;
-                    case 3:
-                        runComplexJoinsApp();
-                        break;
-                    case 4:
-                        runAllApplications();
-                        break;
-                    case 5:
-                        System.out.println("Goodbye!");
-                        return;
-                    default:
-                        System.out.println("Invalid choice. Please enter 1-5.");
+                System.out.print("Enter your choice (1-5): ");
+                String input = scanner.nextLine().trim();
+                
+                try {
+                    int choice = Integer.parseInt(input);
+                    
+                    switch (choice) {
+                        case 1:
+                            runBatchProcessingApp();
+                            break;
+                        case 2:
+                            runAsyncQueryApp();
+                            break;
+                        case 3:
+                            runComplexJoinsApp();
+                            break;
+                        case 4:
+                            runAllApplications();
+                            break;
+                        case 5:
+                            System.out.println("Goodbye!");
+                            return;
+                        default:
+                            System.out.println("Invalid choice. Please enter 1-5.");
+                    }
+                    
+                    System.out.println("\nPress Enter to continue...");
+                    scanner.nextLine();
+                    
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a number 1-5.");
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Error running application", e);
+                    System.out.println("Error: " + e.getMessage());
                 }
-                
-                System.out.println("\nPress Enter to continue...");
-                scanner.nextLine();
-                
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number 1-5.");
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error running application", e);
-                System.out.println("Error: " + e.getMessage());
             }
         }
     }
