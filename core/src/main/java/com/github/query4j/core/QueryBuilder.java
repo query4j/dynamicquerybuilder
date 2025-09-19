@@ -692,6 +692,14 @@ public interface QueryBuilder<T> {
     String toSQL();
 
     /**
+     * Returns the parameters map for this query.
+     * 
+     * @return Map containing parameter names and values, never null
+     * @since 1.0.0
+     */
+    Map<String, Object> getParameters();
+
+    /**
      * Returns query execution statistics and performance metrics.
      * 
      * @return QueryStats containing execution information, never null

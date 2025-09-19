@@ -154,39 +154,28 @@ public class DynamicQueryService {
      */
     private List<Customer> executeQueryWithNamedParameters(String sql, Map<String, Object> parameters, 
                                                            int page, int size) {
-        // Build parameterized SQL for H2 - safe from SQL injection
-        StringBuilder sqlBuilder = new StringBuilder(
-            "SELECT id, name, region, email, phone_number, credit_limit, active FROM customers WHERE 1=1");
+        // Convert named parameters to positional parameters for JdbcTemplate
         List<Object> args = new ArrayList<>();
-
-        // Add conditions with parameterized queries
+        String processedSql = sql;
+        
+        // Convert named parameter syntax (:paramName) to positional (?)
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            String paramName = entry.getKey();
-            Object value = entry.getValue();
-            
-            if (paramName.contains("region")) {
-                sqlBuilder.append(" AND region = ?");
-                args.add(value);
-            } else if (paramName.contains("active")) {
-                sqlBuilder.append(" AND active = ?");
-                args.add(value);
-            } else if (paramName.contains("creditLimit")) {
-                sqlBuilder.append(" AND credit_limit >= ?");
-                args.add(value);
+            String paramName = ":" + entry.getKey();
+            if (processedSql.contains(paramName)) {
+                processedSql = processedSql.replace(paramName, "?");
+                args.add(entry.getValue());
             }
         }
         
-        // Add proper pagination with LIMIT and OFFSET
-        int safeSize = Math.max(1, size);
-        int safePage = Math.max(1, page);
-        int offset = (safePage - 1) * safeSize;
+        // Ensure we have a proper table name (convert class name to table name)
+        processedSql = processedSql.replace("FROM Customer", "FROM customers");
         
-        sqlBuilder.append(" LIMIT ? OFFSET ?");
-        args.add(safeSize);
-        args.add(offset);
+        // Add proper field mappings if needed
+        processedSql = processedSql.replace("creditLimit", "credit_limit");
+        processedSql = processedSql.replace("phoneNumber", "phone_number");
         
-        log.debug("Executing parameterized SQL: {} with args: {}", sqlBuilder.toString(), args);
-        return jdbcTemplate.query(sqlBuilder.toString(), new CustomerRowMapper(), args.toArray());
+        log.debug("Executing SQL: {} with args: {}", processedSql, args);
+        return jdbcTemplate.query(processedSql, new CustomerRowMapper(), args.toArray());
     }
     
     /**

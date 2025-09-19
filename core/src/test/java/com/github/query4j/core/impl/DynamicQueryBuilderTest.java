@@ -1,6 +1,7 @@
 package com.github.query4j.core.impl;
 
 import com.github.query4j.core.QueryBuilder;
+import com.github.query4j.core.QueryStats;
 import com.github.query4j.core.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -599,36 +600,51 @@ class DynamicQueryBuilderTest {
     }
 
     @Nested
-    @DisplayName("Unsupported Operations")
-    class UnsupportedOperationTests {
+    @DisplayName("Implemented Operations")
+    class ImplementedOperationTests {
 
         @Test
-        @DisplayName("should throw UnsupportedOperationException for unimplemented methods")
-        void shouldThrowUnsupportedOperationExceptionForUnimplementedMethods() {
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.exists(builder));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.notExists(builder));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.in("field", builder));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.notIn("field", builder));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.customFunction("func", "field"));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.nativeQuery("SELECT * FROM table"));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.parameter("param", "value"));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.parameters(Collections.emptyMap()));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.hint("hint", "value"));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.fetchSize(100));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.timeout(30));
-            assertThrows(UnsupportedOperationException.class, 
-                () -> builder.getExecutionStats());
+        @DisplayName("should successfully execute implemented methods without throwing exceptions")
+        void shouldExecuteImplementedMethods() {
+            // Test subquery methods return new builders (no exception)
+            assertDoesNotThrow(() -> builder.exists(builder));
+            assertDoesNotThrow(() -> builder.notExists(builder));
+            assertDoesNotThrow(() -> builder.in("field", builder));
+            assertDoesNotThrow(() -> builder.notIn("field", builder));
+            
+            // Test advanced methods return new builders (no exception)
+            assertDoesNotThrow(() -> builder.customFunction("func", "field"));
+            assertDoesNotThrow(() -> builder.nativeQuery("SELECT * FROM table"));
+            assertDoesNotThrow(() -> builder.parameter("param", "value"));
+            assertDoesNotThrow(() -> builder.parameters(Collections.emptyMap()));
+            assertDoesNotThrow(() -> builder.hint("hint", "value"));
+            assertDoesNotThrow(() -> builder.fetchSize(100));
+            assertDoesNotThrow(() -> builder.timeout(30));
+            
+            // Test query statistics work
+            QueryStats stats = assertDoesNotThrow(() -> builder.getExecutionStats());
+            assertNotNull(stats);
+        }
+        
+        @Test
+        @DisplayName("should generate proper SQL for implemented methods")
+        void shouldGenerateProperSQLForImplementedMethods() {
+            // Test EXISTS subquery SQL generation
+            QueryBuilder<TestEntity> existsBuilder = builder.exists(
+                QueryBuilder.forEntity(TestEntity.class).where("active", true)
+            );
+            String existsSQL = existsBuilder.toSQL();
+            assertTrue(existsSQL.contains("EXISTS"));
+            
+            // Test custom function SQL generation
+            QueryBuilder<TestEntity> funcBuilder = builder.customFunction("UPPER", "name");
+            String funcSQL = funcBuilder.toSQL();
+            assertTrue(funcSQL.contains("UPPER(name)"));
+            
+            // Test native query
+            QueryBuilder<TestEntity> nativeBuilder = builder.nativeQuery("SELECT * FROM users WHERE active = 1");
+            String nativeSQL = nativeBuilder.toSQL();
+            assertEquals("SELECT * FROM users WHERE active = 1", nativeSQL);
         }
     }
 

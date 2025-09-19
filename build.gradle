@@ -51,20 +51,20 @@ subprojects {
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     }
 
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
         useJUnitPlatform()
         systemProperty 'file.encoding', 'UTF-8'
     }
 
-    tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
 
     // Add delombok task for JavaDoc generation
-    task delombok(type: JavaExec) {
+    tasks.register('delombok', JavaExec) {
         outputs.dir "$buildDir/delombok"
         inputs.files sourceSets.main.java.srcDirs
-        
+
         classpath = configurations.compileClasspath + configurations.annotationProcessor
         mainClass = 'lombok.launch.Main'
         args 'delombok'
@@ -73,15 +73,17 @@ subprojects {
         args sourceSets.main.java.srcDirs
     }
 
-    tasks.withType(Javadoc) {
-        dependsOn delombok
-        source = fileTree("$buildDir/delombok")
-        options.encoding = 'UTF-8'
-        options.addStringOption('Xdoclint:all,-missing', '-quiet')
-        failOnError = false
-        doFirst {
-            // Add the classpath including compiled classes
-            options.classpath = (configurations.compileClasspath + sourceSets.main.output.classesDirs).collect { it }
+    tasks.withType(Javadoc).tap {
+        configureEach {
+            dependsOn delombok
+            source = fileTree("$buildDir/delombok")
+            options.encoding = 'UTF-8'
+            options.addStringOption('Xdoclint:all,-missing', '-quiet')
+            failOnError = false
+            doFirst {
+                // Add the classpath including compiled classes
+                options.classpath = (configurations.compileClasspath + sourceSets.main.output.classesDirs).collect { it }
+            }
         }
     }
 }
@@ -91,20 +93,20 @@ jacoco {
     toolVersion = '0.8.10'
 }
 
-task jacocoRootReport(type: JacocoReport) {
+tasks.register('jacocoRootReport', JacocoReport) {
     description = 'Generates an aggregate report from all subprojects'
     group = 'reporting'
 
     // Only include certain subprojects in coverage
-    def coveredProjects = subprojects.findAll { 
-        it.name in ['core', 'cache', 'optimizer'] 
+    def coveredProjects = subprojects.findAll {
+        it.name in ['core', 'cache', 'optimizer']
     }
-    
+
     dependsOn(coveredProjects*.jacocoTestReport)
 
     additionalSourceDirs.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
     sourceDirectories.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
-    
+
     // Exclude example classes, benchmark entities, generated code, and main classes from coverage
     classDirectories.from(files(coveredProjects.sourceSets.main.output).asFileTree.matching {
         exclude '**/examples/**'
@@ -116,7 +118,7 @@ task jacocoRootReport(type: JacocoReport) {
         exclude '**/*_jmhType*'
         exclude '**/*_jmhTest*'
     })
-    
+
     executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
 
     reports {
@@ -126,20 +128,20 @@ task jacocoRootReport(type: JacocoReport) {
     }
 }
 
-task jacocoRootCoverageVerification(type: JacocoCoverageVerification) {
+tasks.register('jacocoRootCoverageVerification', JacocoCoverageVerification) {
     description = 'Verifies code coverage metrics based on specified rules.'
     group = 'verification'
 
     dependsOn jacocoRootReport
 
     // Only include certain subprojects in coverage
-    def coveredProjects = subprojects.findAll { 
-        it.name in ['core', 'cache', 'optimizer'] 
+    def coveredProjects = subprojects.findAll {
+        it.name in ['core', 'cache', 'optimizer']
     }
 
     additionalSourceDirs.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
     sourceDirectories.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
-    
+
     // Same exclusions as in jacocoRootReport
     classDirectories.from(files(coveredProjects.sourceSets.main.output).asFileTree.matching {
         exclude '**/examples/**'
@@ -151,14 +153,13 @@ task jacocoRootCoverageVerification(type: JacocoCoverageVerification) {
         exclude '**/*_jmhType*'
         exclude '**/*_jmhTest*'
     })
-    
+
     executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
 
     violationRules {
         rule {
             limit {
-                // Target 85% coverage as requested
-                minimum = 0.85
+                minimum = 0.95
             }
         }
     }

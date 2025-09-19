@@ -14,9 +14,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -47,21 +49,24 @@ class SpringBootIntegrationTest {
     @Autowired
     private OrderRepository orderRepository;
     
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+    
     @BeforeEach
-    @Transactional
     void setUp() {
         // Reset cache statistics for clean test state
         CacheStatistics stats = dynamicQueryService.getCacheStatistics();
         stats.reset();
         
-        // Insert test data programmatically
-        setupTestData();
+        // Insert test data programmatically if not already present
+        setupTestDataIfNeeded();
     }
     
-    @Transactional
-    private void setupTestData() {
-        // Create and save test customers using repository
-        if (customerRepository.count() == 0) {
+    private void setupTestDataIfNeeded() {
+        // Use TransactionTemplate to ensure data is committed
+        transactionTemplate.execute(status -> {
+            // Create and save test customers using repository
+            if (customerRepository.count() == 0) {
             List<Customer> customers = List.of(
                 Customer.builder().name("Alice Johnson").region("North").email("alice.johnson@example.com")
                     .phoneNumber("555-0101").creditLimit(5000.0).active(true).build(),
@@ -95,7 +100,9 @@ class SpringBootIntegrationTest {
                 Order.builder().customer(eve).total(new BigDecimal("50.00"))
                     .placedAt(java.time.LocalDateTime.now().minusDays(3)).status("PENDING").build()
             ));
-        }
+            }
+            return null; // TransactionTemplate callback return
+        });
     }
     
     @Nested
