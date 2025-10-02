@@ -1,0 +1,285 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+description = 'JMH Performance Benchmarks for Query4j Dynamic Query Builder'
+
+dependencies {
+    // Core module for benchmarking
+    implementation project(':core')
+    
+    // Optimizer module for performance impact benchmarking
+    implementation project(':optimizer')
+    
+    // JMH dependencies
+    implementation "org.openjdk.jmh:jmh-core:${jmhVersion}"
+    annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:${jmhVersion}"
+    
+    // Baseline libraries for comparison
+    implementation 'org.hibernate.orm:hibernate-core:6.2.7.Final'
+    implementation 'org.hibernate.orm:hibernate-hikaricp:6.2.7.Final'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    
+    // MyBatis for comparison
+    implementation 'org.mybatis:mybatis:3.5.13'
+    implementation 'org.mybatis:mybatis-spring:3.0.2'
+    
+    // H2 Database for benchmarking
+    implementation 'com.h2database:h2:2.2.220'
+    
+    // HikariCP connection pooling
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+    
+    // SLF4J for logging
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'org.slf4j:slf4j-simple:2.0.7'
+}
+
+// Configure the main class for JMH
+application {
+    mainClass = 'org.openjdk.jmh.Main'
+}
+
+// Create fat JAR for benchmarks - equivalent to Maven's shade plugin
+task benchmarkJar(type: Jar) {
+    archiveBaseName = 'benchmarks'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'classes'
+    
+    manifest {
+        attributes 'Main-Class': 'org.openjdk.jmh.Main'
+    }
+    
+    from sourceSets.main.output
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA' 
+    exclude 'META-INF/*.RSA'
+}
+
+// Task for running benchmarks - equivalent to Maven benchmark profile
+task benchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run JMH benchmarks'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '-rf', 'json',
+        '-rff', "${buildDir}/jmh-result.json",
+        '-f', '1',
+        '-wi', '5', 
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/jmh-report.txt"
+    ]
+}
+
+// Task for generating CSV reports from all benchmarks
+task benchmarkCsv(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run all benchmarks and generate CSV output'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '-rf', 'csv',
+        '-rff', "${buildDir}/jmh-result.csv",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt'
+    ]
+}
+
+// Task for running pagination benchmarks specifically  
+task paginationBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run pagination benchmarks comparing DynamicQueryBuilder vs baseline libraries'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'PaginationBenchmark',  // Only run pagination benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/pagination-benchmark-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10', 
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/pagination-benchmark-report.txt"
+    ]
+}
+
+// Task for running optimizer benchmarks specifically (Issue #24)
+task optimizerBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run optimizer performance benchmarks measuring analysis overhead vs baseline libraries'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'Optimizer.*',  // Only run optimizer benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/optimizer-benchmark-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10', 
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/optimizer-benchmark-report.txt"
+    ]
+}
+
+// Task for running baseline comparison benchmarks  
+task baselineComparisonBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run baseline library comparison benchmarks (Hibernate, JDBC vs Query4j+Optimizer)'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'OptimizerVsBaseline.*',  // Only run baseline comparison benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/baseline-comparison-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10', 
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/baseline-comparison-report.txt"
+    ]
+}
+
+// Task for running complete optimizer profiling study (Issue #24)
+task optimizerProfilingStudy(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run complete optimizer profiling study including all optimization and baseline benchmarks'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        '(Optimizer|OptimizerVsBaseline).*',  // Run all optimizer-related benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/optimizer-profiling-study-result.json",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '15',  // More iterations for comprehensive study
+        '-tu', 'us',
+        '-bm', 'avgt',
+        '-o', "${buildDir}/optimizer-profiling-study-report.txt"
+    ]
+}
+
+// Task for running core module benchmarks specifically (Issue #32)
+task coreModuleBenchmark(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run JMH micro-benchmarks for core module operations (query construction, cloning, parameter extraction)'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'CoreModuleBenchmark.*',  // Only run core module benchmarks
+        '-rf', 'json',
+        '-rff', "${buildDir}/core-module-benchmark-result.json",
+        '-f', '1',
+        '-wi', '5',  // Warm-up iterations as specified in issue
+        '-i', '10',  // Measurement iterations as specified in issue
+        '-tu', 'us', // Microseconds as specified in issue
+        '-bm', 'avgt',
+        '-o', "${buildDir}/core-module-benchmark-report.txt"
+    ]
+}
+
+// Task for generating CSV reports from core module benchmarks
+task coreModuleBenchmarkCsv(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Run core module benchmarks and generate CSV output'
+    dependsOn 'classes'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    
+    args = [
+        'CoreModuleBenchmark.*',
+        '-rf', 'csv',
+        '-rff', "${buildDir}/core-module-benchmark-result.csv",
+        '-f', '1',
+        '-wi', '5',
+        '-i', '10',
+        '-tu', 'us',
+        '-bm', 'avgt'
+    ]
+}
+
+// Additional benchmark tasks for convenience
+task benchmarkHelp(type: JavaExec) {
+    group = 'benchmark'
+    description = 'Show JMH help'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.openjdk.jmh.Main'
+    args = ['-h']
+}
+
+// Task for generating HTML reports from JSON results
+task generateCoreModuleHtmlReport(type: Exec) {
+    group = 'benchmark'
+    description = 'Generate HTML report from core module benchmark JSON results'
+    
+    commandLine 'python3', 
+        "${projectDir}/src/main/resources/generate-html-report.py",
+        "${buildDir}/core-module-benchmark-result.json",
+        "${buildDir}/core-module-benchmark-report.html"
+    
+    doFirst {
+        if (!file("${buildDir}/core-module-benchmark-result.json").exists()) {
+            throw new GradleException("No JSON results found. Please run coreModuleBenchmark task first.")
+        }
+    }
+    
+    doLast {
+        logger.lifecycle "HTML report generated: ${buildDir}/core-module-benchmark-report.html"
+    }
+}
+
+// Task for generating HTML reports from general benchmark JSON results
+task generateHtmlReport(type: Exec) {
+    group = 'benchmark'
+    description = 'Generate HTML report from benchmark JSON results'
+    
+    commandLine 'python3', 
+        "${projectDir}/src/main/resources/generate-html-report.py",
+        "${buildDir}/jmh-result.json",
+        "${buildDir}/jmh-report.html"
+    
+    doFirst {
+        if (!file("${buildDir}/jmh-result.json").exists()) {
+            throw new GradleException("No JSON results found. Please run benchmark task first.")
+        }
+    }
+    
+    doLast {
+        logger.lifecycle "HTML report generated: ${buildDir}/jmh-report.html"
+    }
+}

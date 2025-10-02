@@ -1,0 +1,244 @@
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'com.github.query4j'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+// Apply common configuration to all subprojects
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'jacoco'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    // Common dependency versions
+    ext {
+        junitVersion = '5.9.3'
+        lombokVersion = '1.18.30'
+        jqwikVersion = '1.7.4'
+        jmhVersion = '1.37'
+    }
+
+    dependencies {
+        // Apply common test dependencies to all modules
+        testImplementation platform("org.junit:junit-bom:${junitVersion}")
+        testImplementation "org.junit.jupiter:junit-jupiter"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+        
+        // Lombok for all modules
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+        testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        systemProperty 'file.encoding', 'UTF-8'
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    // Add delombok task for JavaDoc generation
+    tasks.register('delombok', JavaExec) {
+        outputs.dir "$buildDir/delombok"
+        inputs.files sourceSets.main.java.srcDirs
+
+        classpath = configurations.compileClasspath + configurations.annotationProcessor
+        mainClass = 'lombok.launch.Main'
+        args 'delombok'
+        args '-d'
+        args "$buildDir/delombok"
+        args sourceSets.main.java.srcDirs
+        
+        // Use the same Java version as the build
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+        }
+    }
+
+    tasks.withType(Javadoc).tap {
+        configureEach {
+            dependsOn delombok
+            source = fileTree("$buildDir/delombok")
+            options.encoding = 'UTF-8'
+            options.addStringOption('Xdoclint:all,-missing', '-quiet')
+            failOnError = false
+            doFirst {
+                // Add the classpath including compiled classes
+                options.classpath = (configurations.compileClasspath + sourceSets.main.output.classesDirs).collect { it }
+            }
+        }
+    }
+
+    // Publishing configuration
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                
+                pom {
+                    name = "${project.group}:${project.name}"
+                    description = "Query4j Dynamic Query Builder - ${project.name} module"
+                    url = 'https://github.com/query4j/dynamicquerybuilder'
+                    
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+                    
+                    developers {
+                        developer {
+                            id = 'query4j'
+                            name = 'Query4j Team'
+                            email = 'team@query4j.com'
+                        }
+                    }
+                    
+                    scm {
+                        connection = 'scm:git:git://github.com/query4j/dynamicquerybuilder.git'
+                        developerConnection = 'scm:git:ssh://github.com/query4j/dynamicquerybuilder.git'
+                        url = 'https://github.com/query4j/dynamicquerybuilder'
+                    }
+                }
+            }
+        }
+        
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/query4j/dynamicquerybuilder")
+                credentials {
+                    username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                    password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+                }
+            }
+            
+            // Maven Central (OSSRH) - uncomment when ready
+            // maven {
+            //     name = "OSSRH"
+            //     url = version.endsWith('SNAPSHOT') ? 
+            //         uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") :
+            //         uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            //     credentials {
+            //         username = project.findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+            //         password = project.findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+            //     }
+            // }
+        }
+    }
+
+    // Signing configuration (optional, uncomment when needed for Maven Central)
+    // signing {
+    //     def signingKey = project.findProperty("signingKey") ?: System.getenv("SIGNING_KEY")
+    //     def signingPassword = project.findProperty("signingPassword") ?: System.getenv("SIGNING_PASSWORD")
+    //     if (signingKey && signingPassword) {
+    //         useInMemoryPgpKeys(signingKey, signingPassword)
+    //         sign publishing.publications.mavenJava
+    //     }
+    // }
+}
+
+// Configure JaCoCo for aggregate coverage reporting
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+tasks.register('jacocoRootReport', JacocoReport) {
+    description = 'Generates an aggregate report from all subprojects'
+    group = 'reporting'
+
+    // Only include certain subprojects in coverage
+    def coveredProjects = subprojects.findAll {
+        it.name in ['core', 'cache', 'optimizer']
+    }
+
+    dependsOn(coveredProjects*.jacocoTestReport)
+
+    additionalSourceDirs.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
+    sourceDirectories.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
+
+    // Exclude example classes, benchmark entities, generated code, and main classes from coverage
+    classDirectories.from(files(coveredProjects.sourceSets.main.output).asFileTree.matching {
+        exclude '**/examples/**'
+        exclude '**/benchmark/TestEntity.class'
+        exclude '**/benchmark/jmh_generated/**'
+        exclude '**/model/**'
+        exclude '**/*Main.class'
+        exclude '**/jmh_generated/**'
+        exclude '**/*_jmhType*'
+        exclude '**/*_jmhTest*'
+    })
+
+    executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+}
+
+tasks.register('jacocoRootCoverageVerification', JacocoCoverageVerification) {
+    description = 'Verifies code coverage metrics based on specified rules.'
+    group = 'verification'
+
+    dependsOn jacocoRootReport
+
+    // Only include certain subprojects in coverage
+    def coveredProjects = subprojects.findAll {
+        it.name in ['core', 'cache', 'optimizer']
+    }
+
+    additionalSourceDirs.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
+    sourceDirectories.from(files(coveredProjects.sourceSets.main.allSource.srcDirs))
+
+    // Same exclusions as in jacocoRootReport
+    classDirectories.from(files(coveredProjects.sourceSets.main.output).asFileTree.matching {
+        exclude '**/examples/**'
+        exclude '**/benchmark/TestEntity.class'
+        exclude '**/benchmark/jmh_generated/**'
+        exclude '**/model/**'
+        exclude '**/*Main.class'
+        exclude '**/jmh_generated/**'
+        exclude '**/*_jmhType*'
+        exclude '**/*_jmhTest*'
+    })
+
+    executionData.from(files(coveredProjects.jacocoTestReport.executionData).filter { it.exists() })
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.85
+            }
+        }
+    }
+}

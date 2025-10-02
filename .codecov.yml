@@ -1,0 +1,37 @@
+codecov:
+  require_ci_to_pass: yes
+  
+coverage:
+  status:
+    project:
+      default:
+        target: 85%
+        threshold: 1%
+    patch:
+      default:
+        target: 85%
+        threshold: 1%
+
+ignore:
+  - "build.gradle"
+  - "settings.gradle"
+  - "gradlew"
+  - "gradlew.bat"
+  - "gradle/**"
+  - "**/build/**"
+  - "**/*.gradle"
+  - "**/*.gradle.kts"
+  - "docs/**"
+  - "*.md"
+  - "**/*Main.java"
+  - "**/examples/**"
+  - "**/model/**"
+  - "**/benchmark/src/main/java/com/github/query4j/benchmark/TestEntity.java"
+  - "**/jmh_generated/**"
+  - "**/*_jmhType*"
+  - "**/*_jmhTest*"
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false

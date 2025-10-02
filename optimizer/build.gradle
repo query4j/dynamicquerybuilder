@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'SQL query analysis and optimization'
+
+dependencies {
+    // Core module dependency for QueryBuilder and predicate analysis
+    api project(':core')
+    
+    // Property-based testing with jqwik
+    testImplementation "net.jqwik:jqwik:${jqwikVersion}"
+    
+    // Mockito for testing
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    
+    // AssertJ for fluent assertions
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+}
+
+// Configure tests to include jqwik
+test {
+    // run all JUnit Platform engines (jqwik + junit-jupiter)
+    useJUnitPlatform()
+}
+
+// JaCoCo configuration for this module
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+test.finalizedBy jacocoTestReport
