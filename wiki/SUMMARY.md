@@ -339,7 +339,7 @@ The wiki is designed to be the **central, living repository** for Query4j docume
 
 ---
 
-**Created:** December 2024  
+**Created:** October 2025  
 **Version:** 1.0.0  
 **Status:** Ready for Publication  
 **Maintained by:** Query4j Development Team

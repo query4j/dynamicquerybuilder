@@ -165,7 +165,7 @@ Query4j is open source software licensed under the [Apache License 2.0](https://
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Current Version:** 1.0.0  
 **Maintained by:** Query4j Development Team
 

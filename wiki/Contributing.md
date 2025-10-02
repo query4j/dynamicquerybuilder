@@ -495,5 +495,5 @@ Your contributions help make Query4j better for everyone. We appreciate your tim
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Version:** 1.0.0

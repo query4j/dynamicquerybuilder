@@ -479,5 +479,5 @@ For questions about wiki maintenance:
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Maintained by:** Query4j Development Team

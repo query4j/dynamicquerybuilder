@@ -185,6 +185,6 @@ This benchmark suite provides comprehensive measurement of Query4j's optimizer p
 
 ---
 
-*Report Generated: December 2024*  
+*Report Generated: October 2025*  
 *Benchmark Framework: JMH 1.37*  
 *Query4j Version: 1.0.0-SNAPSHOT*

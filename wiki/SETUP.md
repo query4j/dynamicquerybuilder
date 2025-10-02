@@ -289,4 +289,4 @@ Need help with setup?
 
 **Setup Time:** ~10 minutes  
 **Maintenance:** Per [MAINTENANCE.md](MAINTENANCE.md)  
-**Last Updated:** December 2024
+**Last Updated:** October 2025

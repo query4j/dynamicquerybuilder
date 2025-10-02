@@ -415,5 +415,5 @@ diff baseline.txt feature.txt
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Version:** 1.0.0
