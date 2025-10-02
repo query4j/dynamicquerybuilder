@@ -76,9 +76,7 @@ public interface QueryBuilder<T> {
      * 
      * @param fieldName the field name, must not be null or empty
      * @param operator  the comparison operator (=, !=, &lt;, &lt;=, &gt;, &gt;=, LIKE), must not be null
-     *                  not be null
      * @param value     the comparison value, may be null for IS NULL/IS NOT NULL
-     *                  operators
      * @return a new QueryBuilder instance with the condition added
      * @throws IllegalArgumentException if fieldName or operator is null or empty,
      *                                  or operator is invalid
