@@ -313,7 +313,7 @@ Security researchers who have responsibly disclosed vulnerabilities will be ackn
 
 This security policy may be updated periodically. Check back for changes or watch the repository for updates.
 
-**Last Updated**: October 1, 2024  
+**Last Updated**: October 2, 2025  
 **Version**: 1.0
 
 ---

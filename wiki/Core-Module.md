@@ -647,5 +647,5 @@ See **[Error Handling](Error-Handling)** for complete error catalog.
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Version:** 1.0.0

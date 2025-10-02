@@ -1,6 +1,6 @@
 # 🎉 Announcing Query4j Dynamic Query Builder v1.0.0 - First Stable Release
 
-**Release Date:** October 1, 2024  
+**Release Date:** October 2, 2025
 **Status:** Production Ready 🚀
 
 ---
@@ -303,7 +303,7 @@ Love Query4j? Help us spread the word:
 ## Release Details
 
 - **Version**: 1.0.0
-- **Release Date**: October 1, 2024
+- **Release Date**: October 2, 2025
 - **License**: Apache 2.0
 - **Release Notes**: [RELEASE_NOTES_v1.0.0.md](https://github.com/query4j/dynamicquerybuilder/blob/master/RELEASE_NOTES_v1.0.0.md)
 - **Changelog**: [CHANGELOG.md](https://github.com/query4j/dynamicquerybuilder/blob/master/CHANGELOG.md)

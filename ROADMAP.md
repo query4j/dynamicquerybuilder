@@ -417,7 +417,7 @@ We value your input! Share your thoughts:
 ---
 
 **Roadmap Version**: 1.0  
-**Last Updated**: October 1, 2024  
+**Last Updated**: October 2, 2025  
 **Next Review**: January 1, 2025
 
 ---

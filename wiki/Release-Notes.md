@@ -2,7 +2,7 @@
 
 Query4j version history and changelog.
 
-## Current Version: 1.0.0 (December 2024)
+## Current Version: 1.0.0 (October 2025)
 
 ### Initial Release
 
@@ -357,5 +357,5 @@ We follow [Keep a Changelog](https://keepachangelog.com/) format:
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Current Version:** 1.0.0

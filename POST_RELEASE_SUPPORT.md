@@ -477,5 +477,5 @@ Thank you for using Query4j Dynamic Query Builder! Your support, feedback, and c
 
 ---
 
-*Last Updated: October 1, 2024*
+*Last Updated: October 2, 2025*
 *Version: 1.0.0*

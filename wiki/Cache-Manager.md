@@ -622,5 +622,5 @@ public void updateUser(User user) {
 
 ---
 
-**Last Updated:** December 2024  
+**Last Updated:** October 2025  
 **Version:** 1.0.0

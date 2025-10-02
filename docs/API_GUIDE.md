@@ -501,7 +501,7 @@ List<User> users = QueryBuilder.forEntity(User.class)
 **Current Stable Release: v1.0.0** 🎉
 
 #### Version History
-- **1.0.0** (2024-10-01): First stable release - Production ready
+- **1.0.0** (2025-10-02): First stable release - Production ready
   - Core query building with comprehensive predicate support
   - Cache module with LRU and TTL support
   - Optimizer module with query analysis and suggestions
