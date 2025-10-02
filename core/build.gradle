@@ -1,0 +1,45 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Core dynamic query builder functionality'
+
+dependencies {
+    // Property-based testing with jqwik
+    testImplementation "net.jqwik:jqwik:${jqwikVersion}"
+    
+    // H2 database for integration tests
+    testImplementation 'com.h2database:h2:2.2.224'
+    
+    // Mockito for testing defensive code branches
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+}
+
+// Configure tests to include jqwik
+test {
+    // run all JUnit Platform engines (jqwik + junit-jupiter)
+    useJUnitPlatform()
+}
+
+// JaCoCo configuration for this module
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    
+    // Exclude example classes, benchmark entities, and main classes from coverage
+    classDirectories.from(files(sourceSets.main.output).asFileTree.matching {
+        exclude '**/examples/**'
+        exclude '**/benchmark/TestEntity.class'
+        exclude '**/model/**'
+        exclude '**/*Main.class'
+    })
+}
+
+test.finalizedBy jacocoTestReport

@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Integration tests and benchmarks'
+
+task testJar(type: Jar) {
+    from sourceSets.test.output
+    archiveClassifier = 'tests'
+    dependsOn testClasses
+}
+
+configurations {
+    tests {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+        }
+    }
+}
+
+artifacts {
+    add('tests', testJar)
+}
+
+dependencies {
+    // Add integration test dependencies as needed
+    implementation project(':core')
+    implementation project(':cache')
+    implementation project(':optimizer')
+    testImplementation project(':core')
+    testImplementation project(':cache')
+    testImplementation project(':optimizer')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
+}

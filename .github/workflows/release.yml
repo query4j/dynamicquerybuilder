@@ -1,0 +1,315 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        default: 'false'
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      is_prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag or input
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if prerelease
+        id: check_prerelease
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "is_prerelease=${{ github.event.inputs.prerelease }}" >> $GITHUB_OUTPUT
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+              echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+
+  build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Update version in build.gradle
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          sed -i "s/version = '.*'/version = '$VERSION'/" build.gradle
+          cat build.gradle | grep "version ="
+
+      - name: Build all modules
+        run: ./gradlew clean build -x test
+
+      - name: Run all tests
+        run: ./gradlew test
+
+      - name: Generate coverage report
+        run: ./gradlew jacocoRootReport jacocoRootCoverageVerification
+
+      - name: Build artifacts (JAR, sources, javadoc)
+        run: ./gradlew assemble javadoc
+
+      - name: Archive release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            **/build/libs/*.jar
+            !**/build/libs/*-plain.jar
+            **/build/docs/javadoc/
+
+      - name: Build benchmark JAR
+        run: ./gradlew benchmark:benchmarkJar
+
+      - name: Archive benchmark JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-jar
+          path: benchmark/build/libs/benchmarks-*.jar
+
+  publish-github:
+    name: Publish to GitHub Releases
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: ./artifacts
+
+      - name: Download benchmark JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-jar
+          path: ./artifacts/benchmark
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          echo "## Query4j Dynamic Query Builder v$VERSION" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Changes in this release" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> RELEASE_NOTES.md
+          else
+            git log --pretty=format:"- %s (%h)" --max-count=20 >> RELEASE_NOTES.md
+          fi
+          
+          echo "" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Artifacts" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "- Core module: \`query4j-core-$VERSION.jar\`" >> RELEASE_NOTES.md
+          echo "- Cache module: \`query4j-cache-$VERSION.jar\`" >> RELEASE_NOTES.md
+          echo "- Optimizer module: \`query4j-optimizer-$VERSION.jar\`" >> RELEASE_NOTES.md
+          echo "- Benchmark suite: \`benchmarks-$VERSION.jar\`" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Documentation" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "- [JavaDoc Documentation](https://query4j.github.io/dynamicquerybuilder/)" >> RELEASE_NOTES.md
+          echo "- [API Guide](https://github.com/query4j/dynamicquerybuilder/blob/v$VERSION/docs/API_GUIDE.md)" >> RELEASE_NOTES.md
+          echo "- [Quick Start](https://github.com/query4j/dynamicquerybuilder/blob/v$VERSION/QUICKSTART.md)" >> RELEASE_NOTES.md
+          
+          cat RELEASE_NOTES.md
+
+      - name: Collect release files
+        run: |
+          mkdir -p release-files
+          find ./artifacts -name "*.jar" -type f ! -name "*-plain.jar" -exec cp {} release-files/ \;
+          ls -lh release-files/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release v${{ needs.validate.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
+          files: release-files/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Update version in build.gradle
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          sed -i "s/version = '.*'/version = '$VERSION'/" build.gradle
+
+      - name: Build artifacts
+        run: ./gradlew assemble
+
+      - name: Publish to GitHub Packages
+        run: ./gradlew publish || echo "Publishing not configured yet - skipping"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  publish-docs:
+    name: Publish Documentation
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Generate JavaDoc
+        run: ./gradlew javadoc
+
+      - name: Prepare documentation site
+        run: |
+          mkdir -p docs-site
+          cp -r core/build/docs/javadoc docs-site/core
+          cp -r cache/build/docs/javadoc docs-site/cache
+          cp -r optimizer/build/docs/javadoc docs-site/optimizer
+          
+          # Create index page
+          cat > docs-site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Query4j API Documentation</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; }
+                  h1 { color: #333; }
+                  ul { list-style-type: none; }
+                  li { margin: 10px 0; }
+                  a { color: #0066cc; text-decoration: none; font-size: 18px; }
+                  a:hover { text-decoration: underline; }
+              </style>
+          </head>
+          <body>
+              <h1>Query4j Dynamic Query Builder - API Documentation</h1>
+              <p>Version: ${{ needs.validate.outputs.version }}</p>
+              <ul>
+                  <li><a href="core/index.html">Core Module</a> - Query building and execution</li>
+                  <li><a href="cache/index.html">Cache Module</a> - Query caching strategies</li>
+                  <li><a href="optimizer/index.html">Optimizer Module</a> - Query optimization</li>
+              </ul>
+              <p><a href="https://github.com/query4j/dynamicquerybuilder">Back to GitHub Repository</a></p>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs-site
+          commit_message: "Deploy documentation for v${{ needs.validate.outputs.version }}"
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [validate, publish-github, publish-packages, publish-docs]
+    if: always()
+
+    steps:
+      - name: Prepare notification
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          STATUS="${{ job.status }}"
+          echo "Release v$VERSION completed with status: $STATUS"
+          
+      - name: Create issue for failed release
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Release v${{ needs.validate.outputs.version }} Failed',
+              body: 'The release pipeline failed. Please check the workflow logs for details.\n\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+              labels: ['release', 'bug', 'high-priority']
+            })

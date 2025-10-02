@@ -1,0 +1,58 @@
+Query4j GitHub Wiki Structure
+==============================
+
+wiki/
+├── Home.md                          (1,200 words) - Project vision, roadmap, navigation
+├── Getting-Started.md               (1,900 words) - Setup, installation, first query
+├── Core-Module.md                   (3,300 words) - QueryBuilder API, predicates, JOINs
+├── Cache-Manager.md                 (3,000 words) - Caching strategies, configuration
+├── Optimizer.md                     (3,500 words) - Query optimization, index suggestions
+├── Configuration.md                 (2,300 words) - Configuration options, sources
+├── API-Reference.md                 (2,400 words) - Complete API documentation
+├── Error-Handling.md                (2,800 words) - Exception catalog, troubleshooting
+├── Benchmarking.md                  (2,100 words) - Performance benchmarks, JMH results
+├── FAQ-and-Troubleshooting.md       (2,000 words) - Common questions and solutions
+├── Contributing.md                  (2,200 words) - Contribution guidelines, workflow
+├── Release-Notes.md                 (1,700 words) - Version history, changelog
+├── _Sidebar.md                      - Navigation menu for all pages
+├── _Footer.md                       - Footer with version info and links
+├── README.md                        (2,200 words) - Wiki overview and structure
+├── SETUP.md                         (1,300 words) - Quick setup guide
+├── MAINTENANCE.md                   (2,500 words) - Comprehensive maintenance workflow
+└── SUMMARY.md                       (2,100 words) - Complete package summary
+
+Total: 18 files, ~20,000 words, 150+ code examples
+
+Documentation Coverage
+======================
+✅ Getting Started & Tutorials
+✅ Core Functionality & API
+✅ Advanced Features (Cache, Optimizer)
+✅ Configuration & Best Practices
+✅ Error Handling & Troubleshooting
+✅ Performance & Benchmarking
+✅ Contributing & Community
+✅ Maintenance & Operations
+
+Navigation Structure
+===================
+Sidebar Navigation (_Sidebar.md) provides:
+- Quick links to all main pages
+- Organized by category
+- External links (GitHub, Issues, Discussions)
+
+Cross-References
+===============
+Each page includes:
+- Table of Contents
+- "See Also" sections
+- Internal wiki links
+- External reference links
+- Related documentation links
+
+Ready for Publication
+====================
+All files ready to publish to GitHub Wiki at:
+https://github.com/query4j/dynamicquerybuilder/wiki
+
+Follow SETUP.md for publishing instructions.
