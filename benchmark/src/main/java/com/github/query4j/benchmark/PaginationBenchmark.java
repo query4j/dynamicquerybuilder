@@ -131,17 +131,11 @@ public class PaginationBenchmark {
             }
             
             // Add indexes for performance
-            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_department ON employees(department)")) {
-                stmt.execute();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_salary ON employees(salary)")) {
-                stmt.execute();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_hire_date ON employees(hire_date)")) {
-                stmt.execute();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_active ON employees(active)")) {
-                stmt.execute();
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("CREATE INDEX idx_department ON employees(department)");
+                stmt.execute("CREATE INDEX idx_salary ON employees(salary)");
+                stmt.execute("CREATE INDEX idx_hire_date ON employees(hire_date)");
+                stmt.execute("CREATE INDEX idx_active ON employees(active)");
             }
         }
     }
