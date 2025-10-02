@@ -108,9 +108,11 @@ public class PaginationBenchmark {
     private void initializeDatabase() throws SQLException {
         try (Connection conn = dataSource.getConnection()) {
             // Drop table if exists to avoid conflicts
-            conn.createStatement().execute("DROP TABLE IF EXISTS employees");
+            try (PreparedStatement stmt = conn.prepareStatement("DROP TABLE IF EXISTS employees")) {
+                stmt.execute();
+            }
             
-            conn.createStatement().execute(
+            try (PreparedStatement stmt = conn.prepareStatement(
                 "CREATE TABLE employees (" +
                 "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                 "first_name VARCHAR(100) NOT NULL, " +
@@ -124,13 +126,23 @@ public class PaginationBenchmark {
                 "city VARCHAR(50), " +
                 "country VARCHAR(50)" +
                 ")"
-            );
+            )) {
+                stmt.execute();
+            }
             
             // Add indexes for performance
-            conn.createStatement().execute("CREATE INDEX idx_department ON employees(department)");
-            conn.createStatement().execute("CREATE INDEX idx_salary ON employees(salary)");
-            conn.createStatement().execute("CREATE INDEX idx_hire_date ON employees(hire_date)");
-            conn.createStatement().execute("CREATE INDEX idx_active ON employees(active)");
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_department ON employees(department)")) {
+                stmt.execute();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_salary ON employees(salary)")) {
+                stmt.execute();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_hire_date ON employees(hire_date)")) {
+                stmt.execute();
+            }
+            try (PreparedStatement stmt = conn.prepareStatement("CREATE INDEX idx_active ON employees(active)")) {
+                stmt.execute();
+            }
         }
     }
     
