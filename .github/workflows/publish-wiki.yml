@@ -1,7 +1,7 @@
 ---
 name: Publish Wiki
 
-'on':
+on:
   push:
     branches:
       - master
@@ -49,8 +49,7 @@ jobs:
         run: |
           cd wiki-repo
           git config user.name "github-actions[bot]"
-          git config user.email \
-            "github-actions[bot]@users.noreply.github.com"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Check if there are changes
           if git diff-index --quiet HEAD --; then
@@ -62,12 +61,14 @@ jobs:
 
             # Create commit message
             COMMIT_SHA="${{ github.sha }}"
-            COMMIT_MSG="Update wiki from main repository
+            cat > commit_msg.txt << EOF
+          Update wiki from main repository
 
           Source commit: ${COMMIT_SHA}
-          Automated wiki sync from .github/workflows/publish-wiki.yml"
+          Automated wiki sync from .github/workflows/publish-wiki.yml
+          EOF
 
-            git commit -m "$COMMIT_MSG"
+            git commit -F commit_msg.txt
             git push origin HEAD
             echo "WIKI_UPDATED=true" >> $GITHUB_ENV
           fi
@@ -79,7 +80,7 @@ jobs:
             echo "## Wiki Published Successfully! 📚" \
               >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Wiki files have been synced to the GitHub Wiki." \
+            echo "Wiki files synced to GitHub Wiki." \
               >> $GITHUB_STEP_SUMMARY
           else
             echo "## No Wiki Changes" >> $GITHUB_STEP_SUMMARY

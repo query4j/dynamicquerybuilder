@@ -99,7 +99,8 @@ echo "✅ Wiki Published Successfully!"
 echo "================================================"
 echo ""
 echo "View your wiki at:"
-echo "https://github.com/query4j/dynamicquerybuilder/wiki"
+# Derive wiki URL from repository URL
+echo "${REPO_URL}/wiki"
 echo ""
 echo "Published pages:"
 for file in *.md; do
