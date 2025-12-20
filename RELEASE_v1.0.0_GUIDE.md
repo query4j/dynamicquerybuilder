@@ -307,4 +307,4 @@ For release questions or issues:
 
 **Release Manager**: @query4j  
 **Technical Lead**: @sandeep-jaiswar  
-**Release Date**: December 20, 2025
+**Release Date**: TBD (See GitHub Release for actual date)

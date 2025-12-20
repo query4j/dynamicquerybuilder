@@ -42,12 +42,12 @@ print_section() {
 
 # Check Java version
 print_section "1. Checking Java Version"
-java -version 2>&1 | grep -q "version \"17" || java -version 2>&1 | grep -q "version \"21"
-if [ $? -eq 0 ]; then
+JAVA_VERSION=$(java -version 2>&1 | head -1 | cut -d'"' -f2 | cut -d'.' -f1)
+if [ "$JAVA_VERSION" -ge 17 ] 2>/dev/null; then
     print_success "Java 17+ detected"
     java -version 2>&1 | head -1
 else
-    print_error "Java 17+ required"
+    print_error "Java 17+ required (detected: $JAVA_VERSION)"
     exit 1
 fi
 
@@ -62,7 +62,11 @@ fi
 
 # Check version in build.gradle
 print_section "3. Verifying Version"
-VERSION=$(grep "^version = " build.gradle | cut -d"'" -f2)
+VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+if [ -z "$VERSION" ]; then
+    # Fallback to direct parsing if Gradle command fails
+    VERSION=$(grep "^version = " build.gradle | sed "s/version = ['\"]//;s/['\"]//")
+fi
 echo "Current version: $VERSION"
 if [[ $VERSION == *"SNAPSHOT"* ]]; then
     print_error "Version is still SNAPSHOT. Please update to stable version."
@@ -74,8 +78,12 @@ fi
 # Clean build
 print_section "4. Clean Build"
 echo "Running: ./gradlew clean"
-./gradlew clean > /dev/null 2>&1
-print_success "Clean completed"
+if ./gradlew clean > /dev/null; then
+    print_success "Clean completed"
+else
+    print_error "Clean failed"
+    exit 1
+fi
 
 # Run tests
 print_section "5. Running Tests"

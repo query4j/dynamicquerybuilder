@@ -119,7 +119,7 @@ See "Rollback Plan" section in [RELEASE_v1.0.0_GUIDE.md](./RELEASE_v1.0.0_GUIDE.
 - **Release Manager**: @query4j
 - **Technical Lead**: @sandeep-jaiswar
 - **Pre-Release Verification**: ✅ PASSED
-- **Release Date**: December 20, 2025
+- **Release Date**: TBD (See GitHub Release for actual date)
 
 ---
 

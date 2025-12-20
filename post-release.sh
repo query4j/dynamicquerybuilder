@@ -36,7 +36,11 @@ print_success() {
 }
 
 # Get current version
-CURRENT_VERSION=$(grep "^version = " build.gradle | cut -d"'" -f2)
+CURRENT_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+if [ -z "$CURRENT_VERSION" ]; then
+    # Fallback to direct parsing if Gradle command fails
+    CURRENT_VERSION=$(grep "^version = " build.gradle | sed "s/version = ['\"]//;s/['\"]//")
+fi
 echo "Current released version: $CURRENT_VERSION"
 
 # Calculate next version
@@ -83,17 +87,22 @@ read -p "Do you want to update build.gradle to ${NEXT_VERSION}? (y/n) " -n 1 -r
 echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    # Update version in build.gradle
-    sed -i.bak "s/version = '${CURRENT_VERSION}'/version = '${NEXT_VERSION}'/" build.gradle
-    print_success "Updated build.gradle to version ${NEXT_VERSION}"
-    
-    # Show the change
-    echo ""
-    echo "Change:"
-    diff build.gradle.bak build.gradle || true
-    
-    # Clean up backup
-    rm build.gradle.bak
+    # Update version in build.gradle - use more precise regex
+    if grep -q "^version = ['\"]${CURRENT_VERSION}['\"]" build.gradle; then
+        sed -i.bak "s/^version = ['\"]${CURRENT_VERSION}['\"]/version = '${NEXT_VERSION}'/" build.gradle
+        print_success "Updated build.gradle to version ${NEXT_VERSION}"
+        
+        # Show the change
+        echo ""
+        echo "Change:"
+        diff build.gradle.bak build.gradle || true
+        
+        # Clean up backup
+        rm build.gradle.bak
+    else
+        print_error "Could not find version line in build.gradle"
+        exit 1
+    fi
     
     echo ""
     echo "Next steps:"
