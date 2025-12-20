@@ -46,6 +46,8 @@ task benchmarkJar(type: Jar) {
     archiveBaseName = 'benchmarks'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn 'classes'
+    dependsOn ':core:jar'
+    dependsOn ':optimizer:jar'
     
     manifest {
         attributes 'Main-Class': 'org.openjdk.jmh.Main'
