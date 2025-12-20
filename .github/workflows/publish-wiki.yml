@@ -1,0 +1,82 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'wiki/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-wiki:
+    name: Publish Wiki to GitHub Wiki
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy wiki files
+        run: |
+          echo "Copying wiki files from /wiki to wiki repository..."
+          cp wiki/*.md wiki-repo/
+          cd wiki-repo
+          
+          # List files being published
+          echo "Files to be published:"
+          ls -la *.md
+
+      - name: Commit and push wiki changes
+        run: |
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are changes
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to wiki content"
+            exit 0
+          fi
+          
+          # Stage all markdown files
+          git add *.md
+          
+          # Create commit message
+          COMMIT_SHA="${{ github.sha }}"
+          COMMIT_MSG="Update wiki from main repository
+          
+          Source commit: ${COMMIT_SHA}
+          Automated wiki sync from .github/workflows/publish-wiki.yml"
+          
+          git commit -m "$COMMIT_MSG"
+          git push origin master
+
+      - name: Summary
+        run: |
+          echo "## Wiki Published Successfully! 📚" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Wiki files have been synced to the GitHub Wiki." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View at: https://github.com/${{ github.repository }}/wiki" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published pages:" >> $GITHUB_STEP_SUMMARY
+          cd wiki-repo
+          for file in *.md; do
+            if [ -f "$file" ]; then
+              page_name="${file%.md}"
+              echo "- [$page_name](https://github.com/${{ github.repository }}/wiki/$page_name)" >> $GITHUB_STEP_SUMMARY
+            fi
+          done

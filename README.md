@@ -5,6 +5,22 @@
 
 Welcome to the Query4j documentation! This page helps you find the right documentation for your needs.
 
+## 📚 GitHub Wiki
+
+For comprehensive, living documentation with detailed guides, tutorials, and reference material, visit our **[GitHub Wiki](https://github.com/query4j/dynamicquerybuilder/wiki)**:
+
+- **[Home](https://github.com/query4j/dynamicquerybuilder/wiki/Home)** - Project vision, philosophy, and roadmap
+- **[Getting Started](https://github.com/query4j/dynamicquerybuilder/wiki/Getting-Started)** - Setup and first query tutorial
+- **[Core Module](https://github.com/query4j/dynamicquerybuilder/wiki/Core-Module)** - QueryBuilder API and predicates
+- **[Cache Manager](https://github.com/query4j/dynamicquerybuilder/wiki/Cache-Manager)** - Caching strategies and tuning
+- **[Optimizer](https://github.com/query4j/dynamicquerybuilder/wiki/Optimizer)** - Query optimization and analysis
+- **[Configuration](https://github.com/query4j/dynamicquerybuilder/wiki/Configuration)** - Configuration options and best practices
+- **[API Reference](https://github.com/query4j/dynamicquerybuilder/wiki/API-Reference)** - Complete API documentation
+- **[Error Handling](https://github.com/query4j/dynamicquerybuilder/wiki/Error-Handling)** - Exception catalog and troubleshooting
+- **[Benchmarking](https://github.com/query4j/dynamicquerybuilder/wiki/Benchmarking)** - Performance benchmarks and results
+- **[FAQ & Troubleshooting](https://github.com/query4j/dynamicquerybuilder/wiki/FAQ-and-Troubleshooting)** - Common questions and solutions
+- **[Contributing](https://github.com/query4j/dynamicquerybuilder/wiki/Contributing)** - Contribution guidelines and workflow
+
 ## Getting Started
 
 New to Query4j? Start here:
@@ -117,10 +133,23 @@ Real-world usage examples:
 **Troubleshoot issues**
 → Check [Troubleshooting](../QUICKSTART.md#troubleshooting) and [Common Pitfalls](../ADVANCED.md#common-pitfalls)
 
+## Wiki Publishing
+
+The GitHub Wiki is automatically published from the `/wiki` directory:
+
+- **Automatic Publishing**: Wiki content is automatically synced to GitHub Wiki when changes are pushed to the `master` branch
+- **Manual Publishing**: Run `./publish-wiki.sh` to manually publish wiki content
+- **Wiki Maintenance**: See [wiki/MAINTENANCE.md](wiki/MAINTENANCE.md) for maintenance guidelines
+
+For details on wiki setup and publishing, see:
+- [wiki/README.md](wiki/README.md) - Wiki overview and structure
+- [wiki/SETUP.md](wiki/SETUP.md) - Quick setup guide
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/query4j/dynamicquerybuilder/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/query4j/dynamicquerybuilder/discussions)
+- **Wiki**: [GitHub Wiki](https://github.com/query4j/dynamicquerybuilder/wiki)
 
 ---
 
