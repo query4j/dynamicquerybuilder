@@ -9,8 +9,12 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WIKI_SOURCE_DIR="${SCRIPT_DIR}/wiki"
-WIKI_REPO_DIR="${SCRIPT_DIR}/../dynamicquerybuilder.wiki"
-REPO_URL="https://github.com/query4j/dynamicquerybuilder.wiki.git"
+# Derive wiki repo name from current directory name
+REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
+WIKI_REPO_DIR="${SCRIPT_DIR}/../${REPO_NAME}.wiki"
+# Derive wiki URL from git remote
+REPO_URL="$(git remote get-url origin | sed 's/\.git$//')"
+WIKI_URL="${REPO_URL}.wiki.git"
 
 echo "================================================"
 echo "Query4j Wiki Publisher"
@@ -30,18 +34,20 @@ if ! ls "$WIKI_SOURCE_DIR"/*.md 1> /dev/null 2>&1; then
 fi
 
 echo "📂 Wiki source directory: $WIKI_SOURCE_DIR"
-echo "📦 Wiki repository URL: $REPO_URL"
+echo "📦 Wiki repository URL: $WIKI_URL"
 echo ""
 
 # Clone or update wiki repository
 if [ -d "$WIKI_REPO_DIR" ]; then
-    echo "📥 Wiki repository already exists, pulling latest..."
+    echo "📥 Wiki repository already exists, fetching latest..."
     cd "$WIKI_REPO_DIR"
-    git pull origin master
+    git fetch origin
+    # Clean update to avoid merge conflicts
+    git reset --hard origin/master
     cd "$SCRIPT_DIR"
 else
     echo "📥 Cloning wiki repository..."
-    git clone "$REPO_URL" "$WIKI_REPO_DIR"
+    git clone "$WIKI_URL" "$WIKI_REPO_DIR"
 fi
 
 echo ""

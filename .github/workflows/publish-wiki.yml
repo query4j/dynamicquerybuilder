@@ -33,6 +33,11 @@ jobs:
       - name: Copy wiki files
         run: |
           echo "Copying wiki files from /wiki to wiki repository..."
+          # Check if wiki files exist
+          if ! ls wiki/*.md 1> /dev/null 2>&1; then
+            echo "❌ Error: No markdown files found in wiki directory"
+            exit 1
+          fi
           cp wiki/*.md wiki-repo/
           cd wiki-repo
 
@@ -50,34 +55,43 @@ jobs:
           # Check if there are changes
           if git diff-index --quiet HEAD --; then
             echo "No changes to wiki content"
-            exit 0
-          fi
+            echo "WIKI_UPDATED=false" >> $GITHUB_ENV
+          else
+            # Stage all markdown files
+            git add *.md
 
-          # Stage all markdown files
-          git add *.md
-
-          # Create commit message
-          COMMIT_SHA="${{ github.sha }}"
-          COMMIT_MSG="Update wiki from main repository
+            # Create commit message
+            COMMIT_SHA="${{ github.sha }}"
+            COMMIT_MSG="Update wiki from main repository
 
           Source commit: ${COMMIT_SHA}
           Automated wiki sync from .github/workflows/publish-wiki.yml"
 
-          git commit -m "$COMMIT_MSG"
-          git push origin master
+            git commit -m "$COMMIT_MSG"
+            git push origin HEAD
+            echo "WIKI_UPDATED=true" >> $GITHUB_ENV
+          fi
 
       - name: Summary
+        if: always()
         run: |
-          echo "## Wiki Published Successfully! 📚" \
-            >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Wiki files have been synced to the GitHub Wiki." \
-            >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.WIKI_UPDATED }}" = "true" ]; then
+            echo "## Wiki Published Successfully! 📚" \
+              >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Wiki files have been synced to the GitHub Wiki." \
+              >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## No Wiki Changes" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Wiki content is already up to date." \
+              >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           WIKI_URL="https://github.com/${{ github.repository }}/wiki"
           echo "View at: ${WIKI_URL}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Published pages:" >> $GITHUB_STEP_SUMMARY
+          echo "Available pages:" >> $GITHUB_STEP_SUMMARY
           cd wiki-repo
           for file in *.md; do
             if [ -f "$file" ]; then
