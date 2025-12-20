@@ -39,3 +39,6 @@ Thumbs.db
 *.bak
 /bin/
 test_*.java
+
+# Benchmark results
+benchmark-results.json
