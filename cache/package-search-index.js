@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.github.query4j.cache"},{"l":"com.github.query4j.cache.config"},{"l":"com.github.query4j.cache.impl"}];updateSearchResults();

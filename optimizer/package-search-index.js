@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.github.query4j.optimizer"},{"l":"com.github.query4j.optimizer.config"},{"l":"com.github.query4j.optimizer.index"},{"l":"com.github.query4j.optimizer.join"},{"l":"com.github.query4j.optimizer.predicate"}];updateSearchResults();

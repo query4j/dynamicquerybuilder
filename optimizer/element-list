@@ -1,0 +1,5 @@
+com.github.query4j.optimizer
+com.github.query4j.optimizer.config
+com.github.query4j.optimizer.index
+com.github.query4j.optimizer.join
+com.github.query4j.optimizer.predicate
