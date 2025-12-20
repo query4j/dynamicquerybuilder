@@ -1,5 +1,8 @@
 # Query4j Documentation Index
 
+> ⚠️ **NOTICE**: This project is currently in **FEATURE FREEZE** for v1.0.0 release.  
+> See [FEATURE_FREEZE.md](./FEATURE_FREEZE.md) for details. Only bug fixes, documentation, and tests are accepted during this period.
+
 Welcome to the Query4j documentation! This page helps you find the right documentation for your needs.
 
 ## Getting Started
