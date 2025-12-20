@@ -2,6 +2,19 @@
 
 Welcome! Thank you for your interest in contributing to the **dynamicquerybuilder** project. This document outlines the coding standards, contribution process, and quality expectations to maintain a world-class, high-performance Java library.
 
+## ⚠️ Current Status: Feature Freeze for v1.0.0
+
+**The project is currently in a FEATURE FREEZE for v1.0.0 release.**
+
+During this period:
+- ✅ Bug fixes are welcome
+- ✅ Documentation improvements are encouraged
+- ✅ Test additions are appreciated
+- ❌ New features will be deferred to v1.1.0
+- ❌ API changes are not permitted
+
+See [FEATURE_FREEZE.md](./FEATURE_FREEZE.md) for complete details.
+
 ## Table of Contents
 
 - [Code Style & Standards](#code-style--standards)
