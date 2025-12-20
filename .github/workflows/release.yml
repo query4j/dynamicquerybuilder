@@ -293,6 +293,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate, publish-github, publish-packages, publish-docs]
     if: always()
+    permissions:
+      issues: write
 
     steps:
       - name: Prepare notification
