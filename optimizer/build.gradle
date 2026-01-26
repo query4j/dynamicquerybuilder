@@ -16,7 +16,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     
     // AssertJ for fluent assertions
-    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.assertj:assertj-core:3.27.7'
 }
 
 // Configure tests to include jqwik
